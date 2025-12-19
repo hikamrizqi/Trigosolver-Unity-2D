@@ -222,7 +222,7 @@ Jika menemukan bug atau punya ide fitur:
 
 ## 📄 License
 
-Project ini dikembangkan untuk tujuan **edukasi dan penelitian**. 
+Project ini dikembangkan untuk tujuan **edukasi dan penelitian skripsi**. 
 
 ⚠️ **Penggunaan Komersial**: Memerlukan izin tertulis dari penulis.
 
