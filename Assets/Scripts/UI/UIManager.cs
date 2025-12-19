@@ -84,12 +84,14 @@ public class UIManager : MonoBehaviour
     // Method untuk load scene Stage 1 (Bagian 1 - Observasi Segitiga)
     public void OnClickBagian1()
     {
+        Debug.Log("[UIManager] Loading Chapter 1 - Stage 1");
         SceneManager.LoadScene("Stage 1");
     }
 
     // Method untuk load scene Stage 2 (Bagian 2 - Tembakan Meriam)
     public void OnClickBagian2()
     {
+        Debug.Log("[UIManager] Loading Chapter 2 - Stage 2");
         SceneManager.LoadScene("Stage 2");
     }
 

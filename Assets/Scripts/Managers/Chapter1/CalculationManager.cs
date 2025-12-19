@@ -11,7 +11,7 @@ public class CalculationManager : MonoBehaviour
     [Header("Status Permainan")]
     private int lives = 3;
     private int progres = 0;
-    private int totalSoal = 5;
+    private int totalSoal = 30; // Update dari 5 ke 30 soal
     private int score = 0; // Tambahan untuk tracking score
 
     [Header("Gameplay Settings")]
@@ -37,7 +37,8 @@ public class CalculationManager : MonoBehaviour
         }
 
         progres++;
-        dataSoalSaatIni = dataGenerator.GenerateNewQuestion();
+        // Generate soal berdasarkan nomor urut (progressive difficulty)
+        dataSoalSaatIni = dataGenerator.GenerateQuestionByNumber(progres);
         uiManager.SetupNewQuestion(progres, totalSoal, dataSoalSaatIni);
     }
 

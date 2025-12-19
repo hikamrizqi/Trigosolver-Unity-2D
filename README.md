@@ -34,28 +34,37 @@ Dikembangkan sebagai bagian dari penelitian skripsi untuk meningkatkan pemahaman
 
 ### 🔺 Visualisasi Segitiga Dinamis
 - **Real-time Triangle Rendering**: Segitiga siku-siku digambar secara dinamis dengan sprite rendering
-- **Interactive Labels**: Label sisi (depan, samping, miring) dan sudut (θ) yang responsif
+- **Triangle Rotation System**: Segitiga dapat berputar 0°, 90°, 180°, 270° untuk variasi pembelajaran
+- **Interactive Labels**: Label sisi (depan, samping, miring) dan sudut (θ) yang responsif terhadap rotasi
+- **Auto-Scaling**: Segitiga otomatis menyesuaikan ukuran agar selalu fit di layar
 - **Color-coded System**: Setiap sisi memiliki warna berbeda untuk memudahkan identifikasi
 
-### 📊 Sistem Soal Berbasis Pythagoras
-- Menggunakan **Pythagorean Triples** untuk soal yang akurat: (3,4,5), (5,12,13), (8,15,17), (7,24,25)
-- Perhitungan otomatis nilai Sin, Cos, Tan dengan presisi tinggi
-- Sistem validasi jawaban dengan feedback langsung
+### 📊 Sistem 30 Soal dengan Progressive Difficulty
+- **30 Pertanyaan Bertingkat**: Easy (1-10), Medium (11-20), Hard (21-30)
+- **12 Pythagorean Triples**: Dari sederhana (3,4,5) hingga kompleks (13,84,85)
+- **7 Tipe Pertanyaan**: 
+  - Cari nilai Sin/Cos/Tan θ
+  - Cari sisi dari rasio trigonometri (inverse problems)
+  - Pythagorean theorem (cari sisi ketiga)
+- **Perhitungan Presisi Tinggi**: Validasi jawaban dengan toleransi ±0.01
+- **Adaptive Rotation**: Rotasi segitiga meningkat sesuai difficulty level
 
 ### 🎮 Mode Pembelajaran
-- **Mode Cerita**: Belajar melalui narasi dan cutscene yang menarik
-- **Mode Latihan**: Tantangan soal dengan level bertingkat
-- **Mode Chapter 2**: Gameplay dengan meriam dan proyektil (physics-based)
+- **Chapter 1 - Observasi Segitiga**: 30 soal progresif dengan rotasi dinamis
+- **Chapter 2 - Mode Shooting**: Gameplay dengan meriam dan proyektil (physics-based)
+- **Progressive Learning Curve**: Soal bertambah sulit secara konsisten
+- **Visual Feedback System**: Highlight sisi, animasi jawaban benar/salah
 
 ### 🎨 UI/UX Modern
 - **Animated Menu System**: Animasi drop, bounce, dan sink menggunakan DOTween
-- **Parallax Background**: Efek kedalaman visual pada background
+- **Unlimited Parallax Background**: Efek scrolling seamless pada background
+- **Opening Video**: Intro dengan pause-hold-fade transition
 - **Responsive Design**: UI yang adaptif untuk berbagai resolusi
 
 ### 🔊 Audio System
-- Sound effects untuk setiap interaksi
-- Audio manager terpisah per chapter
-- Support untuk background music
+- **Global Button Sound**: Sound effect universal untuk semua tombol
+- **Audio Manager per Chapter**: Terpisah untuk BGM dan SFX
+- **Smooth Audio Transitions**: Fade in/out untuk perpindahan scene
 
 ---
 
@@ -222,7 +231,7 @@ Jika menemukan bug atau punya ide fitur:
 
 ## 📄 License
 
-Project ini dikembangkan untuk tujuan **edukasi dan penelitian skripsi**. 
+Project ini dikembangkan untuk tujuan **edukasi dan penelitian**. 
 
 ⚠️ **Penggunaan Komersial**: Memerlukan izin tertulis dari penulis.
 

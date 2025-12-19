@@ -1,49 +1,304 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Enum untuk tipe pertanyaan
+/// </summary>
+public enum QuestionType
+{
+    FindSinValue,       // Cari nilai Sin θ
+    FindCosValue,       // Cari nilai Cos θ  
+    FindTanValue,       // Cari nilai Tan θ
+    FindOpposite,       // Diberikan Sin θ & hypotenuse, cari opposite
+    FindAdjacent,       // Diberikan Cos θ & hypotenuse, cari adjacent
+    FindHypotenuse,     // Diberikan Sin/Cos θ & sisi, cari hypotenuse
+    FindPythagorean     // Diberikan 2 sisi, cari sisi ketiga (Pythagoras)
+}
+
+/// <summary>
+/// Enum untuk tingkat kesulitan
+/// </summary>
+public enum DifficultyLevel
+{
+    Easy,       // Soal 1-10: Segitiga standard, cari rasio trigonometri
+    Medium,     // Soal 11-20: Segitiga rotasi, variasi pertanyaan
+    Hard        // Soal 21-30: Inverse problems, segitiga rotasi kompleks
+}
+
 [System.Serializable]
 public class TriangleData
 {
-    public int Depan;
-    public int Samping;
-    public int Miring;
-    public string SoalDisederhanakan;
-    public float JawabanBenar;
+    // Data segitiga asli (sebelum rotasi visual)
+    public int Depan;           // Sisi opposite (tegak)
+    public int Samping;         // Sisi adjacent (alas)
+    public int Miring;          // Sisi hypotenuse (miring)
+
+    // Rotasi visual segitiga (dalam derajat)
+    public float RotationAngle; // 0°, 90°, 180°, 270° untuk variasi visual
+
+    // Pertanyaan & jawaban
+    public QuestionType TypeSoal;           // Tipe soal
+    public DifficultyLevel Difficulty;      // Tingkat kesulitan
+    public string PertanyaanText;           // Text pertanyaan lengkap
+    public string SoalDisederhanakan;       // Singkatan soal (untuk kompatibilitas)
+    public float JawabanBenar;              // Nilai jawaban yang benar
+
+    // Info tambahan untuk soal yang lebih kompleks
+    public string InfoTambahan;             // Informasi yang diberikan (misal: "Sin θ = 0.6")
+    public int SisiDiketahui1;              // Nilai sisi 1 yang diketahui (jika applicable)
+    public int SisiDiketahui2;              // Nilai sisi 2 yang diketahui (jika applicable)
 }
 
 public class TriangleDataGenerator : MonoBehaviour
 {
     private List<(int, int, int)> triples = new List<(int, int, int)>
     {
-        (3, 4, 5), (5, 12, 13), (8, 15, 17), (7, 24, 25)
+        (3, 4, 5),
+        (5, 12, 13),
+        (8, 15, 17),
+        (7, 24, 25),
+        (6, 8, 10),     // Multiple of (3,4,5)
+        (9, 12, 15),    // Multiple of (3,4,5)
+        (12, 16, 20),   // Multiple of (3,4,5)
+        (15, 20, 25),   // Multiple of (3,4,5)
+        (20, 21, 29),   // New triple
+        (9, 40, 41),    // New triple
+        (11, 60, 61),   // New triple
+        (13, 84, 85)    // New triple
     };
 
+    // Index soal saat ini (untuk progressive difficulty)
+    private int currentQuestionIndex = 0;
+
+    /// <summary>
+    /// Generate soal berdasarkan nomor urut (1-30)
+    /// Menggunakan progressive difficulty
+    /// </summary>
+    public TriangleData GenerateQuestionByNumber(int questionNumber)
+    {
+        currentQuestionIndex = questionNumber;
+
+        // Tentukan difficulty berdasarkan nomor soal
+        DifficultyLevel difficulty;
+        if (questionNumber <= 10)
+            difficulty = DifficultyLevel.Easy;
+        else if (questionNumber <= 20)
+            difficulty = DifficultyLevel.Medium;
+        else
+            difficulty = DifficultyLevel.Hard;
+
+        // Generate soal sesuai difficulty
+        return GenerateQuestionByDifficulty(difficulty, questionNumber);
+    }
+
+    /// <summary>
+    /// Generate soal random (untuk backward compatibility)
+    /// </summary>
     public TriangleData GenerateNewQuestion()
     {
-        (int a, int b, int c) triple = triples[Random.Range(0, triples.Count)];
-        bool isADepan = Random.Range(0, 2) == 0;
+        return GenerateQuestionByNumber(Random.Range(1, 31));
+    }
 
+    /// <summary>
+    /// Generate soal berdasarkan difficulty level
+    /// </summary>
+    private TriangleData GenerateQuestionByDifficulty(DifficultyLevel difficulty, int questionNumber)
+    {
         TriangleData data = new TriangleData();
+        data.Difficulty = difficulty;
+
+        // Pilih triple berdasarkan difficulty
+        (int a, int b, int c) triple;
+        if (difficulty == DifficultyLevel.Easy)
+        {
+            // Easy: Gunakan triple sederhana (3,4,5) (5,12,13) (8,15,17)
+            triple = triples[questionNumber % 4]; // 4 triple pertama
+        }
+        else if (difficulty == DifficultyLevel.Medium)
+        {
+            // Medium: Gunakan triple medium (termasuk multiples)
+            triple = triples[(questionNumber - 11) % 8]; // 8 triple pertama
+        }
+        else
+        {
+            // Hard: Gunakan semua triple termasuk yang sulit
+            triple = triples[(questionNumber - 21) % triples.Count];
+        }
+
+        // Random orientasi (a atau b sebagai depan)
+        bool isADepan = (questionNumber % 2 == 0);
         data.Depan = isADepan ? triple.a : triple.b;
         data.Samping = isADepan ? triple.b : triple.a;
         data.Miring = triple.c;
 
-        int questionType = Random.Range(0, 3);
-        switch (questionType)
+        // Tentukan rotasi berdasarkan difficulty
+        if (difficulty == DifficultyLevel.Easy)
+        {
+            data.RotationAngle = 0f; // Tidak ada rotasi
+        }
+        else if (difficulty == DifficultyLevel.Medium)
+        {
+            // Rotasi 0° atau 90°
+            data.RotationAngle = (questionNumber % 2 == 0) ? 0f : 90f;
+        }
+        else // Hard
+        {
+            // Rotasi bervariasi: 0°, 90°, 180°, 270°
+            float[] rotations = { 0f, 90f, 180f, 270f };
+            data.RotationAngle = rotations[questionNumber % 4];
+        }
+
+        // Generate soal berdasarkan difficulty
+        GenerateQuestionContent(data, difficulty, questionNumber);
+
+        return data;
+    }
+
+    /// <summary>
+    /// Generate konten pertanyaan berdasarkan difficulty
+    /// </summary>
+    private void GenerateQuestionContent(TriangleData data, DifficultyLevel difficulty, int questionNumber)
+    {
+        if (difficulty == DifficultyLevel.Easy)
+        {
+            // Easy: Hanya cari nilai Sin, Cos, Tan
+            GenerateBasicTrigQuestion(data, questionNumber);
+        }
+        else if (difficulty == DifficultyLevel.Medium)
+        {
+            // Medium: Mix antara basic dan inverse problems
+            if (questionNumber % 3 == 0)
+                GenerateInverseTrigQuestion(data);
+            else
+                GenerateBasicTrigQuestion(data, questionNumber);
+        }
+        else // Hard
+        {
+            // Hard: Lebih banyak inverse problems dan Pythagorean
+            int variant = questionNumber % 4;
+            if (variant == 0)
+                GeneratePythagoreanQuestion(data);
+            else if (variant == 1)
+                GenerateInverseTrigQuestion(data);
+            else
+                GenerateBasicTrigQuestion(data, questionNumber);
+        }
+    }
+
+    /// <summary>
+    /// Generate pertanyaan dasar: Cari nilai Sin/Cos/Tan θ
+    /// </summary>
+    private void GenerateBasicTrigQuestion(TriangleData data, int questionNumber)
+    {
+        int type = questionNumber % 3;
+
+        switch (type)
         {
             case 0: // Sin
-                data.SoalDisederhanakan = "Sin\u03B8"; // Unicode theta
+                data.TypeSoal = QuestionType.FindSinValue;
+                data.SoalDisederhanakan = "Sin\u03B8";
+                data.PertanyaanText = "Berapakah nilai Sin\u03B8?";
                 data.JawabanBenar = (float)data.Depan / data.Miring;
+                data.InfoTambahan = $"Sisi Depan = {data.Depan}, Sisi Miring = {data.Miring}";
                 break;
+
             case 1: // Cos
-                data.SoalDisederhanakan = "Cos\u03B8"; // Unicode theta
+                data.TypeSoal = QuestionType.FindCosValue;
+                data.SoalDisederhanakan = "Cos\u03B8";
+                data.PertanyaanText = "Berapakah nilai Cos\u03B8?";
                 data.JawabanBenar = (float)data.Samping / data.Miring;
+                data.InfoTambahan = $"Sisi Samping = {data.Samping}, Sisi Miring = {data.Miring}";
                 break;
+
             case 2: // Tan
-                data.SoalDisederhanakan = "Tan\u03B8"; // Unicode theta
+                data.TypeSoal = QuestionType.FindTanValue;
+                data.SoalDisederhanakan = "Tan\u03B8";
+                data.PertanyaanText = "Berapakah nilai Tan\u03B8?";
                 data.JawabanBenar = (float)data.Depan / data.Samping;
+                data.InfoTambahan = $"Sisi Depan = {data.Depan}, Sisi Samping = {data.Samping}";
                 break;
         }
-        return data;
+    }
+
+    /// <summary>
+    /// Generate pertanyaan inverse: Diberikan rasio trigonometri, cari sisi
+    /// </summary>
+    private void GenerateInverseTrigQuestion(TriangleData data)
+    {
+        int type = Random.Range(0, 3);
+
+        switch (type)
+        {
+            case 0: // Diberikan Sin θ dan miring, cari depan
+                data.TypeSoal = QuestionType.FindOpposite;
+                float sinValue = (float)data.Depan / data.Miring;
+                data.SoalDisederhanakan = "Sisi Depan";
+                data.PertanyaanText = $"Jika Sin\u03B8 = {sinValue:F2} dan sisi miring = {data.Miring}, berapa panjang sisi depan?";
+                data.JawabanBenar = data.Depan;
+                data.InfoTambahan = $"Sin\u03B8 = {sinValue:F2}";
+                data.SisiDiketahui1 = data.Miring;
+                break;
+
+            case 1: // Diberikan Cos θ dan miring, cari samping
+                data.TypeSoal = QuestionType.FindAdjacent;
+                float cosValue = (float)data.Samping / data.Miring;
+                data.SoalDisederhanakan = "Sisi Samping";
+                data.PertanyaanText = $"Jika Cos\u03B8 = {cosValue:F2} dan sisi miring = {data.Miring}, berapa panjang sisi samping?";
+                data.JawabanBenar = data.Samping;
+                data.InfoTambahan = $"Cos\u03B8 = {cosValue:F2}";
+                data.SisiDiketahui1 = data.Miring;
+                break;
+
+            case 2: // Diberikan Sin θ dan depan, cari miring
+                data.TypeSoal = QuestionType.FindHypotenuse;
+                float sinVal = (float)data.Depan / data.Miring;
+                data.SoalDisederhanakan = "Sisi Miring";
+                data.PertanyaanText = $"Jika Sin\u03B8 = {sinVal:F2} dan sisi depan = {data.Depan}, berapa panjang sisi miring?";
+                data.JawabanBenar = data.Miring;
+                data.InfoTambahan = $"Sin\u03B8 = {sinVal:F2}";
+                data.SisiDiketahui1 = data.Depan;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Generate pertanyaan Pythagorean: Diberikan 2 sisi, cari sisi ketiga
+    /// </summary>
+    private void GeneratePythagoreanQuestion(TriangleData data)
+    {
+        int type = Random.Range(0, 3);
+
+        switch (type)
+        {
+            case 0: // Diberikan depan & samping, cari miring
+                data.TypeSoal = QuestionType.FindPythagorean;
+                data.SoalDisederhanakan = "Sisi Miring";
+                data.PertanyaanText = $"Jika sisi depan = {data.Depan} dan sisi samping = {data.Samping}, berapa panjang sisi miring?";
+                data.JawabanBenar = data.Miring;
+                data.InfoTambahan = "Teorema Pythagoras: c² = a² + b²";
+                data.SisiDiketahui1 = data.Depan;
+                data.SisiDiketahui2 = data.Samping;
+                break;
+
+            case 1: // Diberikan depan & miring, cari samping
+                data.TypeSoal = QuestionType.FindPythagorean;
+                data.SoalDisederhanakan = "Sisi Samping";
+                data.PertanyaanText = $"Jika sisi depan = {data.Depan} dan sisi miring = {data.Miring}, berapa panjang sisi samping?";
+                data.JawabanBenar = data.Samping;
+                data.InfoTambahan = "Teorema Pythagoras: b² = c² - a²";
+                data.SisiDiketahui1 = data.Depan;
+                data.SisiDiketahui2 = data.Miring;
+                break;
+
+            case 2: // Diberikan samping & miring, cari depan
+                data.TypeSoal = QuestionType.FindPythagorean;
+                data.SoalDisederhanakan = "Sisi Depan";
+                data.PertanyaanText = $"Jika sisi samping = {data.Samping} dan sisi miring = {data.Miring}, berapa panjang sisi depan?";
+                data.JawabanBenar = data.Depan;
+                data.InfoTambahan = "Teorema Pythagoras: a² = c² - b²";
+                data.SisiDiketahui1 = data.Samping;
+                data.SisiDiketahui2 = data.Miring;
+                break;
+        }
     }
 }

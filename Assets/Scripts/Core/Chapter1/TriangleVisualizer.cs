@@ -27,8 +27,11 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Label untuk menampilkan nilai sisi Miring")]
     public TextMeshProUGUI miringLabel;
 
-    [Tooltip("Label untuk simbol theta di sudut siku-siku (World Space)")]
+    [Tooltip("Label untuk simbol theta di sudut lancip (World Space)")]
     public TextMeshPro thetaLabel;
+
+    [Tooltip("Label untuk simbol sudut siku-siku ∟ (World Space)")]
+    public TextMeshPro rightAngleLabel;
 
     [Header("Camera Reference")]
     [Tooltip("Camera untuk konversi world to screen point")]
@@ -38,11 +41,23 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Skala dasar untuk sprites (1 = 1 unit Unity per nilai segitiga)")]
     public float baseScale = 0.5f;
 
+    [Tooltip("Maksimal ukuran segitiga untuk auto-scaling (fit di layar)")]
+    public float maxTriangleSize = 8f;
+
+    [Tooltip("Safety margin dari batas layar (dalam units)")]
+    public float safetyMargin = 1f;
+
+    [Tooltip("Gunakan auto-scaling agar semua segitiga fit di layar")]
+    public bool useAutoScaling = true;
+
     [Tooltip("Posisi pusat segitiga di world space")]
     public Vector3 centerPosition = Vector3.zero;
 
     [Tooltip("Offset label dari garis (jarak)")]
     public float labelOffset = 0.5f;
+
+    [Tooltip("Ukuran font simbol sudut siku-siku ∟")]
+    public float rightAngleFontSize = 5f;
 
     [Tooltip("Ketebalan garis segitiga")]
     public float lineThickness = 0.5f;
@@ -60,41 +75,97 @@ public class TriangleVisualizer : MonoBehaviour
     private int currentDepan;
     private int currentSamping;
     private int currentMiring;
+    private float currentRotation = 0f; // Rotasi segitiga saat ini
 
     /// <summary>
-    /// Menggambar segitiga dengan nilai yang diberikan
+    /// Menggambar segitiga dengan nilai yang diberikan (tanpa rotasi - default 0°)
     /// </summary>
     public void DrawTriangle(int depan, int samping, int miring)
+    {
+        DrawTriangle(depan, samping, miring, 0f);
+    }
+
+    /// <summary>
+    /// Menggambar segitiga dengan nilai dan rotasi yang diberikan
+    /// Rotasi: 0° = standard (theta di kiri bawah), 90° = theta di kiri atas, 180° = theta di kanan atas, 270° = theta di kanan bawah
+    /// </summary>
+    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle)
     {
         currentDepan = depan;
         currentSamping = samping;
         currentMiring = miring;
+        currentRotation = rotationAngle;
 
-        // Hitung posisi-posisi vertex segitiga
-        // Gunakan transform.position sebagai base + centerPosition sebagai offset
-        Vector3 basePosition = transform.position + centerPosition;
+        // Hitung scale dinamis agar segitiga fit di layar
+        float dynamicScale = baseScale;
 
-        // Segitiga siku-siku dengan sudut di kiri bawah
-        Vector3 bottomLeft = basePosition;
-        Vector3 bottomRight = bottomLeft + new Vector3(samping * baseScale, 0, 0);
-        Vector3 topLeft = bottomLeft + new Vector3(0, depan * baseScale, 0);
-
-        // SISI SAMPING (Horizontal - Bottom)
-        PositionSprite(sampingSprite, bottomLeft, bottomRight, samping);
-        if (sampingLabel != null)
+        if (useAutoScaling)
         {
-            sampingLabel.text = samping.ToString();
-            Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
-            PositionUILabel(sampingLabel, midPoint + new Vector3(0, -labelOffset, 0));
+            // Hitung ukuran segitiga yang akan di-render (width x height)
+            float widthNeeded = samping * baseScale;   // Lebar segitiga
+            float heightNeeded = depan * baseScale;     // Tinggi segitiga
+
+            // Maksimal ukuran yang aman (dikurangi safety margin)
+            float safeMaxSize = maxTriangleSize - safetyMargin;
+
+            // Tentukan scale berdasarkan dimensi yang paling besar
+            float scaleByWidth = widthNeeded > safeMaxSize ? safeMaxSize / samping : baseScale;
+            float scaleByHeight = heightNeeded > safeMaxSize ? safeMaxSize / depan : baseScale;
+
+            // Gunakan scale yang paling kecil (paling membatasi) agar fit di KEDUA dimensi
+            dynamicScale = Mathf.Min(scaleByWidth, scaleByHeight);
+
+            if (dynamicScale < baseScale)
+            {
+                Debug.Log($"[TriangleVisualizer] Auto-scaling: {baseScale:F2} → {dynamicScale:F2} (W:{samping}, H:{depan} → Final: {samping * dynamicScale:F1} x {depan * dynamicScale:F1} units, Max allowed: {safeMaxSize:F1})");
+            }
         }
 
-        // SISI DEPAN (Vertical - Left)
-        PositionSprite(depanSprite, bottomLeft, topLeft, depan);
+        // Hitung posisi-posisi vertex segitiga SEBELUM rotasi
+        Vector3 basePosition = transform.position + centerPosition;
+
+        // Segitiga siku-siku dengan sudut siku di origin (0,0) relatif
+        // PENTING: Theta di topLeft (sudut A), sudut siku di bottomLeft (sudut B)
+        // BC (horizontal) = DEPAN (opposite dari theta)
+        // AB (vertical) = SAMPING (adjacent ke theta)
+        // AC (diagonal) = MIRING (hypotenuse)
+        Vector3 bottomLeft = Vector3.zero;
+        Vector3 bottomRight = new Vector3(depan * dynamicScale, 0, 0);  // BC = horizontal = DEPAN
+        Vector3 topLeft = new Vector3(0, samping * dynamicScale, 0);    // AB = vertical = SAMPING
+
+        // ROTASI: Rotasi semua vertex di sekitar origin
+        float rotRad = rotationAngle * Mathf.Deg2Rad;
+        bottomLeft = RotatePoint(bottomLeft, rotRad);
+        bottomRight = RotatePoint(bottomRight, rotRad);
+        topLeft = RotatePoint(topLeft, rotRad);
+
+        // Offset semua vertex ke basePosition (world position)
+        bottomLeft += basePosition;
+        bottomRight += basePosition;
+        topLeft += basePosition;
+
+        // SISI DEPAN (BC - Horizontal di rotasi 0° - OPPOSITE dari theta)
+        PositionSprite(depanSprite, bottomLeft, bottomRight, depan);
         if (depanLabel != null)
         {
             depanLabel.text = depan.ToString();
+            Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
+            // Offset label perpendicular ke garis
+            Vector3 direction = (bottomRight - bottomLeft).normalized;
+            Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
+            PositionUILabel(depanLabel, midPoint + perpendicular * (-labelOffset));
+        }
+
+        // SISI SAMPING (AB - Vertical di rotasi 0° - ADJACENT ke theta)
+        PositionSprite(sampingSprite, bottomLeft, topLeft, samping);
+        if (sampingLabel != null)
+        {
+            sampingLabel.text = samping.ToString();
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
-            PositionUILabel(depanLabel, midPoint + new Vector3(-labelOffset, 0, 0));
+            // Offset label perpendicular ke garis
+            Vector3 direction = (topLeft - bottomLeft).normalized;
+            Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
+            PositionUILabel(sampingLabel, midPoint + perpendicular * (-labelOffset));
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -110,18 +181,91 @@ public class TriangleVisualizer : MonoBehaviour
             PositionUILabel(miringLabel, midPoint + perpendicular * labelOffset);
         }
 
-        // SIMBOL THETA (di sudut siku-siku antara depan dan samping) - WORLD SPACE
+        // SIMBOL THETA (di sudut lancip atas A - antara samping AB dan miring AC) - WORLD SPACE
         if (thetaLabel != null)
         {
             thetaLabel.text = "θ";
-            // Posisi theta di sudut kiri bawah (bottomLeft), offset sedikit ke dalam segitiga
-            float thetaOffsetDistance = 0.8f; // Jarak dari vertex ke arah dalam segitiga
-            Vector3 thetaPosition = bottomLeft + new Vector3(thetaOffsetDistance, thetaOffsetDistance, 0);
+            // Posisi theta di topLeft (titik A - sudut antara sisi samping AB dan sisi miring AC)
+            float thetaOffsetDistance = 0.8f;
+
+            // Hitung arah menuju "dalam" segitiga dari sudut theta
+            // Arah dari topLeft ke bottomLeft (sepanjang sisi samping AB)
+            Vector3 toSamping = (bottomLeft - topLeft).normalized;
+            // Arah dari topLeft ke bottomRight (sepanjang sisi miring AC)
+            Vector3 toMiring = (bottomRight - topLeft).normalized;
+            // Bisector (tengah-tengah antara dua arah)
+            Vector3 inward = (toSamping + toMiring).normalized;
+
+            Vector3 thetaPosition = topLeft + inward * thetaOffsetDistance;
             thetaLabel.transform.position = thetaPosition;
+
+            // Set Z-position agar theta di depan garis segitiga
+            thetaLabel.transform.position = new Vector3(
+                thetaLabel.transform.position.x,
+                thetaLabel.transform.position.y,
+                -2f  // Z negatif = lebih dekat ke kamera = di depan
+            );
+
+            // Atur sorting order untuk TextMeshPro renderer
+            if (thetaLabel.GetComponent<MeshRenderer>() != null)
+            {
+                thetaLabel.GetComponent<MeshRenderer>().sortingOrder = 10; // Lebih tinggi = di depan
+            }
+        }
+
+        // SIMBOL SUDUT SIKU-SIKU ∟ (di sudut B - bottomLeft) - 90 derajat
+        if (rightAngleLabel != null)
+        {
+            rightAngleLabel.text = "∟"; // Unicode U+221F - Right Angle symbol
+
+            // Posisi di sudut siku-siku (bottomLeft = titik B)
+            // Hitung arah untuk offset simbol ke dalam segitiga
+            Vector3 toRight = (bottomRight - bottomLeft).normalized; // Arah ke kanan (depan BC)
+            Vector3 toUp = (topLeft - bottomLeft).normalized;        // Arah ke atas (samping AB)
+
+            // Offset dari vertex agar simbol tidak pas di pojok
+            float offsetDistance = 0.5f;
+            Vector3 offset = (toRight + toUp).normalized * offsetDistance;
+            Vector3 symbolPosition = bottomLeft + offset;
+
+            // Set posisi dengan Z di depan garis
+            rightAngleLabel.transform.position = new Vector3(
+                symbolPosition.x,
+                symbolPosition.y,
+                -1.5f  // Di antara garis (0) dan theta (-2)
+            );
+
+            // Rotasi simbol ∟ mengikuti sudut segitiga
+            // Simbol ∟ default menghadap kanan-atas, rotasi sesuai orientasi sisi
+            float angleToRight = Mathf.Atan2(toRight.y, toRight.x) * Mathf.Rad2Deg;
+            rightAngleLabel.transform.rotation = Quaternion.Euler(0, 0, angleToRight);
+
+            // Set font size
+            rightAngleLabel.fontSize = rightAngleFontSize;
+
+            // Set sorting order agar terlihat di depan garis
+            if (rightAngleLabel.GetComponent<MeshRenderer>() != null)
+            {
+                rightAngleLabel.GetComponent<MeshRenderer>().sortingOrder = 8; // Di bawah theta (10) tapi di atas garis (0)
+            }
         }
 
         // Reset warna ke normal
         ResetColors();
+    }
+
+    /// <summary>
+    /// Rotasi point di sekitar origin (0,0) sebesar angle (dalam radian)
+    /// </summary>
+    private Vector3 RotatePoint(Vector3 point, float angleRad)
+    {
+        float cos = Mathf.Cos(angleRad);
+        float sin = Mathf.Sin(angleRad);
+
+        float newX = point.x * cos - point.y * sin;
+        float newY = point.x * sin + point.y * cos;
+
+        return new Vector3(newX, newY, point.z);
     }
 
     /// <summary>

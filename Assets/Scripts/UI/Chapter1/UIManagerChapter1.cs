@@ -56,10 +56,19 @@ public class UIManagerChapter1 : MonoBehaviour
         // Force clear dan update dengan delay untuk refresh rendering
         pertanyaanText.text = "";
         pertanyaanText.ForceMeshUpdate();
-        pertanyaanText.text = $"Berapakah nilai {data.SoalDisederhanakan}?";
+
+        // Gunakan PertanyaanText yang lebih deskriptif (bukan hanya "Berapakah nilai X?")
+        pertanyaanText.text = data.PertanyaanText; // Text pertanyaan lengkap dari generator
         pertanyaanText.ForceMeshUpdate();
 
         Debug.Log($"pertanyaanText.text setelah set: '{pertanyaanText.text}'");
+
+        // Tampilkan info tambahan jika ada (untuk soal yang lebih kompleks)
+        if (!string.IsNullOrEmpty(data.InfoTambahan))
+        {
+            Debug.Log($"Info Tambahan: {data.InfoTambahan}");
+            // Anda bisa tampilkan di UI jika ada label khusus untuk hints
+        }
 
         jawabanInput.text = "";
         feedbackPanel.SetActive(false);
@@ -70,10 +79,13 @@ public class UIManagerChapter1 : MonoBehaviour
         if (miringLabel_World != null) miringLabel_World.text = data.Miring.ToString();
 
 
-        // Gunakan TriangleVisualizer untuk menggambar segitiga (garis nya saja)
+        // Gunakan TriangleVisualizer untuk menggambar segitiga DENGAN ROTASI
         if (triangleVisualizer != null)
         {
-            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring);
+            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle);
+
+            // Log difficulty & rotation untuk debugging
+            Debug.Log($"[Chapter1] Soal #{progres}/{totalSoal} | Difficulty: {data.Difficulty} | Rotation: {data.RotationAngle}°");
         }
         else
         {
