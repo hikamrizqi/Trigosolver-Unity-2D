@@ -1,0 +1,226 @@
+using UnityEngine;
+using UnityEngine.UI; // Masih perlu untuk Tombol, Input, Hati
+using TMPro;
+
+public class UIManagerChapter1 : MonoBehaviour
+{
+    [Header("Header Status (UI Canvas)")]
+    [SerializeField] private TextMeshProUGUI judulText;
+    [SerializeField] private TextMeshProUGUI progresText;
+    [SerializeField] private GameObject[] livesIcons;
+
+    [Header("Interaksi & Pertanyaan (UI Canvas)")]
+    [SerializeField] private TextMeshProUGUI pertanyaanText;
+    [SerializeField] public TMP_InputField jawabanInput; // Public untuk CalculationManager
+
+    [Header("Umpan Balik (UI Canvas)")]
+    [SerializeField] private GameObject feedbackPanel;
+    [SerializeField] private TextMeshProUGUI feedbackText;
+
+    [Header("Visualisasi Segitiga (Game World)")]
+    [SerializeField] private TriangleVisualizer triangleVisualizer; // Script visualizer untuk menggambar segitiga
+    [SerializeField] private TextMeshProUGUI depanLabel_World;   // Label UI untuk depan
+    [SerializeField] private TextMeshProUGUI sampingLabel_World; // Label UI untuk samping
+    [SerializeField] private TextMeshProUGUI miringLabel_World;  // Label UI untuk miring
+    [SerializeField] private TextMeshPro thetaLabel_World;       // Label World Space untuk sudut theta
+    [SerializeField] public SpriteRenderer depanSprite;      // Dulu: depanImg (Image)
+    [SerializeField] public SpriteRenderer sampingSprite;    // Dulu: sampingImg (Image)
+    [SerializeField] public SpriteRenderer miringSprite;     // Dulu: miringImg (Image)
+
+    [Header("Warna Highlight")]
+    public Color defaultColor = Color.white;
+    public Color highlightKuning = Color.yellow;
+    public Color highlightMerah = Color.red;
+    public Color highlightHijau = Color.green;
+
+    [Header("Efek Visual")]
+    [SerializeField] private ParticleSystem sparkleEffect; // Opsional: untuk efek sparkle
+    [SerializeField] private float highlightDuration = 1.5f;
+
+    [Header("Audio Manager")]
+    [SerializeField] private Chapter1AudioManager audioManager; // Opsional: untuk sound effects
+
+    // Fungsi ini dimodifikasi untuk menargetkan objek World Space
+    public void SetupNewQuestion(int progres, int totalSoal, TriangleData data)
+    {
+        // Update UI Canvas
+        progresText.text = $"Soal: {progres}/{totalSoal}";
+
+        // Debug log untuk cek nilai
+        Debug.Log($"SoalDisederhanakan: '{data.SoalDisederhanakan}' (length: {data.SoalDisederhanakan.Length})");
+        for (int i = 0; i < data.SoalDisederhanakan.Length; i++)
+        {
+            Debug.Log($"  Char[{i}]: '{data.SoalDisederhanakan[i]}' (code: {(int)data.SoalDisederhanakan[i]})");
+        }
+
+        // Force clear dan update dengan delay untuk refresh rendering
+        pertanyaanText.text = "";
+        pertanyaanText.ForceMeshUpdate();
+        pertanyaanText.text = $"Berapakah nilai {data.SoalDisederhanakan}?";
+        pertanyaanText.ForceMeshUpdate();
+
+        Debug.Log($"pertanyaanText.text setelah set: '{pertanyaanText.text}'");
+
+        jawabanInput.text = "";
+        feedbackPanel.SetActive(false);
+
+        // Update label UI secara langsung
+        if (depanLabel_World != null) depanLabel_World.text = data.Depan.ToString();
+        if (sampingLabel_World != null) sampingLabel_World.text = data.Samping.ToString();
+        if (miringLabel_World != null) miringLabel_World.text = data.Miring.ToString();
+
+
+        // Gunakan TriangleVisualizer untuk menggambar segitiga (garis nya saja)
+        if (triangleVisualizer != null)
+        {
+            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring);
+        }
+        else
+        {
+            // Fallback: reset warna jika visualizer tidak ada
+            ResetSideColors();
+        }
+    }
+
+    // Fungsi ini dimodifikasi untuk menerima SpriteRenderer atau gunakan triangleVisualizer
+    public void HighlightSide(SpriteRenderer sideSprite)
+    {
+        if (triangleVisualizer != null)
+        {
+            // Tentukan nama sisi berdasarkan sprite
+            string sideName = "";
+            if (sideSprite == depanSprite) sideName = "depan";
+            else if (sideSprite == sampingSprite) sideName = "samping";
+            else if (sideSprite == miringSprite) sideName = "miring";
+
+            triangleVisualizer.HighlightSide(sideName);
+        }
+        else
+        {
+            // Fallback manual
+            ResetSideColors();
+            sideSprite.color = highlightKuning;
+        }
+    }
+
+    public void ResetSideColors()
+    {
+        if (triangleVisualizer != null)
+        {
+            triangleVisualizer.ResetColors();
+        }
+        else
+        {
+            depanSprite.color = defaultColor;
+            sampingSprite.color = defaultColor;
+            miringSprite.color = defaultColor;
+        }
+    }
+
+    // Fungsi ini dimodifikasi untuk menargetkan SpriteRenderer
+    public void HighlightWrongAnswer(string soalType)
+    {
+        if (triangleVisualizer != null)
+        {
+            triangleVisualizer.ResetColors();
+            Color wrongColor = highlightMerah;
+
+            if (soalType == "Sinθ")
+            {
+                triangleVisualizer.HighlightSide("depan", wrongColor);
+                triangleVisualizer.HighlightSide("miring", wrongColor);
+            }
+            else if (soalType == "Cosθ")
+            {
+                triangleVisualizer.HighlightSide("samping", wrongColor);
+                triangleVisualizer.HighlightSide("miring", wrongColor);
+            }
+            else if (soalType == "Tanθ")
+            {
+                triangleVisualizer.HighlightSide("depan", wrongColor);
+                triangleVisualizer.HighlightSide("samping", wrongColor);
+            }
+        }
+        else
+        {
+            // Fallback manual
+            ResetSideColors();
+            if (soalType == "Sinθ")
+            {
+                depanSprite.color = highlightMerah;
+                miringSprite.color = highlightMerah;
+            }
+            else if (soalType == "Cosθ")
+            {
+                sampingSprite.color = highlightMerah;
+                miringSprite.color = highlightMerah;
+            }
+            else if (soalType == "Tanθ")
+            {
+                depanSprite.color = highlightMerah;
+                sampingSprite.color = highlightMerah;
+            }
+        }
+    }
+
+    // Fungsi-fungsi ini tidak perlu diubah
+    public void UpdateLives(int currentLives)
+    {
+        for (int i = 0; i < livesIcons.Length; i++)
+        {
+            livesIcons[i].SetActive(i < currentLives);
+        }
+    }
+
+    public void ShowFeedback(bool isCorrect, string message)
+    {
+        feedbackPanel.SetActive(true);
+        feedbackText.text = message;
+        feedbackText.color = isCorrect ? highlightHijau : highlightMerah;
+    }
+
+    // Fungsi khusus untuk feedback jawaban benar dengan efek
+    public void ShowCorrectFeedback(string message)
+    {
+        ShowFeedback(true, message);
+    }
+
+    // Highlight semua sisi segitiga menjadi hijau untuk jawaban benar
+    public void HighlightCorrectAnswer()
+    {
+        if (triangleVisualizer != null)
+        {
+            triangleVisualizer.HighlightSide("depan", highlightHijau);
+            triangleVisualizer.HighlightSide("samping", highlightHijau);
+            triangleVisualizer.HighlightSide("miring", highlightHijau);
+        }
+        else
+        {
+            depanSprite.color = highlightHijau;
+            sampingSprite.color = highlightHijau;
+            miringSprite.color = highlightHijau;
+        }
+
+        // Aktifkan efek sparkle jika ada
+        if (sparkleEffect != null)
+        {
+            sparkleEffect.Play();
+        }
+    }
+
+    // Fungsi untuk tombol interaktif Depan, Samping, Miring
+    public void OnDepanButtonClicked()
+    {
+        HighlightSide(depanSprite);
+    }
+
+    public void OnSampingButtonClicked()
+    {
+        HighlightSide(sampingSprite);
+    }
+
+    public void OnMiringButtonClicked()
+    {
+        HighlightSide(miringSprite);
+    }
+}
