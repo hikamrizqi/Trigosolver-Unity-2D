@@ -99,6 +99,14 @@ public class MenuAnimationController : MonoBehaviour
     /// </summary>
     public void AnimateDropInDelayed(Action onComplete = null)
     {
+        // GUARD: Jika logo sudah di corner, SKIP animasi drop (logo harus tetap di corner!)
+        if (isInCorner)
+        {
+            Debug.Log($"[{gameObject.name}] AnimateDropInDelayed SKIPPED - Logo sudah di corner, tidak boleh drop lagi!");
+            onComplete?.Invoke();
+            return;
+        }
+
         // Pastikan sudah diinisialisasi
         Initialize();
 
@@ -149,6 +157,14 @@ public class MenuAnimationController : MonoBehaviour
     /// </summary>
     public void AnimateDropIn(Action onComplete = null)
     {
+        // GUARD: Jika logo sudah di corner, SKIP animasi drop (logo harus tetap di corner!)
+        if (isInCorner)
+        {
+            Debug.Log($"[{gameObject.name}] AnimateDropIn SKIPPED - Logo sudah di corner, tidak boleh drop lagi!");
+            onComplete?.Invoke();
+            return;
+        }
+
         // Pastikan sudah diinisialisasi (untuk GameObject yang inactive sejak awal)
         Initialize();
 
@@ -266,8 +282,15 @@ public class MenuAnimationController : MonoBehaviour
     /// </summary>
     public void AnimateSinkOut(Action onComplete = null)
     {
-        Debug.Log($"[{gameObject.name}] AnimateSinkOut dipanggil! IsInCorner: {isInCorner}");
-        Debug.Log($"[{gameObject.name}] Stack Trace: {System.Environment.StackTrace}");
+        // GUARD: Jika logo sudah di corner, SKIP animasi sink (logo harus tetap di corner!)
+        if (isInCorner)
+        {
+            Debug.Log($"[{gameObject.name}] AnimateSinkOut SKIPPED - Logo sudah di corner, tidak boleh sink!");
+            onComplete?.Invoke();
+            return;
+        }
+
+        Debug.Log($"[{gameObject.name}] AnimateSinkOut dimulai");
 
         float targetY = -Screen.height * dropStartHeight;
 
