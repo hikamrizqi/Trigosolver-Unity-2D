@@ -301,7 +301,7 @@ public class TriangleDataGenerator : MonoBehaviour
                 break;
         }
     }
-    
+
     /// <summary>
     /// Generate distractor answers untuk Duolingo-style input
     /// Return 3 angka salah untuk pool (total 5: 2 correct + 3 wrong)
@@ -309,13 +309,13 @@ public class TriangleDataGenerator : MonoBehaviour
     public List<string> GenerateDistractors(TriangleData data)
     {
         List<string> distractors = new List<string>();
-        
+
         // Ambil sisi segitiga sebagai distractor
         List<int> sidesPool = new List<int> { data.Depan, data.Samping, data.Miring };
-        
+
         // Untuk pecahan, correct answer adalah Depan/Miring atau Samping/Miring
         // Jadi distractor bisa pakai angka sisi yang salah
-        
+
         // Distractor 1: Sisi yang bukan bagian dari jawaban
         foreach (int side in sidesPool)
         {
@@ -327,23 +327,23 @@ public class TriangleDataGenerator : MonoBehaviour
                 if (distractors.Count >= 3) break;
             }
         }
-        
+
         // Distractor 2 & 3: Generate angka random di range yang reasonable
         while (distractors.Count < 3)
         {
             int randomValue = Random.Range(data.Depan - 5, data.Miring + 5);
             if (randomValue <= 0) continue; // Skip non-positive
-            
+
             string strValue = randomValue.ToString();
-            if (!distractors.Contains(strValue) && 
-                strValue != data.Depan.ToString() && 
-                strValue != data.Samping.ToString() && 
+            if (!distractors.Contains(strValue) &&
+                strValue != data.Depan.ToString() &&
+                strValue != data.Samping.ToString() &&
                 strValue != data.Miring.ToString())
             {
                 distractors.Add(strValue);
             }
         }
-        
+
         return distractors;
     }
 }
