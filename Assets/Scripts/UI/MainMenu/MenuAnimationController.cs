@@ -218,6 +218,18 @@ public class MenuAnimationController : MonoBehaviour
 
         Debug.Log($"[{gameObject.name}] AnimateShrinkToCorner dimulai - Target: {cornerPosition}, Current: {rectTransform.anchoredPosition}");
 
+        // CRITICAL: KILL semua tween yang sedang jalan (termasuk AnimateSinkOut yang mungkin sudah jalan!)
+        // Ini mencegah OnComplete callback dari AnimateSinkOut yang akan SetActive(false)
+        DOTween.Kill(rectTransform);
+        DOTween.Kill(canvasGroup);
+        DOTween.Kill(gameObject);
+        
+        // Pastikan gameObject AKTIF dan alpha 1 (kalau AnimateSinkOut sudah fade out)
+        gameObject.SetActive(true);
+        canvasGroup.alpha = 1f;
+        
+        Debug.Log($"[{gameObject.name}] Killed all tweens, forcing active and alpha 1");
+
         isInCorner = true;
 
         Sequence shrinkSequence = DOTween.Sequence();
