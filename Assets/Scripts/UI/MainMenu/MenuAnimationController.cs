@@ -147,15 +147,20 @@ public class MenuAnimationController : MonoBehaviour
         dropSequence.OnComplete(() =>
         {
             Debug.Log($"[{gameObject.name}] AnimateDropInDelayed selesai");
-            // GUARD: JANGAN reset isInCorner jika logo sudah di corner!
-            if (!isInCorner)
+
+            // ULTIMATE GUARD: Jika ini Logo (by name), JANGAN PERNAH reset isInCorner!
+            bool isLogoObject = gameObject.name.ToLower().Contains("logo");
+            if (isLogoObject && isInCorner)
             {
-                // Reset hanya jika logo TIDAK di corner
-                Debug.Log($"[{gameObject.name}] Logo not in corner, safe to reset");
+                Debug.LogWarning($"[{gameObject.name}] LOGO DI CORNER! NEVER RESET isInCorner!");
+                onComplete?.Invoke();
+                return;
             }
-            else
+
+            // Panel lain boleh reset
+            if (!isLogoObject)
             {
-                Debug.LogWarning($"[{gameObject.name}] Logo SUDAH DI CORNER! Skip reset isInCorner!");
+                Debug.Log($"[{gameObject.name}] Not logo, safe to reset");
             }
             onComplete?.Invoke();
         });
@@ -208,15 +213,20 @@ public class MenuAnimationController : MonoBehaviour
         dropSequence.OnComplete(() =>
         {
             Debug.Log($"[{gameObject.name}] AnimateDropIn selesai");
-            // GUARD: JANGAN reset isInCorner jika logo sudah di corner!
-            if (!isInCorner)
+
+            // ULTIMATE GUARD: Jika ini Logo (by name), JANGAN PERNAH reset isInCorner!
+            bool isLogoObject = gameObject.name.ToLower().Contains("logo");
+            if (isLogoObject && isInCorner)
             {
-                // Reset hanya jika logo TIDAK di corner
-                Debug.Log($"[{gameObject.name}] Logo not in corner, safe to reset");
+                Debug.LogWarning($"[{gameObject.name}] LOGO DI CORNER! NEVER RESET isInCorner!");
+                onComplete?.Invoke();
+                return;
             }
-            else
+
+            // Panel lain boleh reset
+            if (!isLogoObject)
             {
-                Debug.LogWarning($"[{gameObject.name}] Logo SUDAH DI CORNER! Skip reset isInCorner!");
+                Debug.Log($"[{gameObject.name}] Not logo, safe to reset");
             }
             onComplete?.Invoke();
         });
