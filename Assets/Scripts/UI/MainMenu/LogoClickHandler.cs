@@ -89,13 +89,6 @@ public class LogoClickHandler : MonoBehaviour, IPointerClickHandler
         hasBeenClicked = true;
         canClick = false;
 
-        // CRITICAL: Disable "click anywhere" behavior IMMEDIATELY to prevent race condition
-        if (mainMenuManager != null)
-        {
-            mainMenuManager.clickAnywhereEnabled = false;
-            Debug.Log("[LogoClickHandler] Disabled click anywhere to prevent AnimateSinkOut");
-        }
-
         // Trigger shrink animation
         if (animationController != null)
         {

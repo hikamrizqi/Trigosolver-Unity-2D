@@ -70,8 +70,15 @@ public class MainMenuManager : MonoBehaviour
     private void Update()
     {
         // Click anywhere untuk logo panel
+        // SKIP jika logo sudah di corner atau sedang animasi ke corner
         if (currentState == MenuState.Logo && clickAnywhereEnabled)
         {
+            // Check: Jika logo sudah/sedang di corner, JANGAN detect click
+            if (logoAnimator != null && logoAnimator.IsInCorner())
+            {
+                return;
+            }
+
             if (Input.GetMouseButtonDown(0) || Input.anyKeyDown)
             {
                 TransitionToMainMenu();
