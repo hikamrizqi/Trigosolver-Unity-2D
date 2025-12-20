@@ -6,31 +6,72 @@ Panduan step-by-step untuk mengubah Trigosolver dari **Landscape (1920x1080)** k
 
 ---
 
+## ⚙️ Prerequisites
+
+**PENTING: Install Android Build Support dulu!**
+
+Sebelum mulai, pastikan Unity kamu sudah punya Android Build Support module.
+
+### Cara Install:
+
+1. **Buka Unity Hub**
+2. **Tab "Installs"** → Find Unity 6000.0.23f1 → **⚙️ (gear icon)**
+3. **"Add modules"** → Centang:
+   - ✅ **Android Build Support**
+   - ✅ Android SDK & NDK Tools
+   - ✅ OpenJDK
+4. **Install** (download ~2-5 GB, tunggu 10-30 menit)
+
+**Atau klik "Install with Unity Hub" di Build Settings window jika muncul warning.**
+
+### Cek Installation:
+
+- **File → Build Settings**
+- Android platform harus muncul di list (tidak ada warning "No Android module loaded")
+
+---
+
 ## 📋 Step-by-Step Implementation
 
-### ✅ **STEP 1: Player Settings (5 menit)**
+### ✅ **STEP 1: Switch Platform & Player Settings (10 menit)**
 
-#### Unity Editor:
-1. **Edit → Project Settings → Player**
-2. Di tab **Resolution and Presentation**:
+#### A. Switch ke Android Platform (PENTING!)
+
+**Default Orientation hanya tersedia untuk mobile platform.**
+
+1. **File → Build Settings**
+2. **Di Platform list, select "Android"**
+3. **Klik "Switch Platform"** (tunggu proses reimport ~2-5 menit)
+4. **Setelah selesai, close Build Settings window**
+
+#### B. Set Portrait Orientation
+
+5. **Edit → Project Settings → Player**
+6. **Di sidebar kiri, klik tab "Android"** (icon robot hijau)
+7. **Expand "Resolution and Presentation"** (klik arrow)
+8. **Set orientation:**
    ```
    Default Orientation: Portrait
+   
    Allowed Orientations for Auto Rotation:
      ✓ Portrait
-     ✓ Portrait Upside Down (optional)
-     ✗ Landscape Right
+     ✓ Portrait Upside Down (optional - untuk flip device)
      ✗ Landscape Left
+     ✗ Landscape Right
    ```
 
-3. **Di tab Other Settings** (scroll down):
+9. **Scroll down ke "Other Settings":**
    ```
-   Auto Graphics API: ✓
-   Color Space: Linear (sudah set)
+   Auto Graphics API: ✓ (checked)
+   Minimum API Level: Android 5.1 'Lollipop' (API level 22) atau lebih tinggi
+   Target API Level: Automatic (highest installed)
    ```
 
 #### Why:
-- Mengunci orientasi ke portrait saat app dibuka
-- Prevent auto-rotation ke landscape
+- Switch platform diperlukan agar Unity compile untuk Android
+- Default Orientation hanya ada di mobile platform (Android/iOS)
+- Portrait lock mencegah game rotate ke landscape saat device diputar
+- Minimum API Level 22 = support Android 5.1+ (95%+ devices)
 
 ---
 
@@ -478,13 +519,13 @@ void ApplySafeArea()
 
 | Task | Estimated Time |
 |------|----------------|
-| Player Settings | 5 minutes |
+| Switch Platform + Player Settings | 10 minutes (termasuk reimport) |
 | Canvas Resolution (3 scenes) | 10 minutes |
 | Background Assets | 15-30 minutes |
 | Camera Settings | 5 minutes |
 | UI Layout Restructure | 60 minutes |
 | Testing & Tweaks | 15 minutes |
-| **TOTAL** | **~2 hours** |
+| **TOTAL** | **~2-2.5 hours** |
 
 ---
 
@@ -531,7 +572,9 @@ void ApplySafeArea()
 
 ## ✅ Final Checklist
 
-- [ ] Player Settings → Portrait orientation set
+- [ ] Android Build Support module installed (via Unity Hub)
+- [ ] Switch Platform → Android (Build Settings)
+- [ ] Player Settings → Android tab → Portrait orientation set
 - [ ] Canvas Scaler → 1080x1920 di semua scene
 - [ ] Background assets adjusted (rotate/scale/variant)
 - [ ] Camera orthographic size increased (8-10)

@@ -21,8 +21,11 @@ public class OpeningVideoController : MonoBehaviour
     [Tooltip("Durasi hold di frame terakhir (detik)")]
     [SerializeField] private float holdDuration = 1f;
 
-    [Tooltip("Durasi fade out (detik)")]
+    [Tooltip("Durasi fade out video (detik)")]
     [SerializeField] private float fadeDuration = 1f;
+
+    [Tooltip("Durasi black screen hold sebelum load scene (detik)")]
+    [SerializeField] private float blackScreenHoldDuration = 0.5f;
 
     [Header("Skip Settings")]
     [Tooltip("Allow skip video dengan tombol/klik")]
@@ -159,6 +162,7 @@ public class OpeningVideoController : MonoBehaviour
 
     /// <summary>
     /// Transition ke scene berikutnya dengan hold dan fade effect
+    /// Flow: Video pause → Hold → Fade to black → Black screen hold → Load scene (dengan SceneFadeController)
     /// </summary>
     private IEnumerator TransitionToNextScene()
     {
@@ -177,7 +181,12 @@ public class OpeningVideoController : MonoBehaviour
         // Fade to black
         yield return StartCoroutine(FadeToBlack());
 
+        // Hold di black screen sebentar sebelum load scene
+        Debug.Log($"[OpeningVideoController] Holding black screen for {blackScreenHoldDuration}s");
+        yield return new WaitForSeconds(blackScreenHoldDuration);
+
         // Load scene berikutnya
+        // SceneFadeController akan auto fade in di scene baru
         LoadNextScene();
     }
 
