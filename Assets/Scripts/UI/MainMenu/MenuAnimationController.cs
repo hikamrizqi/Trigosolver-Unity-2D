@@ -94,6 +94,20 @@ public class MenuAnimationController : MonoBehaviour
     }
 
     /// <summary>
+    /// LateUpdate - Force logo tetap aktif jika sudah di corner
+    /// </summary>
+    private void LateUpdate()
+    {
+        // GUARD: Jika logo di corner, FORCE AKTIF setiap frame!
+        if (isInCorner && !gameObject.activeSelf)
+        {
+            Debug.LogWarning($"[{gameObject.name}] LateUpdate: Logo di corner tapi nonaktif! FORCING ACTIVE!");
+            gameObject.SetActive(true);
+            canvasGroup.alpha = 1f;
+        }
+    }
+
+    /// <summary>
     /// Animasi drop dari atas dengan bounce effect (DELAYED VERSION - untuk scene start)
     /// Background fade in dulu, pause, baru logo drop
     /// </summary>
@@ -223,11 +237,11 @@ public class MenuAnimationController : MonoBehaviour
         DOTween.Kill(rectTransform);
         DOTween.Kill(canvasGroup);
         DOTween.Kill(gameObject);
-        
+
         // Pastikan gameObject AKTIF dan alpha 1 (kalau AnimateSinkOut sudah fade out)
         gameObject.SetActive(true);
         canvasGroup.alpha = 1f;
-        
+
         Debug.Log($"[{gameObject.name}] Killed all tweens, forcing active and alpha 1");
 
         isInCorner = true;
@@ -250,8 +264,11 @@ public class MenuAnimationController : MonoBehaviour
             Debug.Log($"[{gameObject.name}] AnimateShrinkToCorner selesai - Final position: {rectTransform.anchoredPosition}, Target: {cornerPosition}");
             Debug.Log($"[{gameObject.name}] Alpha: {canvasGroup.alpha}, Scale: {rectTransform.localScale}, Active: {gameObject.activeSelf}");
 
-            // FORCE alpha to 1 just in case
+            // FORCE alpha to 1 AND active just in case
             canvasGroup.alpha = 1f;
+            gameObject.SetActive(true);
+            
+            Debug.Log($"[{gameObject.name}] FORCED active=true and alpha=1 in OnComplete");
 
             onComplete?.Invoke();
         });
