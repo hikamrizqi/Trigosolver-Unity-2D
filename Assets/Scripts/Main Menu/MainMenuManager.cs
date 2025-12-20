@@ -76,11 +76,13 @@ public class MainMenuManager : MonoBehaviour
             // Check: Jika logo sudah/sedang di corner, JANGAN detect click
             if (logoAnimator != null && logoAnimator.IsInCorner())
             {
+                Debug.Log("[MainMenuManager] Update: Logo di corner, skip click detection");
                 return;
             }
 
             if (Input.GetMouseButtonDown(0) || Input.anyKeyDown)
             {
+                Debug.Log("[MainMenuManager] Update: Input detected, calling TransitionToMainMenu");
                 TransitionToMainMenu();
             }
         }

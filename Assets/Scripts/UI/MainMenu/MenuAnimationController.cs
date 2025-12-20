@@ -266,6 +266,9 @@ public class MenuAnimationController : MonoBehaviour
     /// </summary>
     public void AnimateSinkOut(Action onComplete = null)
     {
+        Debug.Log($"[{gameObject.name}] AnimateSinkOut dipanggil! IsInCorner: {isInCorner}");
+        Debug.Log($"[{gameObject.name}] Stack Trace: {System.Environment.StackTrace}");
+
         float targetY = -Screen.height * dropStartHeight;
 
         Sequence sinkSequence = DOTween.Sequence();
