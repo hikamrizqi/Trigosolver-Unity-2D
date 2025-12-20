@@ -147,7 +147,16 @@ public class MenuAnimationController : MonoBehaviour
         dropSequence.OnComplete(() =>
         {
             Debug.Log($"[{gameObject.name}] AnimateDropInDelayed selesai");
-            isInCorner = false;
+            // GUARD: JANGAN reset isInCorner jika logo sudah di corner!
+            if (!isInCorner)
+            {
+                // Reset hanya jika logo TIDAK di corner
+                Debug.Log($"[{gameObject.name}] Logo not in corner, safe to reset");
+            }
+            else
+            {
+                Debug.LogWarning($"[{gameObject.name}] Logo SUDAH DI CORNER! Skip reset isInCorner!");
+            }
             onComplete?.Invoke();
         });
     }
@@ -199,7 +208,16 @@ public class MenuAnimationController : MonoBehaviour
         dropSequence.OnComplete(() =>
         {
             Debug.Log($"[{gameObject.name}] AnimateDropIn selesai");
-            isInCorner = false;
+            // GUARD: JANGAN reset isInCorner jika logo sudah di corner!
+            if (!isInCorner)
+            {
+                // Reset hanya jika logo TIDAK di corner
+                Debug.Log($"[{gameObject.name}] Logo not in corner, safe to reset");
+            }
+            else
+            {
+                Debug.LogWarning($"[{gameObject.name}] Logo SUDAH DI CORNER! Skip reset isInCorner!");
+            }
             onComplete?.Invoke();
         });
     }
