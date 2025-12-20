@@ -200,25 +200,26 @@ public class MenuAnimationController : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[{gameObject.name}] AnimateShrinkToCorner dimulai");
+        Debug.Log($"[{gameObject.name}] AnimateShrinkToCorner dimulai - Target: {cornerPosition}, Current: {rectTransform.anchoredPosition}");
 
         isInCorner = true;
 
         Sequence shrinkSequence = DOTween.Sequence();
 
-        // Parallel: shrink scale + move ke corner + fade sedikit
+        // Parallel: shrink scale + move ke corner (NO FADE - tetap 100% opaque)
         shrinkSequence.Append(rectTransform.DOScale(cornerScale, shrinkDuration)
             .SetEase(Ease.OutBack));
 
         shrinkSequence.Join(rectTransform.DOAnchorPos(cornerPosition, shrinkDuration)
             .SetEase(Ease.OutBack));
 
-        shrinkSequence.Join(canvasGroup.DOFade(0.8f, shrinkDuration * 0.5f)); // Sedikit transparent
+        // REMOVED: Fade to 0.8f - logo tetap 100% visible
+        // Logo di corner tetap jelas terlihat, tidak menghilang
 
         // Callback
         shrinkSequence.OnComplete(() =>
         {
-            Debug.Log($"[{gameObject.name}] AnimateShrinkToCorner selesai - logo sekarang di corner");
+            Debug.Log($"[{gameObject.name}] AnimateShrinkToCorner selesai - Final position: {rectTransform.anchoredPosition}, Target: {cornerPosition}");
             onComplete?.Invoke();
         });
     }
