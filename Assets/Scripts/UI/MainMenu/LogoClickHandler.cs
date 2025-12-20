@@ -106,7 +106,7 @@ public class LogoClickHandler : MonoBehaviour, IPointerClickHandler
     {
         hasBeenClicked = false;
         canClick = enableClick;
-        
+
         if (animationController != null)
         {
             animationController.RestoreFromCorner();

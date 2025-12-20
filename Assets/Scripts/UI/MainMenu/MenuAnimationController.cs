@@ -58,6 +58,12 @@ public class MenuAnimationController : MonoBehaviour
         Initialize();
     }
 
+    private void Start()
+    {
+        // Delayed drop dengan fade in background dulu
+        AnimateDropInDelayed();
+    }
+
     /// <summary>
     /// Inisialisasi komponen (dipanggil di Awake atau saat pertama kali digunakan)
     /// </summary>

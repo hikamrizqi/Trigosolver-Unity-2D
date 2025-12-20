@@ -110,7 +110,7 @@ Sebelum mulai, pastikan Unity kamu sudah punya Android Build Support module.
 
 #### Current Situation:
 - `table.png` background di Chapter 1 (landscape wood texture)
-- Main Menu background (parallax horizontal)
+- Main Menu background (parallax horizontal) 
 
 #### Solution Options:
 

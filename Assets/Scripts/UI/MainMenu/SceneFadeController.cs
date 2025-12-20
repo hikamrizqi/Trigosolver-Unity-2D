@@ -43,7 +43,7 @@ public class SceneFadeController : MonoBehaviour
             if (instance == null)
             {
                 instance = FindObjectOfType<SceneFadeController>();
-                
+
                 if (instance == null)
                 {
                     Debug.LogWarning("[SceneFadeController] Instance not found, creating new one");
@@ -100,34 +100,35 @@ public class SceneFadeController : MonoBehaviour
         {
             GameObject canvasGO = new GameObject("FadeCanvas");
             canvasGO.transform.SetParent(transform);
-            
+
             fadeCanvas = canvasGO.AddComponent<Canvas>();
             fadeCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             fadeCanvas.sortingOrder = 9999; // Paling depan
-            
+
             CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
-            
+
             canvasGO.AddComponent<GraphicRaycaster>();
-            
+
             Debug.Log("[SceneFadeController] Fade canvas auto-created");
         }
 
         // Auto-create fade panel
         GameObject panelGO = new GameObject("FadePanel");
         panelGO.transform.SetParent(fadeCanvas.transform, false);
-        
+
         fadePanel = panelGO.AddComponent<Image>();
         fadePanel.color = fadeColor;
-        
+        fadePanel.raycastTarget = true; // Enable raycast saat black screen
+
         // Fullscreen panel
         RectTransform panelRect = panelGO.GetComponent<RectTransform>();
         panelRect.anchorMin = Vector2.zero;
         panelRect.anchorMax = Vector2.one;
         panelRect.sizeDelta = Vector2.zero;
         panelRect.anchoredPosition = Vector2.zero;
-        
+
         Debug.Log("[SceneFadeController] Fade panel auto-created");
     }
 
@@ -150,7 +151,12 @@ public class SceneFadeController : MonoBehaviour
             .SetEase(Ease.InOutQuad)
             .OnComplete(() =>
             {
-                Debug.Log("[SceneFadeController] Fade In complete");
+                Debug.Log("[SceneFadeController] Fade In complete - disabling raycast");
+                
+                // PENTING: Disable raycast setelah fade in selesai
+                // Agar tidak block UI buttons dan interactions
+                fadePanel.raycastTarget = false;
+                
                 onComplete?.Invoke();
             });
     }
@@ -168,6 +174,9 @@ public class SceneFadeController : MonoBehaviour
         }
 
         Debug.Log($"[SceneFadeController] Fade Out (duration: {fadeOutDuration}s)");
+
+        // Enable raycast untuk block interaction saat fade out
+        fadePanel.raycastTarget = true;
 
         // Fade dari alpha 0 (transparent) ke 1 (black)
         fadePanel.DOFade(1f, fadeOutDuration)
