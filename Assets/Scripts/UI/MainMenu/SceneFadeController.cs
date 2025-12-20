@@ -152,11 +152,11 @@ public class SceneFadeController : MonoBehaviour
             .OnComplete(() =>
             {
                 Debug.Log("[SceneFadeController] Fade In complete - disabling raycast");
-                
+
                 // PENTING: Disable raycast setelah fade in selesai
                 // Agar tidak block UI buttons dan interactions
                 fadePanel.raycastTarget = false;
-                
+
                 onComplete?.Invoke();
             });
     }
