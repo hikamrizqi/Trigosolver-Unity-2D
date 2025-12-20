@@ -110,7 +110,15 @@ public class MainMenuManager : MonoBehaviour
             return;
         }
 
-        // Logo sink, lalu main menu drop
+        // CEK: Jika logo sudah di corner, langsung show main menu (jangan sink logo!)
+        if (logoAnimator != null && logoAnimator.IsInCorner())
+        {
+            Debug.Log("Logo sudah di corner, langsung show main menu tanpa sink logo");
+            mainMenuAnimator.AnimateDropIn();
+            return;
+        }
+
+        // Logo sink, lalu main menu drop (behavior lama untuk "click anywhere")
         logoAnimator.AnimateSinkOut(() =>
         {
             Debug.Log("Logo sink selesai, panggil main menu drop");

@@ -220,6 +220,11 @@ public class MenuAnimationController : MonoBehaviour
         shrinkSequence.OnComplete(() =>
         {
             Debug.Log($"[{gameObject.name}] AnimateShrinkToCorner selesai - Final position: {rectTransform.anchoredPosition}, Target: {cornerPosition}");
+            Debug.Log($"[{gameObject.name}] Alpha: {canvasGroup.alpha}, Scale: {rectTransform.localScale}, Active: {gameObject.activeSelf}");
+
+            // FORCE alpha to 1 just in case
+            canvasGroup.alpha = 1f;
+
             onComplete?.Invoke();
         });
     }
@@ -307,6 +312,14 @@ public class MenuAnimationController : MonoBehaviour
         rectTransform.localScale = originalScale;
         canvasGroup.alpha = 1f;
         isInCorner = false;
+    }
+
+    /// <summary>
+    /// Check apakah logo sedang di corner (untuk prevent double animation)
+    /// </summary>
+    public bool IsInCorner()
+    {
+        return isInCorner;
     }
 
     private void OnDestroy()
