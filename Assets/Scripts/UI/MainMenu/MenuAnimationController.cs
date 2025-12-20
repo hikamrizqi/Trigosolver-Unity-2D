@@ -248,6 +248,15 @@ public class MenuAnimationController : MonoBehaviour
 
         Debug.Log($"[{gameObject.name}] Killed all tweens, forcing active and alpha 1");
 
+        // CRITICAL: Reparent ke Canvas root SEBELUM animation supaya tidak ada gap/flicker!
+        Canvas rootCanvas = GetComponentInParent<Canvas>().rootCanvas;
+        if (rootCanvas != null && transform.parent != rootCanvas.transform)
+        {
+            Transform originalParent = transform.parent;
+            transform.SetParent(rootCanvas.transform, true); // worldPositionStays = true
+            Debug.Log($"[{gameObject.name}] Reparented dari {originalParent.name} ke {rootCanvas.name} BEFORE animation");
+        }
+
         isInCorner = true;
 
         Sequence shrinkSequence = DOTween.Sequence();
@@ -271,15 +280,6 @@ public class MenuAnimationController : MonoBehaviour
             // FORCE alpha to 1 AND active just in case
             canvasGroup.alpha = 1f;
             gameObject.SetActive(true);
-
-            // CRITICAL: Reparent ke Canvas root supaya tidak terpengaruh parent yang hide/sink!
-            Canvas rootCanvas = GetComponentInParent<Canvas>().rootCanvas;
-            if (rootCanvas != null && transform.parent != rootCanvas.transform)
-            {
-                Transform originalParent = transform.parent;
-                transform.SetParent(rootCanvas.transform, true); // worldPositionStays = true
-                Debug.Log($"[{gameObject.name}] Reparented dari {originalParent.name} ke {rootCanvas.name}");
-            }
 
             Debug.Log($"[{gameObject.name}] FORCED active=true and alpha=1 in OnComplete");
 
