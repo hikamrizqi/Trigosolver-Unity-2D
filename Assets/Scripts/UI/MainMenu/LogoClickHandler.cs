@@ -12,6 +12,9 @@ public class LogoClickHandler : MonoBehaviour, IPointerClickHandler
     [Tooltip("Menu Animation Controller (auto-detect jika null)")]
     [SerializeField] private MenuAnimationController animationController;
 
+    [Tooltip("Main Menu Manager (auto-detect jika null) - untuk disable click anywhere")]
+    [SerializeField] private MainMenuManager mainMenuManager;
+
     [Header("Settings")]
     [Tooltip("Enable click functionality")]
     [SerializeField] private bool enableClick = true;
@@ -34,6 +37,17 @@ public class LogoClickHandler : MonoBehaviour, IPointerClickHandler
         {
             Debug.LogError("[LogoClickHandler] MenuAnimationController not found!");
             enabled = false;
+        }
+
+        // Auto-detect MainMenuManager
+        if (mainMenuManager == null)
+        {
+            mainMenuManager = FindObjectOfType<MainMenuManager>();
+        }
+
+        if (mainMenuManager == null)
+        {
+            Debug.LogWarning("[LogoClickHandler] MainMenuManager not found - click anywhere won't be disabled");
         }
     }
 
@@ -74,6 +88,13 @@ public class LogoClickHandler : MonoBehaviour, IPointerClickHandler
 
         hasBeenClicked = true;
         canClick = false;
+
+        // CRITICAL: Disable "click anywhere" behavior IMMEDIATELY to prevent race condition
+        if (mainMenuManager != null)
+        {
+            mainMenuManager.clickAnywhereEnabled = false;
+            Debug.Log("[LogoClickHandler] Disabled click anywhere to prevent AnimateSinkOut");
+        }
 
         // Trigger shrink animation
         if (animationController != null)
