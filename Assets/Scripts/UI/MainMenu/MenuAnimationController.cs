@@ -94,20 +94,6 @@ public class MenuAnimationController : MonoBehaviour
     }
 
     /// <summary>
-    /// LateUpdate - Force logo tetap aktif jika sudah di corner
-    /// </summary>
-    private void LateUpdate()
-    {
-        // GUARD: Jika logo di corner, FORCE AKTIF setiap frame!
-        if (isInCorner && !gameObject.activeSelf)
-        {
-            Debug.LogWarning($"[{gameObject.name}] LateUpdate: Logo di corner tapi nonaktif! FORCING ACTIVE!");
-            gameObject.SetActive(true);
-            canvasGroup.alpha = 1f;
-        }
-    }
-
-    /// <summary>
     /// Animasi drop dari atas dengan bounce effect (DELAYED VERSION - untuk scene start)
     /// Background fade in dulu, pause, baru logo drop
     /// </summary>
@@ -267,7 +253,16 @@ public class MenuAnimationController : MonoBehaviour
             // FORCE alpha to 1 AND active just in case
             canvasGroup.alpha = 1f;
             gameObject.SetActive(true);
-            
+
+            // CRITICAL: Reparent ke Canvas root supaya tidak terpengaruh parent yang hide/sink!
+            Canvas rootCanvas = GetComponentInParent<Canvas>().rootCanvas;
+            if (rootCanvas != null && transform.parent != rootCanvas.transform)
+            {
+                Transform originalParent = transform.parent;
+                transform.SetParent(rootCanvas.transform, true); // worldPositionStays = true
+                Debug.Log($"[{gameObject.name}] Reparented dari {originalParent.name} ke {rootCanvas.name}");
+            }
+
             Debug.Log($"[{gameObject.name}] FORCED active=true and alpha=1 in OnComplete");
 
             onComplete?.Invoke();
