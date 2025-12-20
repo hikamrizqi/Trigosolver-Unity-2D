@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// System untuk input jawaban Duolingo-style
+/// System untuk input jawaban berbasis tile (interactive tile-based input)
 /// Tile bergerak dari pool ke slot dengan animasi
 /// </summary>
-public class DuolingoAnswerSystem : MonoBehaviour
+public class AnswerTileSystem : MonoBehaviour
 {
-    public static DuolingoAnswerSystem Instance { get; private set; }
+    public static AnswerTileSystem Instance { get; private set; }
 
     [Header("Answer Slots (Tempat Jawaban)")]
     [SerializeField] private Transform slot1Transform;  // Slot kiri (sebelum /)
@@ -83,7 +83,7 @@ public class DuolingoAnswerSystem : MonoBehaviour
             allTiles.Add(tile);
         }
 
-        Debug.Log($"[DuolingoAnswerSystem] Setup question: {numerator}/{denominator}, Pool: {string.Join(", ", poolValues)}");
+        Debug.Log($"[AnswerTileSystem] Setup question: {numerator}/{denominator}, Pool: {string.Join(", ", poolValues)}");
     }
 
     /// <summary>
@@ -93,7 +93,7 @@ public class DuolingoAnswerSystem : MonoBehaviour
     {
         if (tile.IsInSlot)
         {
-            Debug.LogWarning($"[DuolingoAnswerSystem] Tile {tile.Value} already in slot!");
+            Debug.LogWarning($"[AnswerTileSystem] Tile {tile.Value} already in slot!");
             return;
         }
 
@@ -104,19 +104,19 @@ public class DuolingoAnswerSystem : MonoBehaviour
             // Slot 1 kosong → Isi slot 1
             currentSlot1Tile = tile;
             targetSlot = slot1Transform;
-            Debug.Log($"[DuolingoAnswerSystem] Moving {tile.Value} to Slot1");
+            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot1");
         }
         else if (currentSlot2Tile == null)
         {
             // Slot 1 terisi, slot 2 kosong → Isi slot 2
             currentSlot2Tile = tile;
             targetSlot = slot2Transform;
-            Debug.Log($"[DuolingoAnswerSystem] Moving {tile.Value} to Slot2");
+            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot2");
         }
         else
         {
             // Kedua slot penuh
-            Debug.LogWarning($"[DuolingoAnswerSystem] Both slots full! Cannot move {tile.Value}");
+            Debug.LogWarning($"[AnswerTileSystem] Both slots full! Cannot move {tile.Value}");
             return;
         }
 
@@ -133,7 +133,7 @@ public class DuolingoAnswerSystem : MonoBehaviour
     {
         if (!tile.IsInSlot)
         {
-            Debug.LogWarning($"[DuolingoAnswerSystem] Tile {tile.Value} not in slot!");
+            Debug.LogWarning($"[AnswerTileSystem] Tile {tile.Value} not in slot!");
             return;
         }
 
@@ -141,7 +141,7 @@ public class DuolingoAnswerSystem : MonoBehaviour
         if (currentSlot1Tile == tile)
         {
             currentSlot1Tile = null;
-            Debug.Log($"[DuolingoAnswerSystem] Removed {tile.Value} from Slot1");
+            Debug.Log($"[AnswerTileSystem] Removed {tile.Value} from Slot1");
 
             // Auto-shift: Jika slot2 ada isi, geser ke kiri
             if (currentSlot2Tile != null)
@@ -152,13 +152,13 @@ public class DuolingoAnswerSystem : MonoBehaviour
                 // Geser ke slot1
                 currentSlot1Tile = tileToShift;
                 tileToShift.AnimateToPosition(Vector3.zero, slot1Transform, true, animationDuration);
-                Debug.Log($"[DuolingoAnswerSystem] Auto-shifted {tileToShift.Value} from Slot2 to Slot1");
+                Debug.Log($"[AnswerTileSystem] Auto-shifted {tileToShift.Value} from Slot2 to Slot1");
             }
         }
         else if (currentSlot2Tile == tile)
         {
             currentSlot2Tile = null;
-            Debug.Log($"[DuolingoAnswerSystem] Removed {tile.Value} from Slot2");
+            Debug.Log($"[AnswerTileSystem] Removed {tile.Value} from Slot2");
         }
 
         // Return ke pool
@@ -191,7 +191,7 @@ public class DuolingoAnswerSystem : MonoBehaviour
             hiddenInputField.text = answer;
         }
 
-        Debug.Log($"[DuolingoAnswerSystem] Answer: '{answer}'");
+        Debug.Log($"[AnswerTileSystem] Answer: '{answer}'");
     }
 
     /// <summary>

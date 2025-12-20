@@ -1,8 +1,8 @@
-# Duolingo-Style Answer System - Setup Guide
+# Interactive Tile-Style Answer System - Setup Guide
 
 ## 📖 Overview
 
-System input jawaban seperti Duolingo untuk **10 soal pertama Chapter 1**. Pemain memilih kotak angka yang bergerak ke slot jawaban dengan animasi smooth.
+System input jawaban seperti Interactive Tile untuk **10 soal pertama Chapter 1**. Pemain memilih kotak angka yang bergerak ke slot jawaban dengan animasi smooth.
 
 ### **Konsep:**
 ```
@@ -48,7 +48,7 @@ Assets/
 │  ├─ UI/
 │  │  └─ Chapter1/
 │  │     ├─ AnswerTile.cs              # Kotak jawaban individual
-│  │     ├─ DuolingoAnswerSystem.cs    # Manager untuk slot & pool
+│  │     ├─ Interactive TileAnswerSystem.cs    # Manager untuk slot & pool
 │  │     ├─ UIManagerChapter1.cs       # (existing)
 │  │     └─ ButtonAnswerSystem.cs      # (deprecated - tidak dipakai)
 │  │
@@ -82,7 +82,7 @@ Canvas
    ├─ Question Text (existing)
    ├─ Triangle Visualization (existing)
    │
-   ├─ DuolingoAnswerUI (New - Empty GameObject)
+   ├─ Interactive TileAnswerUI (New - Empty GameObject)
    │  │
    │  ├─ AnswerSlotsContainer (New - Empty GameObject)
    │  │  ├─ Slot1 (Empty GameObject)
@@ -169,15 +169,15 @@ Canvas
 
 ---
 
-### **Step 4: Setup DuolingoAnswerSystem**
+### **Step 4: Setup Interactive TileAnswerSystem**
 
 1. **Create GameObject:**
    - Hierarchy → Create Empty GameObject
-   - Rename: `DuolingoAnswerSystem`
+   - Rename: `Interactive TileAnswerSystem`
    - Parent: QuestionPanel atau Canvas
 
 2. **Add Component:**
-   - Add Component → DuolingoAnswerSystem.cs
+   - Add Component → Interactive TileAnswerSystem.cs
 
 3. **Assign References:**
    - **slot1Transform** → Drag **Slot1** GameObject
@@ -207,7 +207,7 @@ using System.Collections.Generic;
 public class CalculationManager : MonoBehaviour
 {
     [SerializeField] private TriangleDataGenerator dataGenerator;
-    [SerializeField] private DuolingoAnswerSystem duolingoSystem; // NEW
+    [SerializeField] private Interactive TileAnswerSystem Interactive TileSystem; // NEW
     
     private int currentQuestionNumber = 1;
     
@@ -219,24 +219,24 @@ public class CalculationManager : MonoBehaviour
         // Setup UI
         uiManager.SetupNewQuestion(currentQuestionNumber, 30, data);
         
-        // TAMBAHKAN INI: Setup Duolingo system untuk soal 1-10
+        // TAMBAHKAN INI: Setup Interactive Tile system untuk soal 1-10
         if (currentQuestionNumber <= 10)
         {
-            SetupDuolingoAnswer(data);
+            SetupInteractive TileAnswer(data);
         }
         else
         {
             // Soal 11+ pakai input field biasa
-            DisableDuolingoSystem();
+            DisableInteractive TileSystem();
         }
         
         currentQuestionNumber++;
     }
     
     /// <summary>
-    /// Setup Duolingo answer system untuk pecahan
+    /// Setup Interactive Tile answer system untuk pecahan
     /// </summary>
-    private void SetupDuolingoAnswer(TriangleData data)
+    private void SetupInteractive TileAnswer(TriangleData data)
     {
         // Untuk Sin/Cos/Tan soal, jawaban adalah pecahan
         // Contoh: Sin θ = opposite/hypotenuse = Depan/Miring
@@ -266,30 +266,30 @@ public class CalculationManager : MonoBehaviour
                 break;
                 
             default:
-                Debug.LogWarning($"Duolingo system not implemented for {data.TypeSoal}");
+                Debug.LogWarning($"Interactive Tile system not implemented for {data.TypeSoal}");
                 return;
         }
         
         // Generate 3 distractor answers
         List<string> distractors = dataGenerator.GenerateDistractors(data);
         
-        // Setup Duolingo system
-        if (DuolingoAnswerSystem.Instance != null)
+        // Setup Interactive Tile system
+        if (Interactive TileAnswerSystem.Instance != null)
         {
-            DuolingoAnswerSystem.Instance.SetupQuestion(numerator, denominator, distractors);
+            Interactive TileAnswerSystem.Instance.SetupQuestion(numerator, denominator, distractors);
         }
         
-        Debug.Log($"Duolingo Setup: {numerator}/{denominator}, Distractors: {string.Join(", ", distractors)}");
+        Debug.Log($"Interactive Tile Setup: {numerator}/{denominator}, Distractors: {string.Join(", ", distractors)}");
     }
     
     /// <summary>
-    /// Disable Duolingo system untuk soal 11+
+    /// Disable Interactive Tile system untuk soal 11+
     /// </summary>
-    private void DisableDuolingoSystem()
+    private void DisableInteractive TileSystem()
     {
-        if (DuolingoAnswerSystem.Instance != null)
+        if (Interactive TileAnswerSystem.Instance != null)
         {
-            DuolingoAnswerSystem.Instance.gameObject.SetActive(false);
+            Interactive TileAnswerSystem.Instance.gameObject.SetActive(false);
         }
         
         // Enable input field biasa
@@ -310,12 +310,12 @@ public void SetupNewQuestion(int progres, int totalSoal, TriangleData data)
     // Hide/Show input field based on question number
     if (progres <= 10)
     {
-        // Soal 1-10: Pakai Duolingo system, hide input field
+        // Soal 1-10: Pakai Interactive Tile system, hide input field
         jawabanInput.gameObject.SetActive(false);
     }
     else
     {
-        // Soal 11+: Pakai input field biasa, hide Duolingo
+        // Soal 11+: Pakai input field biasa, hide Interactive Tile
         jawabanInput.gameObject.SetActive(true);
     }
 }
@@ -330,17 +330,17 @@ Pastikan Verify Button tetap berfungsi:
 ```csharp
 public void OnVerifyButtonClicked()
 {
-    // Ambil jawaban dari input field (auto sync by Duolingo system)
+    // Ambil jawaban dari input field (auto sync by Interactive Tile system)
     string userAnswer = uiManager.jawabanInput.text;
     
     // Validasi jawaban
     bool isCorrect = ValidateAnswer(userAnswer);
     
     // Highlight tiles (visual feedback)
-    if (DuolingoAnswerSystem.Instance != null && 
-        DuolingoAnswerSystem.Instance.IsAnswerComplete())
+    if (Interactive TileAnswerSystem.Instance != null && 
+        Interactive TileAnswerSystem.Instance.IsAnswerComplete())
     {
-        DuolingoAnswerSystem.Instance.HighlightAnswer(isCorrect);
+        Interactive TileAnswerSystem.Instance.HighlightAnswer(isCorrect);
     }
     
     // Show feedback panel
@@ -398,7 +398,7 @@ public Color wrongColor = new Color(1f, 0.5f, 0.5f);
 
 ### **Animation:**
 
-Edit di **DuolingoAnswerSystem** Inspector:
+Edit di **Interactive TileAnswerSystem** Inspector:
 - **animationDuration:** 0.3f (default)
 - Faster: 0.2f
 - Slower: 0.5f
@@ -419,7 +419,7 @@ transform.DOScale(1.1f, duration * 0.5f) // Bounce size
 - ✅ Check Console untuk error
 
 ### **Jawaban tidak tersync ke input field:**
-- ✅ Check hiddenInputField reference di DuolingoAnswerSystem
+- ✅ Check hiddenInputField reference di Interactive TileAnswerSystem
 - ✅ Pastikan jawabanInput masih aktif (atau minimal component enabled)
 
 ### **Pool tiles overlap:**
@@ -435,14 +435,14 @@ transform.DOScale(1.1f, duration * 0.5f) // Bounce size
 ### **Wrong answer generated:**
 - ✅ Check GenerateDistractors() logic di TriangleDataGenerator
 - ✅ Pastikan numerator/denominator sesuai dengan tipe soal
-- ✅ Debug log di SetupDuolingoAnswer()
+- ✅ Debug log di SetupInteractive TileAnswer()
 
 ---
 
 ## 📊 Testing Checklist
 
 ### **Functional Testing:**
-- [ ] Soal 1-10 show Duolingo system
+- [ ] Soal 1-10 show Interactive Tile system
 - [ ] Soal 11+ show input field biasa
 - [ ] 5 tiles muncul di pool (2 correct + 3 distractor)
 - [ ] Tap tile → Bergerak ke slot1 (kiri)
@@ -474,7 +474,7 @@ transform.DOScale(1.1f, duration * 0.5f) // Bounce size
 
 ### **For 10+ Questions:**
 Setelah 10 soal pertama selesai, kembali ke input field biasa atau:
-- Extend Duolingo system untuk desimal (button: 0-9, .)
+- Extend Interactive Tile system untuk desimal (button: 0-9, .)
 - Add calculator-style input untuk soal kompleks
 - Add hint system (show partial answer)
 
@@ -500,7 +500,7 @@ Setelah 10 soal pertama selesai, kembali ke input field biasa atau:
 
 **Related Files:**
 - `AnswerTile.cs` - Tile component
-- `DuolingoAnswerSystem.cs` - Manager
+- `Interactive TileAnswerSystem.cs` - Manager
 - `TriangleDataGenerator.cs` - Question & distractor generator
 - `UIManagerChapter1.cs` - UI coordinator
 - `CalculationManager.cs` - Game logic

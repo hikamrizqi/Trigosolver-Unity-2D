@@ -63,12 +63,12 @@ public class AnswerTile : MonoBehaviour
         if (isInSlot)
         {
             // Tile di slot → Return ke pool
-            DuolingoAnswerSystem.Instance.ReturnTileToPool(this);
+            AnswerTileSystem.Instance.ReturnTileToPool(this);
         }
         else
         {
             // Tile di pool → Move ke slot
-            DuolingoAnswerSystem.Instance.MoveTileToSlot(this);
+            AnswerTileSystem.Instance.MoveTileToSlot(this);
         }
     }
 
