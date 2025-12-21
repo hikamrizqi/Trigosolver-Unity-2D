@@ -19,7 +19,7 @@ public class AnswerTileSystem : MonoBehaviour
     [SerializeField] private Transform singleSlot1Transform;  // Numerator (kiri)
     [SerializeField] private Transform singleSlot2Transform;  // Denominator (kanan)
     [SerializeField] private TextMeshProUGUI singleSlashText; // "/" di tengah
-    
+
     [Header("Answer Slots - Dual Question (Soal 11-20)")]
     [SerializeField] private GameObject dualQuestionSlotContainer;  // Container untuk layout 2x2
     [SerializeField] private Transform dualSlot1Transform;  // Fraction 1 - Numerator
@@ -96,7 +96,7 @@ public class AnswerTileSystem : MonoBehaviour
         // Show/hide ENTIRE CONTAINER based on question type
         if (singleQuestionSlotContainer != null)
             singleQuestionSlotContainer.SetActive(!isDualQuestion);
-        
+
         if (dualQuestionSlotContainer != null)
             dualQuestionSlotContainer.SetActive(isDualQuestion);
 
@@ -176,9 +176,11 @@ public class AnswerTileSystem : MonoBehaviour
         {
             Debug.LogWarning($"[AnswerTileSystem] Tile {tile.Value} already in slot!");
             return;
-        }berdasarkan question type
+        }
+
+        // Tentukan slot target berdasarkan question type
         Transform targetSlot;
-        
+
         if (currentIsDualQuestion)
         {
             // DUAL QUESTION: Fill order → dualSlot1 → dualSlot2 → dualSlot3 → dualSlot4
@@ -231,9 +233,7 @@ public class AnswerTileSystem : MonoBehaviour
             {
                 Debug.LogWarning($"[AnswerTileSystem] Both single slots full! Cannot move {tile.Value}");
                 return;
-            }slotCount = currentIsDualQuestion ? "4 slots" : "2 slots";
-            Debug.LogWarning($"[AnswerTileSystem] All {slotCount} full! Cannot move {tile.Value}");
-            return;
+            }
         }
 
         // Animate tile ke slot
