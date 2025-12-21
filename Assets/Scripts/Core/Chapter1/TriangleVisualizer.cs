@@ -200,11 +200,11 @@ public class TriangleVisualizer : MonoBehaviour
         Vector3 adjustedCenter = centerPosition;
         if (orientation == TriangleOrientation.Swapped)
         {
-            // Geser ke kanan sebesar setengah lebar horizontal untuk balance
+            // Geser ke kanan sebesar lebar horizontal untuk mencegah overflow ke kiri
             float horizontalWidth = samping * dynamicScale;
-            adjustedCenter += new Vector3(horizontalWidth * 0.3f, 0, 0); // Offset 30% dari width
+            adjustedCenter += new Vector3(horizontalWidth * 0.8f, 0, 0); // Offset 80% dari width - lebih besar!
         }
-        
+
         Vector3 basePosition = transform.position + adjustedCenter;
 
         // Segitiga siku-siku dengan sudut siku di origin (0,0) relatif
