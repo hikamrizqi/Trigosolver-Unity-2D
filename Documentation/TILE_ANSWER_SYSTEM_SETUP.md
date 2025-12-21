@@ -100,7 +100,7 @@ Canvas
    │        - Spacing: 10
    │        - Child Force Expand: Width & Height
    │
-   └─ VerifyButton (existing - Button dengan text "CHECK")
+   └─ VerifyButton (existing - Button dengan text "CHECK")  
 ```
 
 #### **Detail Settings:**

@@ -26,6 +26,14 @@ public enum DifficultyLevel
 }
 
 [System.Serializable]
+public class AnswerTileData
+{
+    public string NumeratorCorrect;     // Pembilang yang benar
+    public string DenominatorCorrect;   // Penyebut yang benar
+    public List<string> WrongAnswers;   // 3 jawaban salah (distractor)
+}
+
+[System.Serializable]
 public class TriangleData
 {
     // Data segitiga asli (sebelum rotasi visual)
@@ -47,6 +55,9 @@ public class TriangleData
     public string InfoTambahan;             // Informasi yang diberikan (misal: "Sin θ = 0.6")
     public int SisiDiketahui1;              // Nilai sisi 1 yang diketahui (jika applicable)
     public int SisiDiketahui2;              // Nilai sisi 2 yang diketahui (jika applicable)
+
+    // Answer Tile Data (untuk button-based input)
+    public AnswerTileData AnswerTileData;   // Data untuk answer tile system
 }
 
 public class TriangleDataGenerator : MonoBehaviour
@@ -150,6 +161,9 @@ public class TriangleDataGenerator : MonoBehaviour
 
         // Generate soal berdasarkan difficulty
         GenerateQuestionContent(data, difficulty, questionNumber);
+
+        // Generate answer tile data untuk button-based input
+        data.AnswerTileData = GenerateAnswerTileData(data);
 
         return data;
     }
@@ -345,5 +359,72 @@ public class TriangleDataGenerator : MonoBehaviour
         }
 
         return distractors;
+    }
+
+    /// <summary>
+    /// Generate answer tile data untuk button-based input (format pecahan)
+    /// </summary>
+    private AnswerTileData GenerateAnswerTileData(TriangleData data)
+    {
+        AnswerTileData tileData = new AnswerTileData();
+
+        // Convert jawaban benar ke pecahan (numerator/denominator)
+        // Contoh: Sin θ = depan/miring, Cos θ = samping/miring, Tan θ = depan/samping
+        switch (data.TypeSoal)
+        {
+            case QuestionType.FindSinValue:
+                tileData.NumeratorCorrect = data.Depan.ToString();
+                tileData.DenominatorCorrect = data.Miring.ToString();
+                break;
+
+            case QuestionType.FindCosValue:
+                tileData.NumeratorCorrect = data.Samping.ToString();
+                tileData.DenominatorCorrect = data.Miring.ToString();
+                break;
+
+            case QuestionType.FindTanValue:
+                tileData.NumeratorCorrect = data.Depan.ToString();
+                tileData.DenominatorCorrect = data.Samping.ToString();
+                break;
+
+            case QuestionType.FindOpposite:
+            case QuestionType.FindAdjacent:
+            case QuestionType.FindHypotenuse:
+                // Untuk inverse, jawaban adalah integer (sisi segitiga)
+                tileData.NumeratorCorrect = ((int)data.JawabanBenar).ToString();
+                tileData.DenominatorCorrect = "1"; // Pecahan sederhana x/1
+                break;
+
+            default:
+                Debug.LogWarning($"Unknown question type: {data.TypeSoal}");
+                tileData.NumeratorCorrect = data.Depan.ToString();
+                tileData.DenominatorCorrect = data.Miring.ToString();
+                break;
+        }
+
+        // Generate 3 wrong answers (distractor)
+        tileData.WrongAnswers = new List<string>();
+        List<string> distractors = GenerateDistractors(data);
+
+        // Ambil 3 distractor pertama
+        for (int i = 0; i < Mathf.Min(3, distractors.Count); i++)
+        {
+            tileData.WrongAnswers.Add(distractors[i]);
+        }
+
+        // Jika distractor kurang dari 3, tambahkan angka random
+        while (tileData.WrongAnswers.Count < 3)
+        {
+            int randomNum = Random.Range(1, 20);
+            string randomStr = randomNum.ToString();
+            if (!tileData.WrongAnswers.Contains(randomStr) &&
+                randomStr != tileData.NumeratorCorrect &&
+                randomStr != tileData.DenominatorCorrect)
+            {
+                tileData.WrongAnswers.Add(randomStr);
+            }
+        }
+
+        return tileData;
     }
 }

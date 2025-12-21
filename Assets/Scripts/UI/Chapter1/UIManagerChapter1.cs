@@ -40,6 +40,9 @@ public class UIManagerChapter1 : MonoBehaviour
     [Header("Audio Manager")]
     [SerializeField] private Chapter1AudioManager audioManager; // Opsional: untuk sound effects
 
+    [Header("Answer Tile System")]
+    [SerializeField] private AnswerTileSystem answerTileSystem; // Reference to answer tile spawner
+
     // Fungsi ini dimodifikasi untuk menargetkan objek World Space
     public void SetupNewQuestion(int progres, int totalSoal, TriangleData data)
     {
@@ -91,6 +94,24 @@ public class UIManagerChapter1 : MonoBehaviour
         {
             // Fallback: reset warna jika visualizer tidak ada
             ResetSideColors();
+        }
+
+        // Setup answer tiles dengan jawaban benar dan distractor
+        if (answerTileSystem != null && data.AnswerTileData != null)
+        {
+            answerTileSystem.SetupQuestion(
+                data.AnswerTileData.NumeratorCorrect,
+                data.AnswerTileData.DenominatorCorrect,
+                data.AnswerTileData.WrongAnswers
+            );
+            Debug.Log($"[UIManager] Answer tiles spawned for question {progres}");
+        }
+        else
+        {
+            if (answerTileSystem == null)
+                Debug.LogError("[UIManager] AnswerTileSystem reference is missing!");
+            if (data.AnswerTileData == null)
+                Debug.LogError("[UIManager] TriangleData.AnswerTileData is null!");
         }
     }
 
