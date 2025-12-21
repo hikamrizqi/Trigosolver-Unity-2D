@@ -44,9 +44,20 @@ public class UIManagerChapter1 : MonoBehaviour
     [Header("Answer Tile System")]
     [SerializeField] private AnswerTileSystem answerTileSystem; // Reference to answer tile spawner
 
+    [Header("Interactive Buttons (Soal 1-10 vs 11-20)")]
+    // TODO: Untuk soal 11-20, ganti button images/text dari DEPAN/SAMPING/MIRING ke AB/BC/AC
+    // User will provide different button images for this
+    // Button handlers (OnDepanButtonClicked, OnSampingButtonClicked, OnMiringButtonClicked) tetap sama
+    
+    // Track question type untuk conditional UI
+    private bool currentIsDualQuestion = false;
+
     // Fungsi ini dimodifikasi untuk menargetkan objek World Space
     public void SetupNewQuestion(int progres, int totalSoal, TriangleData data)
     {
+        // Track question type untuk conditional UI
+        currentIsDualQuestion = data.IsDualQuestion;
+        
         // Update UI Canvas
         progresText.text = $"Soal: {progres}/{totalSoal}";
 
@@ -86,10 +97,11 @@ public class UIManagerChapter1 : MonoBehaviour
         // Gunakan TriangleVisualizer untuk menggambar segitiga DENGAN ROTASI DAN ORIENTATION
         if (triangleVisualizer != null)
         {
-            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation);
+            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation, data.IsDualQuestion);
 
-            // Log difficulty, rotation, dan orientation untuk debugging
-            Debug.Log($"[Chapter1] Soal #{progres}/{totalSoal} | Difficulty: {data.Difficulty} | Rotation: {data.RotationAngle}° | Orientation: {data.Orientation}");
+            // Log difficulty, rotation, orientation, dan question type untuk debugging
+            string questionType = data.IsDualQuestion ? "DUAL (A & B)" : "SINGLE (θ)";
+            Debug.Log($"[Chapter1] Soal #{progres}/{totalSoal} | Type: {questionType} | Difficulty: {data.Difficulty} | Rotation: {data.RotationAngle}° | Orientation: {data.Orientation}");
         }
         else
         {
@@ -103,9 +115,12 @@ public class UIManagerChapter1 : MonoBehaviour
             answerTileSystem.SetupQuestion(
                 data.AnswerTileData.NumeratorCorrect,
                 data.AnswerTileData.DenominatorCorrect,
-                data.AnswerTileData.WrongAnswers
+                data.AnswerTileData.NumeratorCorrect2,
+                data.AnswerTileData.DenominatorCorrect2,
+                data.AnswerTileData.WrongAnswers,
+                data.IsDualQuestion
             );
-            Debug.Log($"[UIManager] Answer tiles spawned for question {progres}");
+            Debug.Log($"[UIManager] Answer tiles spawned for question {progres} - Type: {(data.IsDualQuestion ? "DUAL" : "SINGLE")}");
         }
         else
         {

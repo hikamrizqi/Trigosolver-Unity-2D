@@ -28,11 +28,18 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Label untuk menampilkan nilai sisi Miring (World Space)")]
     public TextMeshPro miringLabel;
 
-    [Tooltip("Label untuk simbol theta di sudut lancip (World Space)")]
+    [Tooltip("Label untuk simbol theta di sudut lancip (World Space) - SOAL 1-10")]
     public TextMeshPro thetaLabel;
 
     [Tooltip("Label untuk simbol sudut siku-siku ∟ (World Space)")]
     public TextMeshPro rightAngleLabel;
+    
+    [Header("Angle Labels (Soal 11-20)")]
+    [Tooltip("Label untuk sudut A (World Space) - SOAL 11-20")]
+    public TextMeshPro angleLabelA;
+    
+    [Tooltip("Label untuk sudut B (World Space) - SOAL 11-20")]
+    public TextMeshPro angleLabelB;
 
     [Header("Camera Reference")]
     [Tooltip("Camera untuk konversi world to screen point")]
@@ -117,13 +124,14 @@ public class TriangleVisualizer : MonoBehaviour
     private int currentMiring;
     private float currentRotation = 0f; // Rotasi segitiga saat ini
     private TriangleOrientation currentOrientation = TriangleOrientation.Normal; // Orientasi saat ini
+    private bool currentIsDualQuestion = false; // True jika soal 11-20 (pakai A dan B)
 
     /// <summary>
     /// Menggambar segitiga dengan nilai yang diberikan (tanpa rotasi - default 0°)
     /// </summary>
     public void DrawTriangle(int depan, int samping, int miring)
     {
-        DrawTriangle(depan, samping, miring, 0f);
+        DrawTriangle(depan, samping, miring, 0f, TriangleOrientation.Normal, false);
     }
 
     /// <summary>
@@ -133,11 +141,21 @@ public class TriangleVisualizer : MonoBehaviour
     /// </summary>
     public void DrawTriangle(int depan, int samping, int miring, float rotationAngle, TriangleOrientation orientation = TriangleOrientation.Normal)
     {
+        DrawTriangle(depan, samping, miring, rotationAngle, orientation, false);
+    }
+
+    /// <summary>
+    /// Menggambar segitiga dengan nilai, rotasi, orientasi, dan tipe soal yang diberikan
+    /// isDualQuestion: true untuk soal 11-20 (pakai A dan B), false untuk soal 1-10 (pakai theta)
+    /// </summary>
+    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle, TriangleOrientation orientation, bool isDualQuestion)
+    {
         currentDepan = depan;
         currentSamping = samping;
         currentMiring = miring;
         currentRotation = rotationAngle;
         currentOrientation = orientation; // Simpan orientasi saat ini
+        currentIsDualQuestion = isDualQuestion; // Simpan tipe soal
 
         // Hitung scale dinamis agar segitiga fit di layar
         float dynamicScale = baseScale;
@@ -292,8 +310,10 @@ public class TriangleVisualizer : MonoBehaviour
         // SIMBOL THETA (di sudut lancip - antara samping dan miring) - WORLD SPACE
         // NORMAL: Theta di topLeft (antara AB dan AC)
         // SWAPPED: Theta di bottomRight (antara BC dan AC)
-        if (thetaLabel != null)
+        // HANYA UNTUK SOAL 1-10 (bukan dual question)
+        if (!currentIsDualQuestion && thetaLabel != null)
         {
+            thetaLabel.gameObject.SetActive(true);
             thetaLabel.text = "θ";
             thetaLabel.fontSize = labelFontSize * 0.8f; // Sedikit lebih kecil dari label angka
 
@@ -326,6 +346,91 @@ public class TriangleVisualizer : MonoBehaviour
             {
                 thetaLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
             }
+        }
+        else if (!currentIsDualQuestion && thetaLabel != null)
+        {
+            thetaLabel.gameObject.SetActive(false);
+        }
+
+        // SIMBOL SUDUT A DAN B (untuk soal 11-20 - dual question)
+        // Sudut A di topLeft, Sudut B di bottomRight (untuk orientasi normal)
+        // Sudut A di bottomRight, Sudut B di topLeft (untuk orientasi swapped)
+        if (currentIsDualQuestion)
+        {
+            // Hide theta jika ada
+            if (thetaLabel != null)
+                thetaLabel.gameObject.SetActive(false);
+
+            float angleOffsetDistance = labelOffset * thetaOffsetMultiplier;
+
+            // SUDUT A
+            if (angleLabelA != null)
+            {
+                angleLabelA.gameObject.SetActive(true);
+                angleLabelA.text = "A";
+                angleLabelA.fontSize = labelFontSize * 0.8f;
+
+                Vector3 angleAPosition;
+                if (orientation == TriangleOrientation.Normal)
+                {
+                    // A di topLeft
+                    Vector3 toSamping = (bottomLeft - topLeft).normalized;
+                    Vector3 toMiring = (bottomRight - topLeft).normalized;
+                    Vector3 inward = (toSamping + toMiring).normalized;
+                    angleAPosition = topLeft + inward * angleOffsetDistance;
+                }
+                else // Swapped
+                {
+                    // A di bottomRight
+                    Vector3 toSamping = (bottomLeft - bottomRight).normalized;
+                    Vector3 toMiring = (topLeft - bottomRight).normalized;
+                    Vector3 inward = (toSamping + toMiring).normalized;
+                    angleAPosition = bottomRight + inward * angleOffsetDistance;
+                }
+
+                angleAPosition.z = labelZOffset;
+                angleLabelA.transform.position = angleAPosition;
+                if (angleLabelA.GetComponent<MeshRenderer>() != null)
+                    angleLabelA.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
+
+            // SUDUT B
+            if (angleLabelB != null)
+            {
+                angleLabelB.gameObject.SetActive(true);
+                angleLabelB.text = "B";
+                angleLabelB.fontSize = labelFontSize * 0.8f;
+
+                Vector3 angleBPosition;
+                if (orientation == TriangleOrientation.Normal)
+                {
+                    // B di bottomRight
+                    Vector3 toDepan = (bottomLeft - bottomRight).normalized;
+                    Vector3 toMiring = (topLeft - bottomRight).normalized;
+                    Vector3 inward = (toDepan + toMiring).normalized;
+                    angleBPosition = bottomRight + inward * angleOffsetDistance;
+                }
+                else // Swapped
+                {
+                    // B di topLeft
+                    Vector3 toDepan = (bottomRight - topLeft).normalized;
+                    Vector3 toMiring = (bottomLeft - topLeft).normalized;
+                    Vector3 inward = (toDepan + toMiring).normalized;
+                    angleBPosition = topLeft + inward * angleOffsetDistance;
+                }
+
+                angleBPosition.z = labelZOffset;
+                angleLabelB.transform.position = angleBPosition;
+                if (angleLabelB.GetComponent<MeshRenderer>() != null)
+                    angleLabelB.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
+        }
+        else // Hide A and B untuk soal 1-10
+        {
+            if (angleLabelA != null)
+                angleLabelA.gameObject.SetActive(false);
+            if (angleLabelB != null)
+                angleLabelB.gameObject.SetActive(false);
         }
 
         // SIMBOL SUDUT SIKU-SIKU ∟ (di sudut B - bottomLeft) - 90 derajat
@@ -385,6 +490,8 @@ public class TriangleVisualizer : MonoBehaviour
         DOTween.Kill(miringLabel?.transform);
         DOTween.Kill(thetaLabel?.transform);
         DOTween.Kill(rightAngleLabel?.transform);
+        DOTween.Kill(angleLabelA?.transform);
+        DOTween.Kill(angleLabelB?.transform);
 
         // HORIZONTAL LINE (bottom): Masuk dari KIRI
         if (sampingSprite != null || depanSprite != null)
@@ -449,8 +556,8 @@ public class TriangleVisualizer : MonoBehaviour
             miringLabel.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
         }
 
-        // THETA SYMBOL: Fade in dan scale
-        if (thetaLabel != null)
+        // THETA SYMBOL: Fade in dan scale (untuk soal 1-10)
+        if (!currentIsDualQuestion && thetaLabel != null && thetaLabel.gameObject.activeSelf)
         {
             thetaLabel.alpha = 0;
             thetaLabel.transform.localScale = Vector3.zero;
@@ -458,7 +565,25 @@ public class TriangleVisualizer : MonoBehaviour
             thetaLabel.transform.DOScale(Vector3.one, animationDuration).SetEase(entryEase);
         }
 
-        // RIGHT ANGLE SYMBOL: Fade in dan scale
+        // ANGLE A SYMBOL: Fade in dan scale (untuk soal 11-20)
+        if (currentIsDualQuestion && angleLabelA != null && angleLabelA.gameObject.activeSelf)
+        {
+            angleLabelA.alpha = 0;
+            angleLabelA.transform.localScale = Vector3.zero;
+            angleLabelA.DOFade(1f, animationDuration).SetEase(entryEase);
+            angleLabelA.transform.DOScale(Vector3.one, animationDuration).SetEase(entryEase);
+        }
+
+        // ANGLE B SYMBOL: Fade in dan scale (untuk soal 11-20)
+        if (currentIsDualQuestion && angleLabelB != null && angleLabelB.gameObject.activeSelf)
+        {
+            angleLabelB.alpha = 0;
+            angleLabelB.transform.localScale = Vector3.zero;
+            angleLabelB.DOFade(1f, animationDuration).SetEase(entryEase);
+            angleLabelB.transform.DOScale(Vector3.one, animationDuration).SetEase(entryEase);
+        }
+
+        // RIGHT ANGLE SYMBOL: Fade in dan scale (untuk semua soal)
         if (rightAngleLabel != null)
         {
             rightAngleLabel.alpha = 0;
@@ -532,11 +657,23 @@ public class TriangleVisualizer : MonoBehaviour
             exitSequence.Join(miringLabel.transform.DOMove(exitPos, animationDuration).SetEase(exitEase));
         }
 
-        // THETA & RIGHT ANGLE: Fade out dan scale down
-        if (thetaLabel != null)
+        // THETA, ANGLE A, ANGLE B, & RIGHT ANGLE: Fade out dan scale down
+        if (thetaLabel != null && thetaLabel.gameObject.activeSelf)
         {
             exitSequence.Join(thetaLabel.DOFade(0f, animationDuration).SetEase(exitEase));
             exitSequence.Join(thetaLabel.transform.DOScale(Vector3.zero, animationDuration).SetEase(exitEase));
+        }
+
+        if (angleLabelA != null && angleLabelA.gameObject.activeSelf)
+        {
+            exitSequence.Join(angleLabelA.DOFade(0f, animationDuration).SetEase(exitEase));
+            exitSequence.Join(angleLabelA.transform.DOScale(Vector3.zero, animationDuration).SetEase(exitEase));
+        }
+
+        if (angleLabelB != null && angleLabelB.gameObject.activeSelf)
+        {
+            exitSequence.Join(angleLabelB.DOFade(0f, animationDuration).SetEase(exitEase));
+            exitSequence.Join(angleLabelB.transform.DOScale(Vector3.zero, animationDuration).SetEase(exitEase));
         }
 
         if (rightAngleLabel != null)

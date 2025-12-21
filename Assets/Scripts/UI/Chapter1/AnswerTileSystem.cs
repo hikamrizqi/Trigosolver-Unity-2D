@@ -15,9 +15,12 @@ public class AnswerTileSystem : MonoBehaviour
     public static AnswerTileSystem Instance { get; private set; }
 
     [Header("Answer Slots (Tempat Jawaban)")]
-    [SerializeField] private Transform slot1Transform;  // Slot kiri (sebelum /)
-    [SerializeField] private Transform slot2Transform;  // Slot kanan (setelah /)
-    [SerializeField] private TextMeshProUGUI slashText; // "/" text di tengah
+    [SerializeField] private Transform slot1Transform;  // Slot 1: Kiri-Atas (numerator 1)
+    [SerializeField] private Transform slot2Transform;  // Slot 2: Kiri-Bawah (denominator 1)
+    [SerializeField] private Transform slot3Transform;  // Slot 3: Kanan-Atas (numerator 2) - Soal 11-20 only
+    [SerializeField] private Transform slot4Transform;  // Slot 4: Kanan-Bawah (denominator 2) - Soal 11-20 only
+    [SerializeField] private TextMeshProUGUI slashText; // "/" text di tengah (fraction 1)
+    [SerializeField] private TextMeshProUGUI slashText2; // "/" text di tengah (fraction 2) - Soal 11-20 only
 
     [Header("Answer Pool (Pilihan Jawaban)")]
     [SerializeField] private Transform poolContainer;   // Container untuk 5 tiles
@@ -39,10 +42,17 @@ public class AnswerTileSystem : MonoBehaviour
     private List<AnswerTile> allTiles = new List<AnswerTile>();
     private AnswerTile currentSlot1Tile = null;
     private AnswerTile currentSlot2Tile = null;
+    private AnswerTile currentSlot3Tile = null; // Soal 11-20 only
+    private AnswerTile currentSlot4Tile = null; // Soal 11-20 only
 
     // Jawaban yang benar untuk soal ini
-    private string correctNumerator;   // Angka atas (15)
-    private string correctDenominator; // Angka bawah (17)
+    private string correctNumerator;   // Angka atas 1 (untuk soal 1-10 atau soal 11-20 pertanyaan pertama)
+    private string correctDenominator; // Angka bawah 1
+    private string correctNumerator2;  // Angka atas 2 (untuk soal 11-20 pertanyaan kedua)
+    private string correctDenominator2; // Angka bawah 2
+    
+    // Track question type
+    private bool currentIsDualQuestion = false;
 
     private void Awake()
     {
@@ -57,13 +67,29 @@ public class AnswerTileSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Setup soal baru dengan jawaban benar dan distractor
+    /// Setup soal baru dengan jawaban benar dan distractor (untuk soal 1-10 - single question)
     /// </summary>
     public void SetupQuestion(string numerator, string denominator, List<string> wrongAnswers)
+    {
+        SetupQuestion(numerator, denominator, "", "", wrongAnswers, false);
+    }
+
+    /// <summary>
+    /// Setup soal baru dengan jawaban benar dan distractor (untuk semua soal - dual or single)
+    /// </summary>
+    public void SetupQuestion(string numerator, string denominator, string numerator2, string denominator2, List<string> wrongAnswers, bool isDualQuestion)
     {
         // Simpan jawaban benar
         correctNumerator = numerator;
         correctDenominator = denominator;
+        correctNumerator2 = numerator2;
+        correctDenominator2 = denominator2;
+        currentIsDualQuestion = isDualQuestion;
+
+        // Show/hide slots based on question type
+        if (slot3Transform != null) slot3Transform.gameObject.SetActive(isDualQuestion);
+        if (slot4Transform != null) slot4Transform.gameObject.SetActive(isDualQuestion);
+        if (slashText2 != null) slashText2.gameObject.SetActive(isDualQuestion);
 
         // Reset slots
         ResetSlots();
@@ -75,8 +101,22 @@ public class AnswerTileSystem : MonoBehaviour
         }
         allTiles.Clear();
 
-        // Buat pool: 2 correct + wrong answers (total 6-8 tiles, acak)
-        List<string> poolValues = new List<string> { numerator, denominator };
+        // Buat pool
+        List<string> poolValues = new List<string>();
+        if (isDualQuestion)
+        {
+            // Dual question: 4 correct + wrong answers (total 6 tiles)
+            poolValues.Add(numerator);
+            poolValues.Add(denominator);
+            poolValues.Add(numerator2);
+            poolValues.Add(denominator2);
+        }
+        else
+        {
+            // Single question: 2 correct + wrong answers (total 6 tiles)
+            poolValues.Add(numerator);
+            poolValues.Add(denominator);
+        }
         poolValues.AddRange(wrongAnswers);
 
         // Shuffle untuk random order
@@ -91,7 +131,10 @@ public class AnswerTileSystem : MonoBehaviour
             allTiles.Add(tile);
         }
 
-        Debug.Log($"[AnswerTileSystem] Setup question: {numerator}/{denominator}, Total tiles: {poolValues.Count}, Pool: {string.Join(", ", poolValues)}");
+        string questionType = isDualQuestion ? "DUAL (4 answers)" : "SINGLE (2 answers)";
+        Debug.Log($"[AnswerTileSystem] Setup {questionType}: {numerator}/{denominator}" + 
+                  (isDualQuestion ? $" and {numerator2}/{denominator2}" : "") + 
+                  $", Total tiles: {poolValues.Count}, Pool: {string.Join(", ", poolValues)}");
 
         // Wait for layout group to position tiles, then animate
         StartCoroutine(AnimateTilesInDelayed());
@@ -126,7 +169,7 @@ public class AnswerTileSystem : MonoBehaviour
             return;
         }
 
-        // Tentukan slot target (prioritas kiri)
+        // Tentukan slot target (fill order: slot1 → slot2 → slot3 → slot4)
         Transform targetSlot;
         if (currentSlot1Tile == null)
         {
@@ -142,10 +185,25 @@ public class AnswerTileSystem : MonoBehaviour
             targetSlot = slot2Transform;
             Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot2");
         }
+        else if (currentIsDualQuestion && currentSlot3Tile == null && slot3Transform != null)
+        {
+            // Slot 3 kosong (soal dual question) → Isi slot 3
+            currentSlot3Tile = tile;
+            targetSlot = slot3Transform;
+            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot3");
+        }
+        else if (currentIsDualQuestion && currentSlot4Tile == null && slot4Transform != null)
+        {
+            // Slot 4 kosong (soal dual question) → Isi slot 4
+            currentSlot4Tile = tile;
+            targetSlot = slot4Transform;
+            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot4");
+        }
         else
         {
-            // Kedua slot penuh
-            Debug.LogWarning($"[AnswerTileSystem] Both slots full! Cannot move {tile.Value}");
+            // Semua slot penuh
+            string slotCount = currentIsDualQuestion ? "4 slots" : "2 slots";
+            Debug.LogWarning($"[AnswerTileSystem] All {slotCount} full! Cannot move {tile.Value}");
             return;
         }
 
@@ -172,8 +230,8 @@ public class AnswerTileSystem : MonoBehaviour
             currentSlot1Tile = null;
             Debug.Log($"[AnswerTileSystem] Removed {tile.Value} from Slot1");
 
-            // Auto-shift: Jika slot2 ada isi, geser ke kiri
-            if (currentSlot2Tile != null)
+            // Auto-shift untuk single question: Jika slot2 ada isi, geser ke kiri
+            if (!currentIsDualQuestion && currentSlot2Tile != null)
             {
                 AnswerTile tileToShift = currentSlot2Tile;
                 currentSlot2Tile = null;
@@ -189,6 +247,16 @@ public class AnswerTileSystem : MonoBehaviour
             currentSlot2Tile = null;
             Debug.Log($"[AnswerTileSystem] Removed {tile.Value} from Slot2");
         }
+        else if (currentSlot3Tile == tile)
+        {
+            currentSlot3Tile = null;
+            Debug.Log($"[AnswerTileSystem] Removed {tile.Value} from Slot3");
+        }
+        else if (currentSlot4Tile == tile)
+        {
+            currentSlot4Tile = null;
+            Debug.Log($"[AnswerTileSystem] Removed {tile.Value} from Slot4");
+        }
 
         // Return ke pool
         tile.ReturnToOriginalPosition(animationDuration);
@@ -203,15 +271,35 @@ public class AnswerTileSystem : MonoBehaviour
     {
         string slot1Value = currentSlot1Tile != null ? currentSlot1Tile.Value : "";
         string slot2Value = currentSlot2Tile != null ? currentSlot2Tile.Value : "";
+        string slot3Value = currentSlot3Tile != null ? currentSlot3Tile.Value : "";
+        string slot4Value = currentSlot4Tile != null ? currentSlot4Tile.Value : "";
 
         string answer = "";
-        if (!string.IsNullOrEmpty(slot1Value) && !string.IsNullOrEmpty(slot2Value))
+        if (currentIsDualQuestion)
         {
-            answer = $"{slot1Value}/{slot2Value}";
+            // Dual question: format "num1/den1|num2/den2"
+            if (!string.IsNullOrEmpty(slot1Value) && !string.IsNullOrEmpty(slot2Value) &&
+                !string.IsNullOrEmpty(slot3Value) && !string.IsNullOrEmpty(slot4Value))
+            {
+                answer = $"{slot1Value}/{slot2Value}|{slot3Value}/{slot4Value}";
+            }
+            else
+            {
+                // Incomplete dual answer
+                answer = $"{slot1Value}/{slot2Value}|{slot3Value}/{slot4Value}";
+            }
         }
-        else if (!string.IsNullOrEmpty(slot1Value))
+        else
         {
-            answer = $"{slot1Value}/";
+            // Single question: format "num/den"
+            if (!string.IsNullOrEmpty(slot1Value) && !string.IsNullOrEmpty(slot2Value))
+            {
+                answer = $"{slot1Value}/{slot2Value}";
+            }
+            else if (!string.IsNullOrEmpty(slot1Value))
+            {
+                answer = $"{slot1Value}/";
+            }
         }
 
         // Sync ke hidden input field
@@ -224,11 +312,21 @@ public class AnswerTileSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Check apakah jawaban sudah lengkap (kedua slot terisi)
+    /// Check apakah jawaban sudah lengkap (semua slot terisi)
     /// </summary>
     public bool IsAnswerComplete()
     {
-        return currentSlot1Tile != null && currentSlot2Tile != null;
+        if (currentIsDualQuestion)
+        {
+            // Dual question: 4 slots harus terisi semua
+            return currentSlot1Tile != null && currentSlot2Tile != null &&
+                   currentSlot3Tile != null && currentSlot4Tile != null;
+        }
+        else
+        {
+            // Single question: 2 slots harus terisi
+            return currentSlot1Tile != null && currentSlot2Tile != null;
+        }
     }
 
     /// <summary>
@@ -237,7 +335,15 @@ public class AnswerTileSystem : MonoBehaviour
     public string GetCurrentAnswer()
     {
         if (!IsAnswerComplete()) return "";
-        return $"{currentSlot1Tile.Value}/{currentSlot2Tile.Value}";
+        
+        if (currentIsDualQuestion)
+        {
+            return $"{currentSlot1Tile.Value}/{currentSlot2Tile.Value}|{currentSlot3Tile.Value}/{currentSlot4Tile.Value}";
+        }
+        else
+        {
+            return $"{currentSlot1Tile.Value}/{currentSlot2Tile.Value}";
+        }
     }
 
     /// <summary>
@@ -264,6 +370,18 @@ public class AnswerTileSystem : MonoBehaviour
         {
             currentSlot2Tile.ReturnToOriginalPosition(0f);
             currentSlot2Tile = null;
+        }
+
+        if (currentSlot3Tile != null)
+        {
+            currentSlot3Tile.ReturnToOriginalPosition(0f);
+            currentSlot3Tile = null;
+        }
+
+        if (currentSlot4Tile != null)
+        {
+            currentSlot4Tile.ReturnToOriginalPosition(0f);
+            currentSlot4Tile = null;
         }
 
         if (hiddenInputField != null)

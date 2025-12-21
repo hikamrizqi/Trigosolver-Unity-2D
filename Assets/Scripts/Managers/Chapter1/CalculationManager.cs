@@ -54,33 +54,90 @@ public class CalculationManager : MonoBehaviour
             return;
         }
 
-        // 2. Cek apakah jawaban sudah lengkap (kedua slot terisi)
+        // 2. Cek apakah jawaban sudah lengkap (semua slot terisi)
         if (!answerTileSystem.IsAnswerComplete())
         {
-            uiManager.ShowFeedback(false, "Isi kedua slot dengan tile terlebih dahulu!");
+            string message = dataSoalSaatIni.IsDualQuestion ? 
+                "Isi keempat slot dengan tile terlebih dahulu!" : 
+                "Isi kedua slot dengan tile terlebih dahulu!";
+            uiManager.ShowFeedback(false, message);
             return;
         }
 
-        // 3. Ambil jawaban dari answer tile system (format: "numerator/denominator")
+        // 3. Ambil jawaban dari answer tile system
         string answer = answerTileSystem.GetCurrentAnswer();
         Debug.Log($"[CalculationManager] Player answer: {answer}");
 
-        // 4. Parse jawaban pecahan
-        string[] parts = answer.Split('/');
-        if (parts.Length != 2 ||
-            !float.TryParse(parts[0].Trim(), out float numerator) ||
-            !float.TryParse(parts[1].Trim(), out float denominator) ||
-            denominator == 0)
+        bool isCorrect;
+        
+        if (dataSoalSaatIni.IsDualQuestion)
         {
-            Debug.LogError($"[CalculationManager] Invalid answer format: {answer}");
-            HandleWrongAnswer("Format jawaban salah!");
-            return;
+            // DUAL QUESTION: Verifikasi 4 nilai (format: "num1/den1|num2/den2")
+            string[] fractions = answer.Split('|');
+            if (fractions.Length != 2)
+            {
+                Debug.LogError($"[CalculationManager] Invalid dual answer format: {answer}");
+                HandleWrongAnswer("Format jawaban salah!");
+                return;
+            }
+
+            // Parse fraction 1
+            string[] parts1 = fractions[0].Split('/');
+            if (parts1.Length != 2 ||
+                !float.TryParse(parts1[0].Trim(), out float num1) ||
+                !float.TryParse(parts1[1].Trim(), out float den1) ||
+                den1 == 0)
+            {
+                Debug.LogError($"[CalculationManager] Invalid fraction 1 format: {fractions[0]}");
+                HandleWrongAnswer("Format jawaban salah!");
+                return;
+            }
+
+            // Parse fraction 2
+            string[] parts2 = fractions[1].Split('/');
+            if (parts2.Length != 2 ||
+                !float.TryParse(parts2[0].Trim(), out float num2) ||
+                !float.TryParse(parts2[1].Trim(), out float den2) ||
+                den2 == 0)
+            {
+                Debug.LogError($"[CalculationManager] Invalid fraction 2 format: {fractions[1]}");
+                HandleWrongAnswer("Format jawaban salah!");
+                return;
+            }
+
+            float playerAnswer1 = num1 / den1;
+            float playerAnswer2 = num2 / den2;
+
+            // Kedua jawaban harus benar
+            bool answer1Correct = Mathf.Abs(playerAnswer1 - dataSoalSaatIni.JawabanBenar) <= answerTolerance;
+            bool answer2Correct = Mathf.Abs(playerAnswer2 - dataSoalSaatIni.JawabanBenar2) <= answerTolerance;
+            
+            isCorrect = answer1Correct && answer2Correct;
+            
+            Debug.Log($"[CalculationManager] Dual Answer Check - Answer1: {playerAnswer1:F3} vs {dataSoalSaatIni.JawabanBenar:F3} ({answer1Correct}), Answer2: {playerAnswer2:F3} vs {dataSoalSaatIni.JawabanBenar2:F3} ({answer2Correct})");
+        }
+        else
+        {
+            // SINGLE QUESTION: Verifikasi 2 nilai (format: "numerator/denominator")
+            string[] parts = answer.Split('/');
+            if (parts.Length != 2 ||
+                !float.TryParse(parts[0].Trim(), out float numerator) ||
+                !float.TryParse(parts[1].Trim(), out float denominator) ||
+                denominator == 0)
+            {
+                Debug.LogError($"[CalculationManager] Invalid answer format: {answer}");
+                HandleWrongAnswer("Format jawaban salah!");
+                return;
+            }
+
+            float playerAnswer = numerator / denominator;
+            isCorrect = Mathf.Abs(playerAnswer - dataSoalSaatIni.JawabanBenar) <= answerTolerance;
+            
+            Debug.Log($"[CalculationManager] Single Answer Check - Player: {playerAnswer:F3} vs Correct: {dataSoalSaatIni.JawabanBenar:F3} ({isCorrect})");
         }
 
-        float playerAnswer = numerator / denominator;
-
-        // 5. Bandingkan jawaban dengan toleransi
-        if (Mathf.Abs(playerAnswer - dataSoalSaatIni.JawabanBenar) <= answerTolerance)
+        // 4. Handle hasil verifikasi
+        if (isCorrect)
         {
             // JAWABAN BENAR
             score += 10;
