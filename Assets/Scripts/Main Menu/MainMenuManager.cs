@@ -20,6 +20,10 @@ public class MainMenuManager : MonoBehaviour
     [Tooltip("Panel Mode Cerita Selection (Chapter selection)")]
     public GameObject modeCeritaSelectionPanel;
 
+    [Header("High Score Display")]
+    [Tooltip("High Score Display component (optional)")]
+    public HighScoreDisplay highScoreDisplay;
+
     [Header("Animation Controllers")]
     private MenuAnimationController logoAnimator;
     private MenuAnimationController mainMenuAnimator;
@@ -131,7 +135,14 @@ public class MainMenuManager : MonoBehaviour
         logoAnimator.AnimateSinkOut(() =>
         {
             Debug.Log("Logo sink selesai, panggil main menu drop");
-            mainMenuAnimator.AnimateDropIn();
+            mainMenuAnimator.AnimateDropIn(() =>
+            {
+                // Refresh high score display when main menu appears
+                if (highScoreDisplay != null)
+                {
+                    highScoreDisplay.RefreshScores();
+                }
+            });
         });
     }
 

@@ -14,6 +14,7 @@ public class CalculationManager : MonoBehaviour
     private int progres = 0;
     private int totalSoal = 30; // Update dari 5 ke 30 soal
     private int score = 0; // Tambahan untuk tracking score
+    private int startingQuestion = 1; // Track which level was selected (1 or 11)
 
     [Header("Gameplay Settings")]
     [SerializeField] private float answerTolerance = 0.01f; // Toleransi untuk jawaban desimal
@@ -42,6 +43,7 @@ public class CalculationManager : MonoBehaviour
         }
 
         gameStarted = true;
+        startingQuestion = questionNumber; // Save which level player started from
         progres = questionNumber - 1; // Set to question before target (will increment in StartNewRound)
         lives = 3;
         score = 0;
@@ -261,12 +263,43 @@ public class CalculationManager : MonoBehaviour
 
     void EndChapter()
     {
+        // Save high score based on which level was played
+        SaveLevelScore();
+
         uiManager.ShowFeedback(true, $"CHAPTER 1 SELESAI! Skor Total: {score}");
 
         // Tampilkan cutscene akhir chapter jika ada
         if (endCutscene != null)
         {
             StartCoroutine(ShowEndCutsceneAfterDelay());
+        }
+    }
+
+    /// <summary>
+    /// Save score to HighScoreManager based on level played
+    /// </summary>
+    private void SaveLevelScore()
+    {
+        if (startingQuestion == 1)
+        {
+            // Level 1 (Soal 1-10)
+            HighScoreManager.Instance.SaveLevel1Score(score);
+            Debug.Log($"[Score] Level 1 completed with score: {score}");
+        }
+        else if (startingQuestion == 11)
+        {
+            // Level 2 (Soal 11-20)
+            HighScoreManager.Instance.SaveLevel2Score(score);
+            Debug.Log($"[Score] Level 2 completed with score: {score}");
+        }
+
+        // If player completes entire chapter (20 questions), save total score
+        if (progres >= 20)
+        {
+            int totalScore = HighScoreManager.Instance.GetLevel1HighScore() +
+                           HighScoreManager.Instance.GetLevel2HighScore();
+            HighScoreManager.Instance.SaveTotalScore(totalScore);
+            Debug.Log($"[Score] Total Chapter 1 score: {totalScore}");
         }
     }
 

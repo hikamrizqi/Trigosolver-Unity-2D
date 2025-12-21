@@ -109,7 +109,7 @@ AnswerSlots_Dual:
 **Step 2: Buat Container untuk Dual Question (Soal 11-20)**
 1. Buat Empty GameObject: `AnswerSlots_Dual`
 2. Add Component: **Horizontal Layout Group** (untuk 2 pecahan side-by-side)
-   - Child Alignment: Middle Center
+   - Child Alignment: Middle Center 
    - Spacing: 40
 3. Di dalam `AnswerSlots_Dual`, buat 2 sub-container:
    
