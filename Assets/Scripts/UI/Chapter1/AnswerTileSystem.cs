@@ -96,7 +96,7 @@ public class AnswerTileSystem : MonoBehaviour
         // Wait for layout group to position tiles, then animate
         StartCoroutine(AnimateTilesInDelayed());
     }
-    
+
     /// <summary>
     /// Delayed animation agar layout group selesai calculate positions
     /// </summary>
@@ -104,14 +104,16 @@ public class AnswerTileSystem : MonoBehaviour
     {
         // Wait 1 frame untuk layout group selesai
         yield return null;
-        
+
         // Force layout rebuild
         Canvas.ForceUpdateCanvases();
         if (poolContainer != null)
         {
             UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(poolContainer as RectTransform);
         }
-        
+
+        AnimateTilesIn();
+    }
 
     /// <summary>
     /// Move tile ke slot kosong
