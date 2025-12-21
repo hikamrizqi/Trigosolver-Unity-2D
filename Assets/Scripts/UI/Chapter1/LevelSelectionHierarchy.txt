@@ -1,0 +1,259 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║           LEVEL SELECTION SYSTEM - HIERARCHY STRUCTURE            ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+📁 Scene: Chapter1
+├── 📁 Canvas (Chapter1)
+│   ├── 🆕 LevelSelectionPanel [RectTransform + CanvasGroup]
+│   │   ├── Background [Image - Optional dark overlay]
+│   │   ├── TitleText [TextMeshPro - "Pilih Level"]
+│   │   ├── ⭐ Level1Button [Button]
+│   │   │   └── Text [TextMeshPro - "Level 1\nSoal 1-10"]
+│   │   └── ⭐ Level2Button [Button]
+│   │       └── Text [TextMeshPro - "Level 2\nSoal 11-20"]
+│   │
+│   ├── QuestionPanel [HIDDEN at start]
+│   ├── InteractiveButtonPanel [HIDDEN at start]
+│   └── CheckButton [HIDDEN at start]
+│
+├── 📁 GameObjects
+│   ├── TriangleVisualizer [HIDDEN at start]
+│   ├── AnswerTileSystem [HIDDEN at start]
+│   └── Background [HIDDEN at start]
+│
+└── 📁 Managers
+    ├── 🆕 LevelSelectionManager [Empty GameObject + Script]
+    ├── CalculationManager
+    └── UIManagerChapter1
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                    INSPECTOR ASSIGNMENTS                          ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+🎮 LevelSelectionManager Inspector:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Level Selection UI                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ Level Selection Panel    → Canvas/LevelSelectionPanel          │
+│ Level1 Button            → LevelSelectionPanel/Level1Button    │
+│ Level2 Button            → LevelSelectionPanel/Level2Button    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Game Objects To Hide/Show                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ Triangle Visualizer Object    → [TriangleVisualizer GameObject]│
+│ Answer Tile System Object     → [AnswerTileSystem GameObject]  │
+│ Background Object             → [Background GameObject]         │
+│ Question Panel Object         → [QuestionPanel]                 │
+│ Interactive Button Panel      → [InteractiveButtonPanel]        │
+│ Check Button Object           → [CheckButton]                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Manager References                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ Calculation Manager      → [CalculationManager GameObject]      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Animation Settings                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ Animation Duration       → 0.5                                  │
+│ Slide Distance           → 1000                                 │
+│ Slide Ease               → OutCubic                             │
+└─────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                       ANIMATION FLOW                              ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+🎬 INITIAL STATE (Game Start):
+   ┌─────────────────────┐
+   │  Level Selection    │  ← Slide IN from TOP
+   │                     │
+   │  [Level 1 Button]   │
+   │  [Level 2 Button]   │
+   └─────────────────────┘
+   
+   All game objects: HIDDEN ❌
+
+🎬 AFTER BUTTON CLICK:
+   
+   Step 1: Panel Slides OUT
+   │
+   │  Level Selection Panel
+   │  ▲▲▲ Slide UP (0.5s)
+   │
+   
+   Step 2: Game Objects Slide IN (0.5s)
+   │
+   ├─► QuestionPanel (from TOP) ▼▼▼
+   ├─► Triangle (from LEFT) ►►►
+   ├─► Answer Tiles (from RIGHT) ◄◄◄
+   ├─► Background (from BOTTOM) ▲▲▲
+   ├─► Interactive Buttons (from BOTTOM) ▲▲▲
+   └─► Check Button (from BOTTOM) ▲▲▲
+   
+   Step 3: Start Game
+   └─► Level 1: progres = 0 (Soal 1)
+   └─► Level 2: progres = 10 (Soal 11)
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                    BUTTON CONFIGURATIONS                          ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+📱 Level1Button:
+   Position: (0, 100, 0)
+   Size: 400 x 80
+   Text: "Level 1\nSoal 1-10"
+   Font Size: 28
+   Colors:
+      Normal: White
+      Highlighted: Yellow
+      Pressed: Green
+   OnClick: LevelSelectionManager.OnLevelSelected(1)
+
+📱 Level2Button:
+   Position: (0, -100, 0)
+   Size: 400 x 80
+   Text: "Level 2\nSoal 11-20"
+   Font Size: 28
+   Colors:
+      Normal: White
+      Highlighted: Yellow
+      Pressed: Green
+   OnClick: LevelSelectionManager.OnLevelSelected(2)
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                      CODE INTEGRATION                             ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+📝 LevelSelectionManager.cs:
+   
+   void Start() {
+      HideAllGameObjects(false);  // Hide tanpa animasi
+      ShowLevelPanel();            // Panel slide in
+   }
+   
+   void OnLevelSelected(int level) {
+      StartCoroutine(LevelSelectionSequence(level));
+   }
+   
+   IEnumerator LevelSelectionSequence(int level) {
+      // 1. Panel slide out
+      levelSelectionPanel.transform.DOMoveY(
+         levelSelectionPanel.transform.position.y + slideDistance, 
+         animationDuration
+      ).SetEase(slideEase);
+      
+      yield return new WaitForSeconds(animationDuration);
+      levelSelectionPanel.SetActive(false);
+      
+      // 2. Game objects slide in
+      ShowAllGameObjects(true);
+      
+      // 3. Start game
+      int questionNumber = (level == 1) ? 1 : 11;
+      calculationManager.StartFromQuestion(questionNumber);
+   }
+
+📝 CalculationManager.cs:
+   
+   private bool gameStarted = false;
+   
+   void Start() {
+      // DON'T auto-start - wait for level selection
+      lives = 3;
+      uiManager.UpdateLives(lives);
+   }
+   
+   public void StartFromQuestion(int questionNumber) {
+      if (gameStarted) return;
+      gameStarted = true;
+      
+      progres = questionNumber - 1;  // 0 atau 10
+      lives = 3;
+      score = 0;
+      
+      StartNewRound();
+   }
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                        TESTING STEPS                              ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+✅ Test 1: Initial State
+   1. Play scene
+   2. Verify only Level Selection Panel visible
+   3. Verify panel slides in from top smoothly
+   4. Verify all game objects hidden
+
+✅ Test 2: Level 1 Selection
+   1. Click Level 1 button
+   2. Verify panel slides out to top
+   3. Verify game objects slide in from edges
+   4. Verify game starts at Soal 1
+   5. Verify using Single Question (2 slots, θ)
+
+✅ Test 3: Level 2 Selection
+   1. Restart scene
+   2. Click Level 2 button
+   3. Verify panel slides out to top
+   4. Verify game objects slide in from edges
+   5. Verify game starts at Soal 11
+   6. Verify using Dual Question (4 slots, A & B)
+
+✅ Test 4: Animation Quality
+   1. Check no glitches/jumps
+   2. Verify 0.5s duration feels smooth
+   3. Verify OutCubic easing feels natural
+   4. Check all objects reach final position
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                     TROUBLESHOOTING                               ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+❌ Problem: Game starts immediately without level selection
+   ✅ Solution: Check CalculationManager.Start() - remove StartNewRound()
+
+❌ Problem: Objects not hiding at start
+   ✅ Solution: Verify all references assigned in Inspector
+
+❌ Problem: Buttons not working
+   ✅ Solution: Check EventSystem exists in scene
+
+❌ Problem: Animation stutters
+   ✅ Solution: Adjust animationDuration or slideDistance
+
+❌ Problem: Wrong question number starts
+   ✅ Solution: Check OnLevelSelected() logic:
+      Level 1 → questionNumber = 1
+      Level 2 → questionNumber = 11
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                      COMMIT INFO                                  ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+Commit: becd672
+Message: feat: Add level selection system for Chapter 1
+
+Files Added:
+   + Assets/Scripts/UI/Chapter1/LevelSelectionManager.cs
+   + Assets/Scripts/UI/Chapter1/LevelSelectionManager.cs.meta
+   + LEVEL_SELECTION_SETUP.md
+   + LevelSelectionHierarchy.txt
+
+Files Modified:
+   ~ Assets/Scripts/Managers/Chapter1/CalculationManager.cs
+      - Added gameStarted flag
+      - Added StartFromQuestion(int) method
+      - Modified Start() to NOT auto-start
+
+Dependencies:
+   - DOTween (already installed)
+   - TextMeshPro (already installed)
+   - CalculationManager (existing)
+   - TriangleVisualizer (existing)
+   - AnswerTileSystem (existing)
