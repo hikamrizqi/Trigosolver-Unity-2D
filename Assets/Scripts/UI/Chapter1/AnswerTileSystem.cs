@@ -67,14 +67,14 @@ public class AnswerTileSystem : MonoBehaviour
         }
         allTiles.Clear();
 
-        // Buat pool: 2 correct + 3 wrong (acak)
+        // Buat pool: 2 correct + wrong answers (total 6-8 tiles, acak)
         List<string> poolValues = new List<string> { numerator, denominator };
         poolValues.AddRange(wrongAnswers);
 
-        // Shuffle
+        // Shuffle untuk random order
         poolValues = poolValues.OrderBy(x => Random.value).ToList();
 
-        // Instantiate tiles
+        // Instantiate tiles (dynamic count based on pool size)
         for (int i = 0; i < poolValues.Count; i++)
         {
             GameObject tileObj = Instantiate(tilePrefab, poolContainer);
@@ -83,7 +83,7 @@ public class AnswerTileSystem : MonoBehaviour
             allTiles.Add(tile);
         }
 
-        Debug.Log($"[AnswerTileSystem] Setup question: {numerator}/{denominator}, Pool: {string.Join(", ", poolValues)}");
+        Debug.Log($"[AnswerTileSystem] Setup question: {numerator}/{denominator}, Total tiles: {poolValues.Count}, Pool: {string.Join(", ", poolValues)}");
     }
 
     /// <summary>

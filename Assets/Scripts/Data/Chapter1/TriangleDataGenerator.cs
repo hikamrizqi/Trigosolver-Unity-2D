@@ -402,28 +402,52 @@ public class TriangleDataGenerator : MonoBehaviour
                 break;
         }
 
-        // Generate 3 wrong answers (distractor)
+        // Generate tiles: 3 angka dari soal + 3 angka random (total 6 tiles)
         tileData.WrongAnswers = new List<string>();
-        List<string> distractors = GenerateDistractors(data);
 
-        // Ambil 3 distractor pertama
-        for (int i = 0; i < Mathf.Min(3, distractors.Count); i++)
+        // Kumpulkan semua angka yang sudah dipakai (termasuk jawaban benar)
+        HashSet<string> usedNumbers = new HashSet<string>
         {
-            tileData.WrongAnswers.Add(distractors[i]);
-        }
+            tileData.NumeratorCorrect,
+            tileData.DenominatorCorrect
+        };
 
-        // Jika distractor kurang dari 3, tambahkan angka random
-        while (tileData.WrongAnswers.Count < 3)
+        // Tambahkan 3 angka dari soal (depan, samping, miring) - exclude yang sudah jadi jawaban benar
+        List<string> triangleNumbers = new List<string>
         {
-            int randomNum = Random.Range(1, 20);
-            string randomStr = randomNum.ToString();
-            if (!tileData.WrongAnswers.Contains(randomStr) &&
-                randomStr != tileData.NumeratorCorrect &&
-                randomStr != tileData.DenominatorCorrect)
+            data.Depan.ToString(),
+            data.Samping.ToString(),
+            data.Miring.ToString()
+        };
+
+        foreach (string num in triangleNumbers)
+        {
+            if (!usedNumbers.Contains(num) && tileData.WrongAnswers.Count < 3)
             {
-                tileData.WrongAnswers.Add(randomStr);
+                tileData.WrongAnswers.Add(num);
+                usedNumbers.Add(num);
             }
         }
+
+        // Generate 3 angka random (1-2 digit) yang berbeda
+        int attempts = 0;
+        while (tileData.WrongAnswers.Count < 6 && attempts < 50) // Total 6 tiles (3 dari soal + 3 random)
+        {
+            attempts++;
+
+            // Random 1-2 digit (1-20 range)
+            int randomNum = Random.Range(1, 21);
+            string randomStr = randomNum.ToString();
+
+            // Pastikan unique (belum ada di list)
+            if (!usedNumbers.Contains(randomStr))
+            {
+                tileData.WrongAnswers.Add(randomStr);
+                usedNumbers.Add(randomStr);
+            }
+        }
+
+        Debug.Log($"[TriangleDataGenerator] Generated {tileData.WrongAnswers.Count + 2} tiles (2 correct + {tileData.WrongAnswers.Count} pool)");
 
         return tileData;
     }
