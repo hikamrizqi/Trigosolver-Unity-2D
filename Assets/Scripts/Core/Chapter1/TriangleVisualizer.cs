@@ -165,7 +165,7 @@ public class TriangleVisualizer : MonoBehaviour
             // Hitung ukuran segitiga yang akan di-render (width x height)
             // PENTING: Untuk SWAPPED orientation, width dan height terbalik!
             float widthNeeded, heightNeeded;
-            
+
             if (orientation == TriangleOrientation.Normal)
             {
                 // NORMAL: Depan=horizontal, Samping=vertical
@@ -196,7 +196,16 @@ public class TriangleVisualizer : MonoBehaviour
         }
 
         // Hitung posisi-posisi vertex segitiga SEBELUM rotasi
-        Vector3 basePosition = transform.position + centerPosition;
+        // ADJUSTMENT: Untuk SWAPPED orientation, geser ke kanan agar tidak overflow ke kiri
+        Vector3 adjustedCenter = centerPosition;
+        if (orientation == TriangleOrientation.Swapped)
+        {
+            // Geser ke kanan sebesar setengah lebar horizontal untuk balance
+            float horizontalWidth = samping * dynamicScale;
+            adjustedCenter += new Vector3(horizontalWidth * 0.3f, 0, 0); // Offset 30% dari width
+        }
+        
+        Vector3 basePosition = transform.position + adjustedCenter;
 
         // Segitiga siku-siku dengan sudut siku di origin (0,0) relatif
         // NORMAL: Depan=horizontal(alas), Samping=vertical(tegak), Theta di topLeft
