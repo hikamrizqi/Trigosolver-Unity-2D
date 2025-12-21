@@ -38,17 +38,24 @@ public class TriangleVisualizer : MonoBehaviour
     public Camera mainCamera;
 
     [Header("Visual Settings")]
-    [Tooltip("Skala dasar untuk sprites (1 = 1 unit Unity per nilai segitiga) - UBAH INI untuk memperbesar/memperkecil segitiga")]
-    public float baseScale = 0.5f; // Tingkatkan dari 0.3 agar tidak terlalu kecil
+    [Tooltip("Skala dasar untuk sprites - UBAH INI untuk memperbesar/memperkecil SEMUA segitiga (0.4=kecil, 0.6=besar)")]
+    public float baseScale = 0.5f;
 
-    [Tooltip("Maksimal ukuran segitiga untuk auto-scaling (fit di layar) - Segitiga hanya dikecilkan jika melebihi ini")]
-    public float maxTriangleSize = 7f; // Tingkatkan dari 5 agar lebih toleran
+    [Tooltip("Maksimal ukuran SETELAH baseScale (units) - Jika sisi terpanjang × baseScale > ini, segitiga dikecilkan. Set 10+ untuk hampir tidak pernah rescale")]
+    public float maxTriangleSize = 9f; // Tingkatkan ke 9 agar jarang rescale
 
     [Tooltip("Safety margin dari batas layar (dalam units)")]
     public float safetyMargin = 0.5f;
 
-    [Tooltip("Gunakan auto-scaling agar semua segitiga fit di layar")]
+    [Tooltip("Gunakan auto-scaling - UNCHECK ini jika mau ukuran tetap baseScale tanpa rescale")]
     public bool useAutoScaling = true;
+
+    [Header("Symbol Position Settings")]
+    [Tooltip("Jarak simbol theta dari sudut (lebih kecil = lebih dekat ke garis)")]
+    public float thetaOffsetMultiplier = 1.5f; // Ubah ke 1.0 atau 0.8 untuk lebih dekat
+
+    [Tooltip("Jarak simbol siku dari sudut (lebih kecil = lebih dekat ke garis)")]
+    public float rightAngleOffsetMultiplier = 1.2f; // Ubah ke 0.8 atau 0.6 untuk lebih dekat
 
     [Tooltip("Posisi pusat segitiga di world space")]
     public Vector3 centerPosition = Vector3.zero;
@@ -223,8 +230,8 @@ public class TriangleVisualizer : MonoBehaviour
             thetaLabel.text = "θ";
             thetaLabel.fontSize = labelFontSize * 0.8f; // Sedikit lebih kecil dari label angka
 
-            // Posisi theta di topLeft (titik A - sudut antara sisi samping AB dan sisi miring AC)
-            float thetaOffsetDistance = labelOffset * 1.5f;
+            // ADJUST: thetaOffsetMultiplier di Inspector (default 1.5) - ubah ke 1.0 atau 0.8 untuk lebih dekat
+            float thetaOffsetDistance = labelOffset * thetaOffsetMultiplier;
 
             // Hitung arah menuju "dalam" segitiga dari sudut theta
             Vector3 toSamping = (bottomLeft - topLeft).normalized;  // Arah ke bawah (samping AB)
@@ -253,8 +260,8 @@ public class TriangleVisualizer : MonoBehaviour
             Vector3 toRight = (bottomRight - bottomLeft).normalized; // Arah ke kanan (depan BC)
             Vector3 toUp = (topLeft - bottomLeft).normalized;        // Arah ke atas (samping AB)
 
-            // Offset dari vertex agar simbol tidak pas di pojok
-            float offsetDistance = labelOffset * 1.2f;
+            // ADJUST: rightAngleOffsetMultiplier di Inspector (default 1.2) - ubah ke 0.8 atau 0.6 untuk lebih dekat
+            float offsetDistance = labelOffset * rightAngleOffsetMultiplier;
             Vector3 offset = (toRight + toUp).normalized * offsetDistance;
             Vector3 symbolPosition = bottomLeft + offset;
             symbolPosition.z = labelZOffset; // Z di depan sprite
