@@ -402,7 +402,7 @@ public class TriangleDataGenerator : MonoBehaviour
                 break;
         }
 
-        // Generate tiles: 3 angka dari soal + 3 angka random (total 6 tiles)
+        // Generate tiles: Total 6 tiles (2 correct + 4 distractor)
         tileData.WrongAnswers = new List<string>();
 
         // Kumpulkan semua angka yang sudah dipakai (termasuk jawaban benar)
@@ -412,7 +412,7 @@ public class TriangleDataGenerator : MonoBehaviour
             tileData.DenominatorCorrect
         };
 
-        // Tambahkan 3 angka dari soal (depan, samping, miring) - exclude yang sudah jadi jawaban benar
+        // Tambahkan angka dari soal (depan, samping, miring) - exclude yang sudah jadi jawaban benar
         List<string> triangleNumbers = new List<string>
         {
             data.Depan.ToString(),
@@ -420,18 +420,19 @@ public class TriangleDataGenerator : MonoBehaviour
             data.Miring.ToString()
         };
 
+        // Ambil maksimal 2 angka dari segitiga untuk distractor
         foreach (string num in triangleNumbers)
         {
-            if (!usedNumbers.Contains(num) && tileData.WrongAnswers.Count < 3)
+            if (!usedNumbers.Contains(num) && tileData.WrongAnswers.Count < 2)
             {
                 tileData.WrongAnswers.Add(num);
                 usedNumbers.Add(num);
             }
         }
 
-        // Generate 3 angka random (1-2 digit) yang berbeda
+        // Generate angka random hingga total WrongAnswers = 4 (jadi total tiles = 2 correct + 4 wrong = 6)
         int attempts = 0;
-        while (tileData.WrongAnswers.Count < 6 && attempts < 50) // Total 6 tiles (3 dari soal + 3 random)
+        while (tileData.WrongAnswers.Count < 4 && attempts < 50)
         {
             attempts++;
 
@@ -447,7 +448,7 @@ public class TriangleDataGenerator : MonoBehaviour
             }
         }
 
-        Debug.Log($"[TriangleDataGenerator] Generated {tileData.WrongAnswers.Count + 2} tiles (2 correct + {tileData.WrongAnswers.Count} pool)");
+        Debug.Log($"[TriangleDataGenerator] Generated {tileData.WrongAnswers.Count + 2} tiles (2 correct + {tileData.WrongAnswers.Count} distractor)");
 
         return tileData;
     }
