@@ -150,32 +150,29 @@ public class TriangleVisualizer : MonoBehaviour
             }
         }
 
-        // SWAP: Tukar depan/samping jika orientation = Swapped
-        int actualDepan = depan;
-        int actualSamping = samping;
-        if (orientation == TriangleOrientation.Swapped)
-        {
-            actualDepan = samping;    // Depan jadi tegak
-            actualSamping = depan;    // Samping jadi alas
-            Debug.Log($"[Orientation] SWAPPED: Depan={actualDepan} (tegak), Samping={actualSamping} (alas), Theta akan pindah ke bottomRight");
-        }
-        else
-        {
-            Debug.Log($"[Orientation] NORMAL: Depan={actualDepan} (alas), Samping={actualSamping} (tegak), Theta di topLeft");
-        }
-
         // Hitung posisi-posisi vertex segitiga SEBELUM rotasi
         Vector3 basePosition = transform.position + centerPosition;
 
         // Segitiga siku-siku dengan sudut siku di origin (0,0) relatif
-        // NORMAL: Theta di topLeft, sudut siku di bottomLeft
-        // SWAPPED: Theta di bottomRight, sudut siku di bottomLeft
-        // BC (horizontal) = actualSamping (alas)
-        // AB (vertical) = actualDepan (tegak)
-        // AC (diagonal) = MIRING (hypotenuse)
+        // NORMAL: Depan=horizontal(alas), Samping=vertical(tegak), Theta di topLeft
+        // SWAPPED: Depan=vertical(tegak), Samping=horizontal(alas), Theta di bottomRight
         Vector3 bottomLeft = Vector3.zero;
-        Vector3 bottomRight = new Vector3(actualSamping * dynamicScale, 0, 0);  // BC = horizontal = alas
-        Vector3 topLeft = new Vector3(0, actualDepan * dynamicScale, 0);        // AB = vertical = tegak
+        Vector3 bottomRight, topLeft;
+
+        if (orientation == TriangleOrientation.Normal)
+        {
+            // NORMAL: Depan di horizontal, Samping di vertical
+            bottomRight = new Vector3(depan * dynamicScale, 0, 0);      // BC = depan (alas)
+            topLeft = new Vector3(0, samping * dynamicScale, 0);        // AB = samping (tegak)
+            Debug.Log($"[Orientation] NORMAL: Depan={depan} (horizontal/alas), Samping={samping} (vertical/tegak), Theta di topLeft");
+        }
+        else // Swapped
+        {
+            // SWAPPED: Samping di horizontal, Depan di vertical
+            bottomRight = new Vector3(samping * dynamicScale, 0, 0);    // BC = samping (alas)
+            topLeft = new Vector3(0, depan * dynamicScale, 0);          // AB = depan (tegak)
+            Debug.Log($"[Orientation] SWAPPED: Samping={samping} (horizontal/alas), Depan={depan} (vertical/tegak), Theta di bottomRight");
+        }
 
         // ROTASI: Rotasi semua vertex di sekitar origin
         float rotRad = rotationAngle * Mathf.Deg2Rad;
@@ -188,42 +185,48 @@ public class TriangleVisualizer : MonoBehaviour
         bottomRight += basePosition;
         topLeft += basePosition;
 
-        // SISI SAMPING (BC - Horizontal - ALAS)
-        // Normal: Samping = alas, Swapped: Depan = alas
-        PositionSprite(sampingSprite, bottomLeft, bottomRight, actualSamping);
-        if (sampingLabel != null)
+        // SISI HORIZONTAL (BC - Alas)
+        // Normal: Depan di horizontal, Swapped: Samping di horizontal
+        int horizontalValue = (orientation == TriangleOrientation.Normal) ? depan : samping;
+        SpriteRenderer horizontalSprite = (orientation == TriangleOrientation.Normal) ? depanSprite : sampingSprite;
+        TextMeshPro horizontalLabel = (orientation == TriangleOrientation.Normal) ? depanLabel : sampingLabel;
+
+        PositionSprite(horizontalSprite, bottomLeft, bottomRight, horizontalValue);
+        if (horizontalLabel != null)
         {
-            sampingLabel.text = actualSamping.ToString();
-            sampingLabel.fontSize = labelFontSize;
+            horizontalLabel.text = horizontalValue.ToString();
+            horizontalLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
             Vector3 direction = (bottomRight - bottomLeft).normalized;
-            // Perpendicular ke BAWAH (untuk label di bawah garis horizontal)
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // ADJUST: sampingLabelMultiplier di Inspector
-            Vector3 labelPos = midPoint + perpendicular * (labelOffset * sampingLabelMultiplier);
+            float multiplier = (orientation == TriangleOrientation.Normal) ? depanLabelMultiplier : sampingLabelMultiplier;
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * multiplier);
             labelPos.z = labelZOffset;
-            sampingLabel.transform.position = labelPos;
-            if (sampingLabel.GetComponent<MeshRenderer>() != null)
-                sampingLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            horizontalLabel.transform.position = labelPos;
+            if (horizontalLabel.GetComponent<MeshRenderer>() != null)
+                horizontalLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
 
-        // SISI DEPAN (AB - Vertical - TEGAK)
-        // Normal: Depan = tegak, Swapped: Samping = tegak
-        PositionSprite(depanSprite, bottomLeft, topLeft, actualDepan);
-        if (depanLabel != null)
+        // SISI VERTICAL (AB - Tegak)
+        // Normal: Samping di vertical, Swapped: Depan di vertical
+        int verticalValue = (orientation == TriangleOrientation.Normal) ? samping : depan;
+        SpriteRenderer verticalSprite = (orientation == TriangleOrientation.Normal) ? sampingSprite : depanSprite;
+        TextMeshPro verticalLabel = (orientation == TriangleOrientation.Normal) ? sampingLabel : depanLabel;
+
+        PositionSprite(verticalSprite, bottomLeft, topLeft, verticalValue);
+        if (verticalLabel != null)
         {
-            depanLabel.text = actualDepan.ToString();
-            depanLabel.fontSize = labelFontSize;
+            verticalLabel.text = verticalValue.ToString();
+            verticalLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
             Vector3 direction = (topLeft - bottomLeft).normalized;
-            // Perpendicular ke KIRI (untuk label di kiri garis vertikal)
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // ADJUST: depanLabelMultiplier di Inspector
-            Vector3 labelPos = midPoint + perpendicular * (labelOffset * depanLabelMultiplier);
+            float multiplier = (orientation == TriangleOrientation.Normal) ? sampingLabelMultiplier : depanLabelMultiplier;
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * multiplier);
             labelPos.z = labelZOffset;
-            depanLabel.transform.position = labelPos;
-            if (depanLabel.GetComponent<MeshRenderer>() != null)
-                depanLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            verticalLabel.transform.position = labelPos;
+            if (verticalLabel.GetComponent<MeshRenderer>() != null)
+                verticalLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -379,30 +382,15 @@ public class TriangleVisualizer : MonoBehaviour
 
     /// <summary>
     /// Highlight salah satu sisi segitiga dengan warna tertentu
-    /// PENTING: Jika orientation = Swapped, maka depan/samping button akan highlight sprite yang sesuai
+    /// Sprite assignment sudah correct sesuai orientation, tidak perlu swap lagi
     /// </summary>
     public void HighlightSide(string sideName, Color color)
     {
         ResetColors();
 
-        // SWAP: Jika orientation = Swapped, tukar mapping depan/samping
-        string actualSideName = sideName.ToLower();
-        if (currentOrientation == TriangleOrientation.Swapped)
-        {
-            if (actualSideName == "depan")
-            {
-                // Button DEPAN → Sekarang highlight sprite SAMPING (karena depan sekarang di posisi tegak)
-                actualSideName = "samping";
-            }
-            else if (actualSideName == "samping")
-            {
-                // Button SAMPING → Sekarang highlight sprite DEPAN (karena samping sekarang di posisi alas)
-                actualSideName = "depan";
-            }
-            // "miring" tetap "miring" (tidak berubah)
-        }
-
-        switch (actualSideName)
+        // Langsung highlight sprite yang sesuai nama
+        // Sprite assignment di DrawTriangle sudah handle orientation swap
+        switch (sideName.ToLower())
         {
             case "depan":
                 if (depanSprite != null) depanSprite.color = color;
