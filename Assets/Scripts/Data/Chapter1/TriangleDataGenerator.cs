@@ -35,9 +35,13 @@ public enum TriangleOrientation
 [System.Serializable]
 public class AnswerTileData
 {
-    public string NumeratorCorrect;     // Pembilang yang benar
-    public string DenominatorCorrect;   // Penyebut yang benar
-    public List<string> WrongAnswers;   // 3 jawaban salah (distractor)
+    public string NumeratorCorrect;     // Pembilang yang benar (untuk soal 1-10 atau jawaban A di soal 11-20)
+    public string DenominatorCorrect;   // Penyebut yang benar (untuk soal 1-10 atau jawaban A di soal 11-20)
+    public List<string> WrongAnswers;   // Jawaban salah (distractor)
+    
+    // Untuk dual question (soal 11-20)
+    public string NumeratorCorrect2;    // Pembilang jawaban B
+    public string DenominatorCorrect2;  // Penyebut jawaban B
 }
 
 [System.Serializable]
@@ -68,6 +72,12 @@ public class TriangleData
 
     // Answer Tile Data (untuk button-based input)
     public AnswerTileData AnswerTileData;   // Data untuk answer tile system
+    
+    // Dual Question System (untuk soal 11-20)
+    public bool IsDualQuestion;             // True jika soal tanya 2 rasio sekaligus
+    public QuestionType TypeSoal2;          // Tipe soal kedua (untuk dual question)
+    public string PertanyaanText2;          // Text pertanyaan kedua
+    public float JawabanBenar2;             // Nilai jawaban kedua
 }
 
 public class TriangleDataGenerator : MonoBehaviour
@@ -186,6 +196,14 @@ public class TriangleDataGenerator : MonoBehaviour
     /// </summary>
     private void GenerateQuestionContent(TriangleData data, DifficultyLevel difficulty, int questionNumber)
     {
+        // Soal 11-20: DUAL QUESTION (2 sudut A dan B, 4 jawaban)
+        if (questionNumber >= 11 && questionNumber <= 20)
+        {
+            GenerateDualAngleQuestion(data, questionNumber);
+            return;
+        }
+        
+        // Soal 1-10: SINGLE QUESTION (θ, 2 jawaban) - TETAP SEPERTI SEBELUMNYA
         if (difficulty == DifficultyLevel.Easy)
         {
             // Easy: Hanya cari nilai Sin, Cos, Tan
@@ -245,6 +263,73 @@ public class TriangleDataGenerator : MonoBehaviour
                 data.InfoTambahan = $"Sisi Depan = {data.Depan}, Sisi Samping = {data.Samping}";
                 break;
         }
+    }
+    
+    /// <summary>
+    /// Generate pertanyaan ganda untuk soal 11-20: Tanya 2 sudut (A dan B) sekaligus
+    /// Contoh: "Berapa sin A dan cos B?"
+    /// </summary>
+    private void GenerateDualAngleQuestion(TriangleData data, int questionNumber)
+    {
+        data.IsDualQuestion = true;
+        
+        // Random pilih 2 tipe soal yang berbeda untuk sudut A dan B
+        QuestionType[] availableTypes = { 
+            QuestionType.FindSinValue, 
+            QuestionType.FindCosValue, 
+            QuestionType.FindTanValue 
+        };
+        
+        // Sudut A: Random sin/cos/tan
+        int indexA = Random.Range(0, 3);
+        data.TypeSoal = availableTypes[indexA];
+        
+        // Sudut B: Random sin/cos/tan (bisa sama atau beda dengan A)
+        int indexB = Random.Range(0, 3);
+        data.TypeSoal2 = availableTypes[indexB];
+        
+        // Generate text pertanyaan untuk sudut A
+        string questionA = "";
+        switch (data.TypeSoal)
+        {
+            case QuestionType.FindSinValue:
+                questionA = "sin A";
+                data.JawabanBenar = (float)data.Depan / data.Miring;
+                break;
+            case QuestionType.FindCosValue:
+                questionA = "cos A";
+                data.JawabanBenar = (float)data.Samping / data.Miring;
+                break;
+            case QuestionType.FindTanValue:
+                questionA = "tan A";
+                data.JawabanBenar = (float)data.Depan / data.Samping;
+                break;
+        }
+        
+        // Generate text pertanyaan untuk sudut B
+        string questionB = "";
+        switch (data.TypeSoal2)
+        {
+            case QuestionType.FindSinValue:
+                questionB = "sin B";
+                data.JawabanBenar2 = (float)data.Samping / data.Miring; // B berbeda dari A
+                break;
+            case QuestionType.FindCosValue:
+                questionB = "cos B";
+                data.JawabanBenar2 = (float)data.Depan / data.Miring; // B berbeda dari A
+                break;
+            case QuestionType.FindTanValue:
+                questionB = "tan B";
+                data.JawabanBenar2 = (float)data.Samping / data.Depan; // B berbeda dari A
+                break;
+        }
+        
+        // Gabungkan pertanyaan A dan B
+        data.PertanyaanText = $"Berapakah nilai {questionA} dan {questionB}?";
+        data.SoalDisederhanakan = $"{questionA} & {questionB}";
+        data.InfoTambahan = $"Sisi AB={data.Miring}, BC={data.Depan}, AC={data.Samping}";
+        
+        Debug.Log($"[DualQuestion] Q{questionNumber}: {questionA} = {data.JawabanBenar:F2}, {questionB} = {data.JawabanBenar2:F2}");
     }
 
     /// <summary>
@@ -381,6 +466,96 @@ public class TriangleDataGenerator : MonoBehaviour
     {
         AnswerTileData tileData = new AnswerTileData();
 
+        // DUAL QUESTION (Soal 11-20): 4 jawaban benar + 2 distractor = 6 tiles
+        if (data.IsDualQuestion)
+        {
+            // Jawaban A (pecahan pertama)
+            switch (data.TypeSoal)
+            {
+                case QuestionType.FindSinValue:
+                    tileData.NumeratorCorrect = data.Depan.ToString();
+                    tileData.DenominatorCorrect = data.Miring.ToString();
+                    break;
+                case QuestionType.FindCosValue:
+                    tileData.NumeratorCorrect = data.Samping.ToString();
+                    tileData.DenominatorCorrect = data.Miring.ToString();
+                    break;
+                case QuestionType.FindTanValue:
+                    tileData.NumeratorCorrect = data.Depan.ToString();
+                    tileData.DenominatorCorrect = data.Samping.ToString();
+                    break;
+            }
+            
+            // Simpan jawaban A di field tambahan untuk dual question
+            string numA = tileData.NumeratorCorrect;
+            string denA = tileData.DenominatorCorrect;
+            
+            // Jawaban B (pecahan kedua)
+            string numB = "";
+            string denB = "";
+            switch (data.TypeSoal2)
+            {
+                case QuestionType.FindSinValue:
+                    numB = data.Samping.ToString(); // B kebalikan A
+                    denB = data.Miring.ToString();
+                    break;
+                case QuestionType.FindCosValue:
+                    numB = data.Depan.ToString(); // B kebalikan A
+                    denB = data.Miring.ToString();
+                    break;
+                case QuestionType.FindTanValue:
+                    numB = data.Samping.ToString(); // B kebalikan A
+                    denB = data.Depan.ToString();
+                    break;
+            }
+            
+            // Simpan jawaban B
+            tileData.NumeratorCorrect2 = numB;
+            tileData.DenominatorCorrect2 = denB;
+            
+            // Kumpulkan 4 jawaban benar
+            HashSet<string> correctAnswers = new HashSet<string> { numA, denA, numB, denB };
+            
+            // Generate 2 distractor (total 6 tiles)
+            tileData.WrongAnswers = new List<string>();
+            HashSet<string> usedNumbers = new HashSet<string>(correctAnswers);
+            
+            // Coba pakai angka dari segitiga dulu
+            List<string> triangleNumbers = new List<string>
+            {
+                data.Depan.ToString(),
+                data.Samping.ToString(),
+                data.Miring.ToString()
+            };
+            
+            foreach (string num in triangleNumbers)
+            {
+                if (!usedNumbers.Contains(num) && tileData.WrongAnswers.Count < 2)
+                {
+                    tileData.WrongAnswers.Add(num);
+                    usedNumbers.Add(num);
+                }
+            }
+            
+            // Jika masih kurang, generate random
+            int attempts = 0;
+            while (tileData.WrongAnswers.Count < 2 && attempts < 50)
+            {
+                attempts++;
+                int randomNum = Random.Range(1, 21);
+                string randomStr = randomNum.ToString();
+                if (!usedNumbers.Contains(randomStr))
+                {
+                    tileData.WrongAnswers.Add(randomStr);
+                    usedNumbers.Add(randomStr);
+                }
+            }
+            
+            Debug.Log($"[DualQuestion] Tiles: {numA}/{denA} (A), {numB}/{denB} (B), Distractors: {string.Join(", ", tileData.WrongAnswers)}");
+            return tileData;
+        }
+        
+        // SINGLE QUESTION (Soal 1-10): 2 jawaban + 4 distractor = 6 tiles - TETAP SEPERTI SEBELUMNYA
         // Convert jawaban benar ke pecahan (numerator/denominator)
         // Contoh: Sin θ = depan/miring, Cos θ = samping/miring, Tan θ = depan/samping
         switch (data.TypeSoal)
