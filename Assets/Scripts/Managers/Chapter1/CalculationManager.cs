@@ -20,12 +20,34 @@ public class CalculationManager : MonoBehaviour
 
     private TriangleData dataSoalSaatIni;
 
+    private bool gameStarted = false; // Track if game has been started by level selection
+
     void Start()
     {
-        // Inisialisasi permainan
-        progres = 0;
+        // DON'T auto-start game - wait for level selection
+        // Inisialisasi lives saja
         lives = 3;
         uiManager.UpdateLives(lives);
+    }
+
+    /// <summary>
+    /// Start game from specific question number (called by LevelSelectionManager)
+    /// </summary>
+    public void StartFromQuestion(int questionNumber)
+    {
+        if (gameStarted)
+        {
+            Debug.LogWarning("[CalculationManager] Game already started!");
+            return;
+        }
+
+        gameStarted = true;
+        progres = questionNumber - 1; // Set to question before target (will increment in StartNewRound)
+        lives = 3;
+        score = 0;
+        uiManager.UpdateLives(lives);
+
+        Debug.Log($"[CalculationManager] Starting from question {questionNumber}");
         StartNewRound();
     }
 

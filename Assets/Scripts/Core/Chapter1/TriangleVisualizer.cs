@@ -268,7 +268,7 @@ public class TriangleVisualizer : MonoBehaviour
             else
             {
                 // Swapped: Samping di alas → multiplier = 1
-                multiplier = 1f;
+                multiplier = 1.3f;
             }
 
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * multiplier);
