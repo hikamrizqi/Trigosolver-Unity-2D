@@ -138,9 +138,20 @@ public class CalculationManager : MonoBehaviour
     // Delay sebelum lanjut ke soal berikutnya
     IEnumerator NextRoundDelay()
     {
-        // Beri pemain waktu 2 detik untuk membaca feedback
-        yield return new WaitForSeconds(2.0f);
-        StartNewRound();
+        // Beri pemain waktu 1.5 detik untuk membaca feedback
+        yield return new WaitForSeconds(1.5f);
+        
+        // Animate triangle keluar
+        if (uiManager != null && uiManager.triangleVisualizer != null)
+        {
+            uiManager.triangleVisualizer.AnimateTriangleOut(() => {
+                StartNewRound();
+            });
+        }
+        else
+        {
+            StartNewRound();
+        }
     }
 
     void EndChapter()

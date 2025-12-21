@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using DG.Tweening;
 
 /// <summary>
 /// Script untuk visualisasi segitiga secara dinamis menggunakan 3 sprites yang tegak lurus
@@ -96,6 +97,19 @@ public class TriangleVisualizer : MonoBehaviour
     public Color highlightColor = Color.yellow;
     public Color correctColor = Color.green;
     public Color wrongColor = Color.red;
+
+    [Header("Animation Settings")]
+    [Tooltip("Durasi animasi garis masuk/keluar (detik)")]
+    public float animationDuration = 0.5f;
+    
+    [Tooltip("Ease type untuk animasi masuk")]
+    public Ease entryEase = Ease.OutBack;
+    
+    [Tooltip("Ease type untuk animasi keluar")]
+    public Ease exitEase = Ease.InBack;
+    
+    [Tooltip("Jarak offscreen untuk spawn position (units)")]
+    public float offscreenDistance = 15f;
 
     // Data segitiga saat ini
     private int currentDepan;
@@ -352,6 +366,192 @@ public class TriangleVisualizer : MonoBehaviour
 
         // Reset warna ke normal
         ResetColors();
+        
+        // Animate triangle in dari offscreen
+        AnimateTriangleIn(bottomLeft, bottomRight, topLeft);
+    }
+    
+    /// <summary>
+    /// Animasi garis dan simbol masuk dari luar layar
+    /// </summary>
+    private void AnimateTriangleIn(Vector3 bottomLeft, Vector3 bottomRight, Vector3 topLeft)
+    {
+        // Kill existing tweens untuk avoid conflict
+        DOTween.Kill(depanSprite?.transform);
+        DOTween.Kill(sampingSprite?.transform);
+        DOTween.Kill(miringSprite?.transform);
+        DOTween.Kill(depanLabel?.transform);
+        DOTween.Kill(sampingLabel?.transform);
+        DOTween.Kill(miringLabel?.transform);
+        DOTween.Kill(thetaLabel?.transform);
+        DOTween.Kill(rightAngleLabel?.transform);
+        
+        // HORIZONTAL LINE (bottom): Masuk dari KIRI
+        if (sampingSprite != null || depanSprite != null)
+        {
+            SpriteRenderer horizontalSprite = (currentOrientation == TriangleOrientation.Normal) ? depanSprite : sampingSprite;
+            TextMeshPro horizontalLabel = (currentOrientation == TriangleOrientation.Normal) ? depanLabel : sampingLabel;
+            
+            if (horizontalSprite != null)
+            {
+                Vector3 startPos = horizontalSprite.transform.position;
+                Vector3 offscreenPos = startPos + Vector3.left * offscreenDistance;
+                horizontalSprite.transform.position = offscreenPos;
+                horizontalSprite.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
+            }
+            
+            if (horizontalLabel != null)
+            {
+                Vector3 startPos = horizontalLabel.transform.position;
+                Vector3 offscreenPos = startPos + Vector3.left * offscreenDistance;
+                horizontalLabel.transform.position = offscreenPos;
+                horizontalLabel.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
+            }
+        }
+        
+        // VERTICAL LINE (left): Masuk dari ATAS
+        if (sampingSprite != null || depanSprite != null)
+        {
+            SpriteRenderer verticalSprite = (currentOrientation == TriangleOrientation.Normal) ? sampingSprite : depanSprite;
+            TextMeshPro verticalLabel = (currentOrientation == TriangleOrientation.Normal) ? sampingLabel : depanLabel;
+            
+            if (verticalSprite != null)
+            {
+                Vector3 startPos = verticalSprite.transform.position;
+                Vector3 offscreenPos = startPos + Vector3.up * offscreenDistance;
+                verticalSprite.transform.position = offscreenPos;
+                verticalSprite.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
+            }
+            
+            if (verticalLabel != null)
+            {
+                Vector3 startPos = verticalLabel.transform.position;
+                Vector3 offscreenPos = startPos + Vector3.up * offscreenDistance;
+                verticalLabel.transform.position = offscreenPos;
+                verticalLabel.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
+            }
+        }
+        
+        // DIAGONAL LINE (miring): Masuk dari KANAN ATAS
+        if (miringSprite != null)
+        {
+            Vector3 startPos = miringSprite.transform.position;
+            Vector3 offscreenPos = startPos + (Vector3.right + Vector3.up).normalized * offscreenDistance;
+            miringSprite.transform.position = offscreenPos;
+            miringSprite.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
+        }
+        
+        if (miringLabel != null)
+        {
+            Vector3 startPos = miringLabel.transform.position;
+            Vector3 offscreenPos = startPos + (Vector3.right + Vector3.up).normalized * offscreenDistance;
+            miringLabel.transform.position = offscreenPos;
+            miringLabel.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
+        }
+        
+        // THETA SYMBOL: Fade in dan scale
+        if (thetaLabel != null)
+        {
+            thetaLabel.alpha = 0;
+            thetaLabel.transform.localScale = Vector3.zero;
+            thetaLabel.DOFade(1f, animationDuration).SetEase(entryEase);
+            thetaLabel.transform.DOScale(Vector3.one, animationDuration).SetEase(entryEase);
+        }
+        
+        // RIGHT ANGLE SYMBOL: Fade in dan scale
+        if (rightAngleLabel != null)
+        {
+            rightAngleLabel.alpha = 0;
+            rightAngleLabel.transform.localScale = Vector3.zero;
+            rightAngleLabel.DOFade(1f, animationDuration).SetEase(entryEase);
+            rightAngleLabel.transform.DOScale(Vector3.one, animationDuration).SetEase(entryEase);
+        }
+    }
+    
+    /// <summary>
+    /// Animasi garis dan simbol keluar ke luar layar
+    /// </summary>
+    public void AnimateTriangleOut(System.Action onComplete = null)
+    {
+        Sequence exitSequence = DOTween.Sequence();
+        
+        // HORIZONTAL LINE: Keluar ke KANAN
+        if (sampingSprite != null || depanSprite != null)
+        {
+            SpriteRenderer horizontalSprite = (currentOrientation == TriangleOrientation.Normal) ? depanSprite : sampingSprite;
+            TextMeshPro horizontalLabel = (currentOrientation == TriangleOrientation.Normal) ? depanLabel : sampingLabel;
+            
+            if (horizontalSprite != null)
+            {
+                Vector3 currentPos = horizontalSprite.transform.position;
+                Vector3 exitPos = currentPos + Vector3.right * offscreenDistance;
+                exitSequence.Join(horizontalSprite.transform.DOMove(exitPos, animationDuration).SetEase(exitEase));
+            }
+            
+            if (horizontalLabel != null)
+            {
+                Vector3 currentPos = horizontalLabel.transform.position;
+                Vector3 exitPos = currentPos + Vector3.right * offscreenDistance;
+                exitSequence.Join(horizontalLabel.transform.DOMove(exitPos, animationDuration).SetEase(exitEase));
+            }
+        }
+        
+        // VERTICAL LINE: Keluar ke BAWAH
+        if (sampingSprite != null || depanSprite != null)
+        {
+            SpriteRenderer verticalSprite = (currentOrientation == TriangleOrientation.Normal) ? sampingSprite : depanSprite;
+            TextMeshPro verticalLabel = (currentOrientation == TriangleOrientation.Normal) ? sampingLabel : depanLabel;
+            
+            if (verticalSprite != null)
+            {
+                Vector3 currentPos = verticalSprite.transform.position;
+                Vector3 exitPos = currentPos + Vector3.down * offscreenDistance;
+                exitSequence.Join(verticalSprite.transform.DOMove(exitPos, animationDuration).SetEase(exitEase));
+            }
+            
+            if (verticalLabel != null)
+            {
+                Vector3 currentPos = verticalLabel.transform.position;
+                Vector3 exitPos = currentPos + Vector3.down * offscreenDistance;
+                exitSequence.Join(verticalLabel.transform.DOMove(exitPos, animationDuration).SetEase(exitEase));
+            }
+        }
+        
+        // DIAGONAL LINE: Keluar ke KIRI BAWAH
+        if (miringSprite != null)
+        {
+            Vector3 currentPos = miringSprite.transform.position;
+            Vector3 exitPos = currentPos + (Vector3.left + Vector3.down).normalized * offscreenDistance;
+            exitSequence.Join(miringSprite.transform.DOMove(exitPos, animationDuration).SetEase(exitEase));
+        }
+        
+        if (miringLabel != null)
+        {
+            Vector3 currentPos = miringLabel.transform.position;
+            Vector3 exitPos = currentPos + (Vector3.left + Vector3.down).normalized * offscreenDistance;
+            exitSequence.Join(miringLabel.transform.DOMove(exitPos, animationDuration).SetEase(exitEase));
+        }
+        
+        // THETA & RIGHT ANGLE: Fade out dan scale down
+        if (thetaLabel != null)
+        {
+            exitSequence.Join(thetaLabel.DOFade(0f, animationDuration).SetEase(exitEase));
+            exitSequence.Join(thetaLabel.transform.DOScale(Vector3.zero, animationDuration).SetEase(exitEase));
+        }
+        
+        if (rightAngleLabel != null)
+        {
+            exitSequence.Join(rightAngleLabel.DOFade(0f, animationDuration).SetEase(exitEase));
+            exitSequence.Join(rightAngleLabel.transform.DOScale(Vector3.zero, animationDuration).SetEase(exitEase));
+        }
+        
+        // Callback setelah animasi selesai
+        if (onComplete != null)
+        {
+            exitSequence.OnComplete(() => onComplete());
+        }
+        
+        exitSequence.Play();
     }
 
     /// <summary>
