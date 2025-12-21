@@ -7,6 +7,7 @@ public class CalculationManager : MonoBehaviour
     [SerializeField] private UIManagerChapter1 uiManager;
     [SerializeField] private TriangleDataGenerator dataGenerator;
     [SerializeField] private Chapter1EndCutscene endCutscene; // Opsional: untuk cutscene akhir
+    [SerializeField] private AnswerTileSystem answerTileSystem; // Reference to answer tile system
 
     [Header("Status Permainan")]
     private int lives = 3;
@@ -42,72 +43,58 @@ public class CalculationManager : MonoBehaviour
         uiManager.SetupNewQuestion(progres, totalSoal, dataSoalSaatIni);
     }
 
-    // Fungsi ini akan dihubungkan ke Tombol "VERIFIKASI"
+    // Fungsi ini akan dihubungkan ke Tombol "CHECK"
     public void VerifyAnswer()
     {
-        // 1. Ambil input pemain dari UIManager
-        string input = uiManager.jawabanInput.text.Trim();
-
-        // Cek jika input kosong
-        if (string.IsNullOrEmpty(input))
+        // 1. Cek apakah answer tile system tersedia
+        if (answerTileSystem == null)
         {
-            uiManager.ShowFeedback(false, "Masukkan jawaban terlebih dahulu!");
+            Debug.LogError("[CalculationManager] AnswerTileSystem reference missing!");
+            uiManager.ShowFeedback(false, "System error!");
             return;
         }
 
-        // 2. Coba konversi input (support desimal dan pecahan)
-        float playerAnswer = 0f;
-        bool isValidInput = false;
-
-        // Cek apakah input adalah pecahan (misal: 3/5)
-        if (input.Contains("/"))
+        // 2. Cek apakah jawaban sudah lengkap (kedua slot terisi)
+        if (!answerTileSystem.IsAnswerComplete())
         {
-            string[] parts = input.Split('/');
-            if (parts.Length == 2 &&
-                float.TryParse(parts[0].Trim(), out float numerator) &&
-                float.TryParse(parts[1].Trim(), out float denominator) &&
-                denominator != 0)
-            {
-                playerAnswer = numerator / denominator;
-                isValidInput = true;
-            }
+            uiManager.ShowFeedback(false, "Isi kedua slot dengan tile terlebih dahulu!");
+            return;
+        }
+
+        // 3. Ambil jawaban dari answer tile system (format: "numerator/denominator")
+        string answer = answerTileSystem.GetCurrentAnswer();
+        Debug.Log($"[CalculationManager] Player answer: {answer}");
+
+        // 4. Parse jawaban pecahan
+        string[] parts = answer.Split('/');
+        if (parts.Length != 2 ||
+            !float.TryParse(parts[0].Trim(), out float numerator) ||
+            !float.TryParse(parts[1].Trim(), out float denominator) ||
+            denominator == 0)
+        {
+            Debug.LogError($"[CalculationManager] Invalid answer format: {answer}");
+            HandleWrongAnswer("Format jawaban salah!");
+            return;
+        }
+
+        float playerAnswer = numerator / denominator;
+
+        // 5. Bandingkan jawaban dengan toleransi
+        if (Mathf.Abs(playerAnswer - dataSoalSaatIni.JawabanBenar) <= answerTolerance)
+        {
+            // JAWABAN BENAR
+            score += 10;
+            answerTileSystem.HighlightAnswer(true); // Highlight hijau
+            uiManager.ShowCorrectFeedback("PENGUKURAN TEPAT! +10 Poin.");
+            uiManager.HighlightCorrectAnswer(); // Sparkle effect
+            StartCoroutine(NextRoundDelay());
         }
         else
         {
-            // Konversi input ke float (angka desimal)
-            // Kita gunakan CultureInfo.InvariantCulture agar tanda titik (.) selalu dikenali
-            if (float.TryParse(input.Replace(",", "."),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out playerAnswer))
-            {
-                isValidInput = true;
-            }
+            // JAWABAN SALAH
+            answerTileSystem.HighlightAnswer(false); // Highlight merah
+            HandleWrongAnswer();
         }
-
-        if (isValidInput)
-            if (isValidInput)
-            {
-                // 3. Bandingkan jawaban dengan toleransi
-                if (Mathf.Abs(playerAnswer - dataSoalSaatIni.JawabanBenar) <= answerTolerance)
-                {
-                    // JAWABAN BENAR
-                    score += 10;
-                    uiManager.ShowCorrectFeedback("PENGUKURAN TEPAT! +10 Poin.");
-                    uiManager.HighlightCorrectAnswer(); // Hijau + Sparkle
-                    StartCoroutine(NextRoundDelay());
-                }
-                else
-                {
-                    // JAWABAN SALAH
-                    HandleWrongAnswer();
-                }
-            }
-            else
-            {
-                // JAWABAN SALAH (Format tidak valid)
-                HandleWrongAnswer("Format jawaban salah!");
-            }
     }
 
     void HandleWrongAnswer(string customMessage = "")

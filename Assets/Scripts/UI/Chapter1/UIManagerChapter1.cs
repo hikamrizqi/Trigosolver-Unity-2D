@@ -11,7 +11,7 @@ public class UIManagerChapter1 : MonoBehaviour
 
     [Header("Interaksi & Pertanyaan (UI Canvas)")]
     [SerializeField] private TextMeshProUGUI pertanyaanText;
-    [SerializeField] public TMP_InputField jawabanInput; // Public untuk CalculationManager
+    // [SerializeField] public TMP_InputField jawabanInput; // DEPRECATED: Now using AnswerTileSystem
 
     [Header("Umpan Balik (UI Canvas)")]
     [SerializeField] private GameObject feedbackPanel;
@@ -73,7 +73,7 @@ public class UIManagerChapter1 : MonoBehaviour
             // Anda bisa tampilkan di UI jika ada label khusus untuk hints
         }
 
-        jawabanInput.text = "";
+        // jawabanInput.text = ""; // DEPRECATED: Now using AnswerTileSystem
         feedbackPanel.SetActive(false);
 
         // Update label UI secara langsung
