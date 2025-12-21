@@ -48,7 +48,7 @@ public class UIManagerChapter1 : MonoBehaviour
     // TODO: Untuk soal 11-20, ganti button images/text dari DEPAN/SAMPING/MIRING ke AB/BC/AC
     // User will provide different button images for this
     // Button handlers (OnDepanButtonClicked, OnSampingButtonClicked, OnMiringButtonClicked) tetap sama
-    
+
     // Track question type untuk conditional UI
     private bool currentIsDualQuestion = false;
 
@@ -57,7 +57,7 @@ public class UIManagerChapter1 : MonoBehaviour
     {
         // Track question type untuk conditional UI
         currentIsDualQuestion = data.IsDualQuestion;
-        
+
         // Update UI Canvas
         progresText.text = $"Soal: {progres}/{totalSoal}";
 

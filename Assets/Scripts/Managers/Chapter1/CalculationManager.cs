@@ -57,8 +57,8 @@ public class CalculationManager : MonoBehaviour
         // 2. Cek apakah jawaban sudah lengkap (semua slot terisi)
         if (!answerTileSystem.IsAnswerComplete())
         {
-            string message = dataSoalSaatIni.IsDualQuestion ? 
-                "Isi keempat slot dengan tile terlebih dahulu!" : 
+            string message = dataSoalSaatIni.IsDualQuestion ?
+                "Isi keempat slot dengan tile terlebih dahulu!" :
                 "Isi kedua slot dengan tile terlebih dahulu!";
             uiManager.ShowFeedback(false, message);
             return;
@@ -69,7 +69,7 @@ public class CalculationManager : MonoBehaviour
         Debug.Log($"[CalculationManager] Player answer: {answer}");
 
         bool isCorrect;
-        
+
         if (dataSoalSaatIni.IsDualQuestion)
         {
             // DUAL QUESTION: Verifikasi 4 nilai (format: "num1/den1|num2/den2")
@@ -111,9 +111,9 @@ public class CalculationManager : MonoBehaviour
             // Kedua jawaban harus benar
             bool answer1Correct = Mathf.Abs(playerAnswer1 - dataSoalSaatIni.JawabanBenar) <= answerTolerance;
             bool answer2Correct = Mathf.Abs(playerAnswer2 - dataSoalSaatIni.JawabanBenar2) <= answerTolerance;
-            
+
             isCorrect = answer1Correct && answer2Correct;
-            
+
             Debug.Log($"[CalculationManager] Dual Answer Check - Answer1: {playerAnswer1:F3} vs {dataSoalSaatIni.JawabanBenar:F3} ({answer1Correct}), Answer2: {playerAnswer2:F3} vs {dataSoalSaatIni.JawabanBenar2:F3} ({answer2Correct})");
         }
         else
@@ -132,7 +132,7 @@ public class CalculationManager : MonoBehaviour
 
             float playerAnswer = numerator / denominator;
             isCorrect = Mathf.Abs(playerAnswer - dataSoalSaatIni.JawabanBenar) <= answerTolerance;
-            
+
             Debug.Log($"[CalculationManager] Single Answer Check - Player: {playerAnswer:F3} vs Correct: {dataSoalSaatIni.JawabanBenar:F3} ({isCorrect})");
         }
 

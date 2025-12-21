@@ -33,11 +33,11 @@ public class TriangleVisualizer : MonoBehaviour
 
     [Tooltip("Label untuk simbol sudut siku-siku ∟ (World Space)")]
     public TextMeshPro rightAngleLabel;
-    
+
     [Header("Angle Labels (Soal 11-20)")]
     [Tooltip("Label untuk sudut A (World Space) - SOAL 11-20")]
     public TextMeshPro angleLabelA;
-    
+
     [Tooltip("Label untuk sudut B (World Space) - SOAL 11-20")]
     public TextMeshPro angleLabelB;
 

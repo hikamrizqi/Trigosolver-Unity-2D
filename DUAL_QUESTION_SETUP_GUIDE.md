@@ -52,40 +52,82 @@ TriangleVisualizer/
 
 ### 2. **AnswerTileSystem GameObject**
 
-Tambahkan 2 slot baru (Slot3 dan Slot4) untuk jawaban kedua:
+⚠️ **PENTING:** Buat **2 CONTAINER TERPISAH** karena layout berbeda!
+
+#### **Struktur Hierarchy yang Benar:**
 
 ```
 AnswerTileSystem/
-├── AnswerSlots/
-│   ├── Slot1               (Numerator 1)
-│   ├── SlashText           (/)
-│   ├── Slot2               (Denominator 1)
-│   ├── Slot3               ⭐ BARU - Numerator 2
-│   ├── SlashText2          ⭐ BARU - (/)
-│   └── Slot4               ⭐ BARU - Denominator 2
+├── AnswerSlots_Single/          ⭐ Container untuk Soal 1-10
+│   ├── SingleSlot1              (Numerator - posisi KIRI)
+│   ├── SlashText_Single         (/) 
+│   └── SingleSlot2              (Denominator - posisi KANAN)
+│
+├── AnswerSlots_Dual/            ⭐ Container untuk Soal 11-20
+│   ├── Fraction1/               (Pecahan pertama)
+│   │   ├── DualSlot1            (Numerator - posisi ATAS)
+│   │   ├── SlashText_Dual1      (/)
+│   │   └── DualSlot2            (Denominator - posisi BAWAH)
+│   └── Fraction2/               (Pecahan kedua)
+│       ├── DualSlot3            (Numerator - posisi ATAS)
+│       ├── SlashText_Dual2      (/)
+│       └── DualSlot4            (Denominator - posisi BAWAH)
+│
 └── TilePool/
 ```
 
-**Layout Slot (2x2 Grid) untuk Soal 11-20:**
+#### **Layout Comparison:**
+
+**Soal 1-10 (HORIZONTAL):**
 ```
-[Slot1]  [Slot3]    ← Numerators (angka atas)
--------  -------
-[Slot2]  [Slot4]    ← Denominators (angka bawah)
+AnswerSlots_Single:  [15] / [17]
+                      ↑       ↑
+                   Slot1   Slot2
+                   (berjejer kanan-kiri)
 ```
 
-**Cara Membuat:**
-1. Duplicate `Slot1` → Rename menjadi `Slot3`
-2. Duplicate `Slot2` → Rename menjadi `Slot4`
-3. Duplicate `SlashText` → Rename menjadi `SlashText2`
-4. Atur posisi dengan Grid Layout Group atau Manual:
-   - **Slot1:** Top-Left
-   - **Slot2:** Bottom-Left
-   - **Slot3:** Top-Right
-   - **Slot4:** Bottom-Right
-   - **SlashText:** Between Slot1 and Slot2
-   - **SlashText2:** Between Slot3 and Slot4
+**Soal 11-20 (2x2 GRID):**
+```
+AnswerSlots_Dual:
+   Fraction1     Fraction2
+    [15]           [8]         ← DualSlot1, DualSlot3 (numerators)
+    ----           ---
+    [17]           [17]        ← DualSlot2, DualSlot4 (denominators)
+```
 
-5. **PENTING:** Slot3, Slot4, dan SlashText2 akan **auto-hide** untuk soal 1-10, dan **auto-show** untuk soal 11-20.
+#### **Cara Membuat:**
+
+**Step 1: Buat Container untuk Single Question (Soal 1-10)**
+1. Buat Empty GameObject: `AnswerSlots_Single`
+2. Add Component: **Horizontal Layout Group**
+   - Child Alignment: Middle Center
+   - Spacing: 20
+   - Child Force Expand: Width ✅, Height ✅
+3. Pindahkan existing Slot1, SlashText, Slot2 ke dalam container ini
+4. Rename menjadi: `SingleSlot1`, `SlashText_Single`, `SingleSlot2`
+
+**Step 2: Buat Container untuk Dual Question (Soal 11-20)**
+1. Buat Empty GameObject: `AnswerSlots_Dual`
+2. Add Component: **Horizontal Layout Group** (untuk 2 pecahan side-by-side)
+   - Child Alignment: Middle Center
+   - Spacing: 40
+3. Di dalam `AnswerSlots_Dual`, buat 2 sub-container:
+   
+   **Sub-Container: Fraction1**
+   - Add Component: **Vertical Layout Group**
+   - Child Alignment: Middle Center
+   - Spacing: 5
+   - Isi dengan: `DualSlot1` (atas), `SlashText_Dual1` (/), `DualSlot2` (bawah)
+   
+   **Sub-Container: Fraction2**
+   - Add Component: **Vertical Layout Group**
+   - Child Alignment: Middle Center
+   - Spacing: 5
+   - Isi dengan: `DualSlot3` (atas), `SlashText_Dual2` (/), `DualSlot4` (bawah)
+
+**Step 3: Script akan Auto Show/Hide Container**
+- Soal 1-10: `AnswerSlots_Single` ACTIVE, `AnswerSlots_Dual` INACTIVE
+- Soal 11-20: `AnswerSlots_Single` INACTIVE, `AnswerSlots_Dual` ACTIVE
 
 ### 3. **InteractiveButtonPanel GameObject**
 
@@ -119,13 +161,26 @@ Tambahkan 2 reference baru:
 
 ### **AnswerTileSystem Component**
 
-Tambahkan 3 reference baru:
+Tambahkan reference untuk **2 CONTAINER** dan **SEMUA SLOTS**:
 
+#### **Single Question (Soal 1-10):**
 | Field Name | Type | Assign To |
 |------------|------|-----------|
-| `Slot3 Transform` | Transform | `AnswerSlots/Slot3` |
-| `Slot4 Transform` | Transform | `AnswerSlots/Slot4` |
-| `Slash Text2` | TextMeshProUGUI | `AnswerSlots/SlashText2` |
+| `Single Question Slot Container` | GameObject | `AnswerSlots_Single` |
+| `Single Slot1 Transform` | Transform | `AnswerSlots_Single/SingleSlot1` |
+| `Single Slot2 Transform` | Transform | `AnswerSlots_Single/SingleSlot2` |
+| `Single Slash Text` | TextMeshProUGUI | `AnswerSlots_Single/SlashText_Single` |
+
+#### **Dual Question (Soal 11-20):**
+| Field Name | Type | Assign To |
+|------------|------|-----------|
+| `Dual Question Slot Container` | GameObject | `AnswerSlots_Dual` |
+| `Dual Slot1 Transform` | Transform | `AnswerSlots_Dual/Fraction1/DualSlot1` |
+| `Dual Slot2 Transform` | Transform | `AnswerSlots_Dual/Fraction1/DualSlot2` |
+| `Dual Slot3 Transform` | Transform | `AnswerSlots_Dual/Fraction2/DualSlot3` |
+| `Dual Slot4 Transform` | Transform | `AnswerSlots_Dual/Fraction2/DualSlot4` |
+| `Dual Slash Text1` | TextMeshProUGUI | `AnswerSlots_Dual/Fraction1/SlashText_Dual1` |
+| `Dual Slash Text2` | TextMeshProUGUI | `AnswerSlots_Dual/Fraction2/SlashText_Dual2` |
 
 ### **UIManagerChapter1 Component**
 
@@ -168,8 +223,9 @@ Klik Tile #4 → Slot4 (den2)
 - [ ] Simbol **θ** muncul di sudut lancip
 - [ ] Label **Depan, Samping, Miring** muncul
 - [ ] Interactive buttons: **DEPAN, SAMPING, MIRING**
-- [ ] **2 slots** muncul untuk answer tiles
-- [ ] Slot3, Slot4, SlashText2 **HIDDEN**
+- [ ] **2 slots HORIZONTAL** (berjejer kiri-kanan: `[15] / [17]`)
+- [ ] Container `AnswerSlots_Single` **VISIBLE**
+- [ ] Container `AnswerSlots_Dual` **HIDDEN**
 - [ ] Verifikasi: 2 angka benar = lanjut
 
 ### **Test Soal 11-20 (Sistem Baru):**
@@ -177,8 +233,9 @@ Klik Tile #4 → Slot4 (den2)
 - [ ] Simbol **θ** HIDDEN
 - [ ] Label **AB, BC, AC** muncul (BUKAN Depan/Samping/Miring)
 - [ ] Interactive buttons: **AB, BC, AC** (setelah user ganti image)
-- [ ] **4 slots** muncul (layout 2x2)
-- [ ] Slot3, Slot4, SlashText2 **VISIBLE**
+- [ ] **4 slots dalam 2x2 GRID** (2 pecahan vertikal side-by-side)
+- [ ] Container `AnswerSlots_Single` **HIDDEN**
+- [ ] Container `AnswerSlots_Dual` **VISIBLE**
 - [ ] 6 tiles spawn (4 correct + 2 distractors)
 - [ ] Verifikasi: SEMUA 4 angka harus benar untuk lanjut
 
@@ -195,10 +252,21 @@ Klik Tile #4 → Slot4 (den2)
 
 ### **Problem:** Slot3 dan Slot4 tidak muncul di soal 11-20
 **Solution:** 
-- Pastikan `Slot3Transform` dan `Slot4Transform` sudah ter-assign di Inspector `AnswerTileSystem`
-- Check Console log untuk error "slot3Transform is null"
+- Pastikan `dualQuestionSlotContainer` sudah ter-assign di Inspector `AnswerTileSystem`
+- Pastikan semua slot di `AnswerSlots_Dual/Fraction1` dan `Fraction2` sudah ter-assign
+- Check Console log untuk error "dualSlot1Transform is null"
+- **Pastikan Layout Group** di Fraction1 dan Fraction2 sudah di-set (Vertical Layout Group)
+
+### **Problem:** Layout slots terlihat sama untuk soal 1-10 dan 11-20
+**Solution:**
+- Pastikan menggunakan **2 CONTAINER TERPISAH** (`AnswerSlots_Single` dan `AnswerSlots_Dual`)
+- `AnswerSlots_Single` harus punya **Horizontal Layout Group** (slots berjejer kiri-kanan)
+- `AnswerSlots_Dual` harus punya **Horizontal Layout Group** dengan 2 sub-container `Fraction1` dan `Fraction2`
+- Masing-masing `Fraction1` dan `Fraction2` harus punya **Vertical Layout Group**
+- Script akan auto show/hide container berdasarkan tipe soal
 
 ### **Problem:** Simbol A dan B tidak muncul
+**Solution:**
 **Solution:**
 - Pastikan `AngleLabelA` dan `AngleLabelB` sudah ter-assign di Inspector `TriangleVisualizer`
 - Check GameObject `AngleLabelA` dan `AngleLabelB` aktif di Hierarchy

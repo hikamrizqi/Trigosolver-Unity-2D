@@ -14,13 +14,20 @@ public class AnswerTileSystem : MonoBehaviour
 {
     public static AnswerTileSystem Instance { get; private set; }
 
-    [Header("Answer Slots (Tempat Jawaban)")]
-    [SerializeField] private Transform slot1Transform;  // Slot 1: Kiri-Atas (numerator 1)
-    [SerializeField] private Transform slot2Transform;  // Slot 2: Kiri-Bawah (denominator 1)
-    [SerializeField] private Transform slot3Transform;  // Slot 3: Kanan-Atas (numerator 2) - Soal 11-20 only
-    [SerializeField] private Transform slot4Transform;  // Slot 4: Kanan-Bawah (denominator 2) - Soal 11-20 only
-    [SerializeField] private TextMeshProUGUI slashText; // "/" text di tengah (fraction 1)
-    [SerializeField] private TextMeshProUGUI slashText2; // "/" text di tengah (fraction 2) - Soal 11-20 only
+    [Header("Answer Slots - Single Question (Soal 1-10)")]
+    [SerializeField] private GameObject singleQuestionSlotContainer;  // Container untuk layout horizontal
+    [SerializeField] private Transform singleSlot1Transform;  // Numerator (kiri)
+    [SerializeField] private Transform singleSlot2Transform;  // Denominator (kanan)
+    [SerializeField] private TextMeshProUGUI singleSlashText; // "/" di tengah
+    
+    [Header("Answer Slots - Dual Question (Soal 11-20)")]
+    [SerializeField] private GameObject dualQuestionSlotContainer;  // Container untuk layout 2x2
+    [SerializeField] private Transform dualSlot1Transform;  // Fraction 1 - Numerator
+    [SerializeField] private Transform dualSlot2Transform;  // Fraction 1 - Denominator
+    [SerializeField] private Transform dualSlot3Transform;  // Fraction 2 - Numerator
+    [SerializeField] private Transform dualSlot4Transform;  // Fraction 2 - Denominator
+    [SerializeField] private TextMeshProUGUI dualSlashText1; // "/" fraction 1
+    [SerializeField] private TextMeshProUGUI dualSlashText2; // "/" fraction 2
 
     [Header("Answer Pool (Pilihan Jawaban)")]
     [SerializeField] private Transform poolContainer;   // Container untuk 5 tiles
@@ -50,7 +57,7 @@ public class AnswerTileSystem : MonoBehaviour
     private string correctDenominator; // Angka bawah 1
     private string correctNumerator2;  // Angka atas 2 (untuk soal 11-20 pertanyaan kedua)
     private string correctDenominator2; // Angka bawah 2
-    
+
     // Track question type
     private bool currentIsDualQuestion = false;
 
@@ -86,10 +93,12 @@ public class AnswerTileSystem : MonoBehaviour
         correctDenominator2 = denominator2;
         currentIsDualQuestion = isDualQuestion;
 
-        // Show/hide slots based on question type
-        if (slot3Transform != null) slot3Transform.gameObject.SetActive(isDualQuestion);
-        if (slot4Transform != null) slot4Transform.gameObject.SetActive(isDualQuestion);
-        if (slashText2 != null) slashText2.gameObject.SetActive(isDualQuestion);
+        // Show/hide ENTIRE CONTAINER based on question type
+        if (singleQuestionSlotContainer != null)
+            singleQuestionSlotContainer.SetActive(!isDualQuestion);
+        
+        if (dualQuestionSlotContainer != null)
+            dualQuestionSlotContainer.SetActive(isDualQuestion);
 
         // Reset slots
         ResetSlots();
@@ -132,8 +141,8 @@ public class AnswerTileSystem : MonoBehaviour
         }
 
         string questionType = isDualQuestion ? "DUAL (4 answers)" : "SINGLE (2 answers)";
-        Debug.Log($"[AnswerTileSystem] Setup {questionType}: {numerator}/{denominator}" + 
-                  (isDualQuestion ? $" and {numerator2}/{denominator2}" : "") + 
+        Debug.Log($"[AnswerTileSystem] Setup {questionType}: {numerator}/{denominator}" +
+                  (isDualQuestion ? $" and {numerator2}/{denominator2}" : "") +
                   $", Total tiles: {poolValues.Count}, Pool: {string.Join(", ", poolValues)}");
 
         // Wait for layout group to position tiles, then animate
@@ -167,42 +176,62 @@ public class AnswerTileSystem : MonoBehaviour
         {
             Debug.LogWarning($"[AnswerTileSystem] Tile {tile.Value} already in slot!");
             return;
-        }
-
-        // Tentukan slot target (fill order: slot1 → slot2 → slot3 → slot4)
+        }berdasarkan question type
         Transform targetSlot;
-        if (currentSlot1Tile == null)
+        
+        if (currentIsDualQuestion)
         {
-            // Slot 1 kosong → Isi slot 1
-            currentSlot1Tile = tile;
-            targetSlot = slot1Transform;
-            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot1");
-        }
-        else if (currentSlot2Tile == null)
-        {
-            // Slot 1 terisi, slot 2 kosong → Isi slot 2
-            currentSlot2Tile = tile;
-            targetSlot = slot2Transform;
-            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot2");
-        }
-        else if (currentIsDualQuestion && currentSlot3Tile == null && slot3Transform != null)
-        {
-            // Slot 3 kosong (soal dual question) → Isi slot 3
-            currentSlot3Tile = tile;
-            targetSlot = slot3Transform;
-            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot3");
-        }
-        else if (currentIsDualQuestion && currentSlot4Tile == null && slot4Transform != null)
-        {
-            // Slot 4 kosong (soal dual question) → Isi slot 4
-            currentSlot4Tile = tile;
-            targetSlot = slot4Transform;
-            Debug.Log($"[AnswerTileSystem] Moving {tile.Value} to Slot4");
+            // DUAL QUESTION: Fill order → dualSlot1 → dualSlot2 → dualSlot3 → dualSlot4
+            if (currentSlot1Tile == null)
+            {
+                currentSlot1Tile = tile;
+                targetSlot = dualSlot1Transform;
+                Debug.Log($"[AnswerTileSystem] DUAL: Moving {tile.Value} to DualSlot1");
+            }
+            else if (currentSlot2Tile == null)
+            {
+                currentSlot2Tile = tile;
+                targetSlot = dualSlot2Transform;
+                Debug.Log($"[AnswerTileSystem] DUAL: Moving {tile.Value} to DualSlot2");
+            }
+            else if (currentSlot3Tile == null)
+            {
+                currentSlot3Tile = tile;
+                targetSlot = dualSlot3Transform;
+                Debug.Log($"[AnswerTileSystem] DUAL: Moving {tile.Value} to DualSlot3");
+            }
+            else if (currentSlot4Tile == null)
+            {
+                currentSlot4Tile = tile;
+                targetSlot = dualSlot4Transform;
+                Debug.Log($"[AnswerTileSystem] DUAL: Moving {tile.Value} to DualSlot4");
+            }
+            else
+            {
+                Debug.LogWarning($"[AnswerTileSystem] All 4 dual slots full! Cannot move {tile.Value}");
+                return;
+            }
         }
         else
         {
-            // Semua slot penuh
-            string slotCount = currentIsDualQuestion ? "4 slots" : "2 slots";
+            // SINGLE QUESTION: Fill order → singleSlot1 → singleSlot2
+            if (currentSlot1Tile == null)
+            {
+                currentSlot1Tile = tile;
+                targetSlot = singleSlot1Transform;
+                Debug.Log($"[AnswerTileSystem] SINGLE: Moving {tile.Value} to SingleSlot1");
+            }
+            else if (currentSlot2Tile == null)
+            {
+                currentSlot2Tile = tile;
+                targetSlot = singleSlot2Transform;
+                Debug.Log($"[AnswerTileSystem] SINGLE: Moving {tile.Value} to SingleSlot2");
+            }
+            else
+            {
+                Debug.LogWarning($"[AnswerTileSystem] Both single slots full! Cannot move {tile.Value}");
+                return;
+            }slotCount = currentIsDualQuestion ? "4 slots" : "2 slots";
             Debug.LogWarning($"[AnswerTileSystem] All {slotCount} full! Cannot move {tile.Value}");
             return;
         }
@@ -238,7 +267,8 @@ public class AnswerTileSystem : MonoBehaviour
 
                 // Geser ke slot1
                 currentSlot1Tile = tileToShift;
-                tileToShift.AnimateToPosition(Vector3.zero, slot1Transform, true, animationDuration);
+                Transform targetSlot = currentIsDualQuestion ? dualSlot1Transform : singleSlot1Transform;
+                tileToShift.AnimateToPosition(Vector3.zero, targetSlot, true, animationDuration);
                 Debug.Log($"[AnswerTileSystem] Auto-shifted {tileToShift.Value} from Slot2 to Slot1");
             }
         }
@@ -335,7 +365,7 @@ public class AnswerTileSystem : MonoBehaviour
     public string GetCurrentAnswer()
     {
         if (!IsAnswerComplete()) return "";
-        
+
         if (currentIsDualQuestion)
         {
             return $"{currentSlot1Tile.Value}/{currentSlot2Tile.Value}|{currentSlot3Tile.Value}/{currentSlot4Tile.Value}";
