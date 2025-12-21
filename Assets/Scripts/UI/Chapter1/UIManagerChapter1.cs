@@ -19,10 +19,11 @@ public class UIManagerChapter1 : MonoBehaviour
 
     [Header("Visualisasi Segitiga (Game World)")]
     [SerializeField] private TriangleVisualizer triangleVisualizer; // Script visualizer untuk menggambar segitiga
-    [SerializeField] private TextMeshProUGUI depanLabel_World;   // Label UI untuk depan
-    [SerializeField] private TextMeshProUGUI sampingLabel_World; // Label UI untuk samping
-    [SerializeField] private TextMeshProUGUI miringLabel_World;  // Label UI untuk miring
-    [SerializeField] private TextMeshPro thetaLabel_World;       // Label World Space untuk sudut theta
+    // DEPRECATED: Labels now handled by TriangleVisualizer (World Space)
+    // [SerializeField] private TextMeshProUGUI depanLabel_World;
+    // [SerializeField] private TextMeshProUGUI sampingLabel_World;
+    // [SerializeField] private TextMeshProUGUI miringLabel_World;
+    // [SerializeField] private TextMeshPro thetaLabel_World;
     [SerializeField] public SpriteRenderer depanSprite;      // Dulu: depanImg (Image)
     [SerializeField] public SpriteRenderer sampingSprite;    // Dulu: sampingImg (Image)
     [SerializeField] public SpriteRenderer miringSprite;     // Dulu: miringImg (Image)
@@ -76,10 +77,10 @@ public class UIManagerChapter1 : MonoBehaviour
         // jawabanInput.text = ""; // DEPRECATED: Now using AnswerTileSystem
         feedbackPanel.SetActive(false);
 
-        // Update label UI secara langsung
-        if (depanLabel_World != null) depanLabel_World.text = data.Depan.ToString();
-        if (sampingLabel_World != null) sampingLabel_World.text = data.Samping.ToString();
-        if (miringLabel_World != null) miringLabel_World.text = data.Miring.ToString();
+        // Labels now handled by TriangleVisualizer automatically
+        // if (depanLabel_World != null) depanLabel_World.text = data.Depan.ToString();
+        // if (sampingLabel_World != null) sampingLabel_World.text = data.Samping.ToString();
+        // if (miringLabel_World != null) miringLabel_World.text = data.Miring.ToString();
 
 
         // Gunakan TriangleVisualizer untuk menggambar segitiga DENGAN ROTASI

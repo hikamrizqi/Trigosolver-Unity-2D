@@ -17,15 +17,15 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Sprite untuk sisi Miring (diagonal)")]
     public SpriteRenderer miringSprite;
 
-    [Header("Label References (TextMeshPro UI)")]
-    [Tooltip("Label untuk menampilkan nilai sisi Depan")]
-    public TextMeshProUGUI depanLabel;
+    [Header("Label References (TextMeshPro World Space)")]
+    [Tooltip("Label untuk menampilkan nilai sisi Depan (World Space)")]
+    public TextMeshPro depanLabel;
 
-    [Tooltip("Label untuk menampilkan nilai sisi Samping")]
-    public TextMeshProUGUI sampingLabel;
+    [Tooltip("Label untuk menampilkan nilai sisi Samping (World Space)")]
+    public TextMeshPro sampingLabel;
 
-    [Tooltip("Label untuk menampilkan nilai sisi Miring")]
-    public TextMeshProUGUI miringLabel;
+    [Tooltip("Label untuk menampilkan nilai sisi Miring (World Space)")]
+    public TextMeshPro miringLabel;
 
     [Tooltip("Label untuk simbol theta di sudut lancip (World Space)")]
     public TextMeshPro thetaLabel;
@@ -153,7 +153,7 @@ public class TriangleVisualizer : MonoBehaviour
             // Offset label perpendicular ke garis
             Vector3 direction = (bottomRight - bottomLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            PositionUILabel(depanLabel, midPoint + perpendicular * (-labelOffset));
+            depanLabel.transform.position = midPoint + perpendicular * (-labelOffset);
         }
 
         // SISI SAMPING (AB - Vertical di rotasi 0° - ADJACENT ke theta)
@@ -165,7 +165,7 @@ public class TriangleVisualizer : MonoBehaviour
             // Offset label perpendicular ke garis
             Vector3 direction = (topLeft - bottomLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            PositionUILabel(sampingLabel, midPoint + perpendicular * (-labelOffset));
+            sampingLabel.transform.position = midPoint + perpendicular * (-labelOffset);
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -178,7 +178,7 @@ public class TriangleVisualizer : MonoBehaviour
             // Hitung perpendicular offset untuk label miring
             Vector3 direction = (bottomRight - topLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            PositionUILabel(miringLabel, midPoint + perpendicular * labelOffset);
+            miringLabel.transform.position = midPoint + perpendicular * labelOffset;
         }
 
         // SIMBOL THETA (di sudut lancip atas A - antara samping AB dan miring AC) - WORLD SPACE
@@ -306,32 +306,6 @@ public class TriangleVisualizer : MonoBehaviour
         // X = ketebalan garis (langsung tanpa normalisasi)
         float scaleY = distance / spriteHeight;
         sprite.transform.localScale = new Vector3(lineThickness, scaleY, 1f);
-    }
-
-    /// <summary>
-    /// Posisikan UI Label (TextMeshProUGUI) berdasarkan world position
-    /// </summary>
-    private void PositionUILabel(TextMeshProUGUI label, Vector3 worldPosition)
-    {
-        if (label == null) return;
-
-        // Gunakan camera untuk konversi world ke screen point
-        Camera cam = mainCamera != null ? mainCamera : Camera.main;
-        if (cam == null)
-        {
-            Debug.LogWarning("TriangleVisualizer: Main Camera tidak ditemukan!");
-            return;
-        }
-
-        // Konversi world position ke screen point
-        Vector3 screenPoint = cam.WorldToScreenPoint(worldPosition);
-
-        // Set posisi RectTransform
-        RectTransform rectTransform = label.GetComponent<RectTransform>();
-        if (rectTransform != null)
-        {
-            rectTransform.position = screenPoint;
-        }
     }
 
     /// <summary>
