@@ -141,15 +141,38 @@ public class CalculationManager : MonoBehaviour
         // Beri pemain waktu 1.5 detik untuk membaca feedback
         yield return new WaitForSeconds(1.5f);
 
+        // Flag untuk tracking animasi selesai
+        bool triangleAnimDone = false;
+        bool tilesAnimDone = false;
+        
         // Animate triangle keluar
         if (uiManager != null && uiManager.triangleVisualizer != null)
         {
-            uiManager.triangleVisualizer.AnimateTriangleOut(() =>
-            {
-                StartNewRound();
+            uiManager.triangleVisualizer.AnimateTriangleOut(() => {
+                triangleAnimDone = true;
+                if (tilesAnimDone) StartNewRound();
             });
         }
         else
+        {
+            triangleAnimDone = true;
+        }
+        
+        // Animate answer tiles keluar (parallel)
+        if (AnswerTileSystem.Instance != null)
+        {
+            AnswerTileSystem.Instance.AnimateTilesOut(() => {
+                tilesAnimDone = true;
+                if (triangleAnimDone) StartNewRound();
+            });
+        }
+        else
+        {
+            tilesAnimDone = true;
+        }
+        
+        // Fallback jika tidak ada animator
+        if (triangleAnimDone && tilesAnimDone)
         {
             StartNewRound();
         }

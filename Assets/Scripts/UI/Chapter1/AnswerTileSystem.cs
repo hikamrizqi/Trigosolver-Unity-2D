@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 
 /// <summary>
 /// System untuk input jawaban berbasis tile (interactive tile-based input)
@@ -27,6 +28,12 @@ public class AnswerTileSystem : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private int poolSize = 5;          // Jumlah tiles (default 5)
     [SerializeField] private float animationDuration = 0.3f;
+    
+    [Header("Entry Animation")]
+    [SerializeField] private float entryAnimDuration = 0.5f;
+    [SerializeField] private float entryStaggerDelay = 0.1f; // Delay antar tile
+    [SerializeField] private float offscreenDistance = 500f; // Pixel distance
+    [SerializeField] private Ease entryEase = Ease.OutBack;
 
     private List<AnswerTile> allTiles = new List<AnswerTile>();
     private AnswerTile currentSlot1Tile = null;
@@ -84,6 +91,9 @@ public class AnswerTileSystem : MonoBehaviour
         }
 
         Debug.Log($"[AnswerTileSystem] Setup question: {numerator}/{denominator}, Total tiles: {poolValues.Count}, Pool: {string.Join(", ", poolValues)}");
+        
+        // Animate tiles masuk dari offscreen
+        AnimateTilesIn();
     }
 
     /// <summary>
@@ -240,6 +250,111 @@ public class AnswerTileSystem : MonoBehaviour
         if (hiddenInputField != null)
         {
             hiddenInputField.text = "";
+        }
+    }
+    
+    /// <summary>
+    /// Animasi tiles masuk dari offscreen dengan stagger
+    /// Tiles dari KIRI, KANAN, dan BAWAH secara bergiliran
+    /// </summary>
+    private void AnimateTilesIn()
+    {
+        if (allTiles == null || allTiles.Count == 0) return;
+        
+        for (int i = 0; i < allTiles.Count; i++)
+        {
+            AnswerTile tile = allTiles[i];
+            if (tile == null) continue;
+            
+            RectTransform rectTransform = tile.GetComponent<RectTransform>();
+            if (rectTransform == null) continue;
+            
+            // Simpan posisi target
+            Vector2 targetPos = rectTransform.anchoredPosition;
+            
+            // Tentukan arah masuk berdasarkan index (pattern: kiri, kanan, bawah, repeat)
+            Vector2 offscreenPos;
+            switch (i % 3)
+            {
+                case 0: // KIRI
+                    offscreenPos = targetPos + Vector2.left * offscreenDistance;
+                    break;
+                case 1: // KANAN
+                    offscreenPos = targetPos + Vector2.right * offscreenDistance;
+                    break;
+                case 2: // BAWAH
+                    offscreenPos = targetPos + Vector2.down * offscreenDistance;
+                    break;
+                default:
+                    offscreenPos = targetPos;
+                    break;
+            }
+            
+            // Set ke posisi offscreen
+            rectTransform.anchoredPosition = offscreenPos;
+            
+            // Animate ke target position dengan stagger delay
+            float delay = i * entryStaggerDelay;
+            rectTransform.DOAnchorPos(targetPos, entryAnimDuration)
+                .SetDelay(delay)
+                .SetEase(entryEase);
+        }
+    }
+    
+    /// <summary>
+    /// Animasi tiles keluar ke offscreen (untuk next question)
+    /// </summary>
+    public void AnimateTilesOut(System.Action onComplete = null)
+    {
+        if (allTiles == null || allTiles.Count == 0)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+        
+        int completedCount = 0;
+        int totalTiles = allTiles.Count;
+        
+        for (int i = 0; i < allTiles.Count; i++)
+        {
+            AnswerTile tile = allTiles[i];
+            if (tile == null) continue;
+            
+            RectTransform rectTransform = tile.GetComponent<RectTransform>();
+            if (rectTransform == null) continue;
+            
+            Vector2 currentPos = rectTransform.anchoredPosition;
+            
+            // Keluar ke arah berlawanan dari masuk
+            Vector2 exitPos;
+            switch (i % 3)
+            {
+                case 0: // Keluar ke KANAN (masuk dari kiri)
+                    exitPos = currentPos + Vector2.right * offscreenDistance;
+                    break;
+                case 1: // Keluar ke KIRI (masuk dari kanan)
+                    exitPos = currentPos + Vector2.left * offscreenDistance;
+                    break;
+                case 2: // Keluar ke ATAS (masuk dari bawah)
+                    exitPos = currentPos + Vector2.up * offscreenDistance;
+                    break;
+                default:
+                    exitPos = currentPos;
+                    break;
+            }
+            
+            // Animate keluar dengan stagger
+            float delay = i * (entryStaggerDelay * 0.5f); // Lebih cepat keluar
+            rectTransform.DOAnchorPos(exitPos, entryAnimDuration * 0.8f)
+                .SetDelay(delay)
+                .SetEase(Ease.InBack)
+                .OnComplete(() => {
+                    completedCount++;
+                    if (completedCount >= totalTiles)
+                    {
+                        onComplete?.Invoke();
+                    }
+                });
         }
     }
 }
