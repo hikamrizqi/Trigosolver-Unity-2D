@@ -163,22 +163,35 @@ public class TriangleVisualizer : MonoBehaviour
         if (useAutoScaling)
         {
             // Hitung ukuran segitiga yang akan di-render (width x height)
-            float widthNeeded = samping * baseScale;   // Lebar segitiga
-            float heightNeeded = depan * baseScale;     // Tinggi segitiga
+            // PENTING: Untuk SWAPPED orientation, width dan height terbalik!
+            float widthNeeded, heightNeeded;
+            
+            if (orientation == TriangleOrientation.Normal)
+            {
+                // NORMAL: Depan=horizontal, Samping=vertical
+                widthNeeded = depan * baseScale;
+                heightNeeded = samping * baseScale;
+            }
+            else
+            {
+                // SWAPPED: Samping=horizontal, Depan=vertical
+                widthNeeded = samping * baseScale;
+                heightNeeded = depan * baseScale;
+            }
 
             // Maksimal ukuran yang aman (dikurangi safety margin)
             float safeMaxSize = maxTriangleSize - safetyMargin;
 
             // Tentukan scale berdasarkan dimensi yang paling besar
-            float scaleByWidth = widthNeeded > safeMaxSize ? safeMaxSize / samping : baseScale;
-            float scaleByHeight = heightNeeded > safeMaxSize ? safeMaxSize / depan : baseScale;
+            float scaleByWidth = widthNeeded > safeMaxSize ? safeMaxSize / (orientation == TriangleOrientation.Normal ? depan : samping) : baseScale;
+            float scaleByHeight = heightNeeded > safeMaxSize ? safeMaxSize / (orientation == TriangleOrientation.Normal ? samping : depan) : baseScale;
 
             // Gunakan scale yang paling kecil (paling membatasi) agar fit di KEDUA dimensi
             dynamicScale = Mathf.Min(scaleByWidth, scaleByHeight);
 
             if (dynamicScale < baseScale)
             {
-                Debug.Log($"[TriangleVisualizer] Auto-scaling: {baseScale:F2} → {dynamicScale:F2} (W:{samping}, H:{depan} → Final: {samping * dynamicScale:F1} x {depan * dynamicScale:F1} units, Max allowed: {safeMaxSize:F1})");
+                Debug.Log($"[TriangleVisualizer] Auto-scaling ({orientation}): {baseScale:F2} → {dynamicScale:F2} (W:{widthNeeded / baseScale}, H:{heightNeeded / baseScale} → Final: {widthNeeded / baseScale * dynamicScale:F1} x {heightNeeded / baseScale * dynamicScale:F1} units, Max allowed: {safeMaxSize:F1})");
             }
         }
 
