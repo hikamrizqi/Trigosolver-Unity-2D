@@ -128,18 +128,29 @@ public class MainMenuManager : MonoBehaviour
             return;
         }
 
-        // CEK: Jika logo sudah di corner, langsung show main menu (jangan sink logo!)
+        // CEK: Jika logo sudah di corner, langsung show main menu (jangan animasi logo!)
         if (logoAnimator != null && logoAnimator.IsInCorner())
         {
-            Debug.Log("Logo sudah di corner, langsung show main menu tanpa sink logo");
+            Debug.Log("Logo sudah di corner, langsung show main menu tanpa animasi logo");
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.SetActive(true);
+            }
             mainMenuAnimator.AnimateDropIn();
             return;
         }
 
-        // Logo sink, lalu main menu drop (behavior lama untuk "click anywhere")
-        logoAnimator.AnimateSinkOut(() =>
+        // PENTING: Logo shrink ke corner (BUKAN sink out!)
+        // Ini adalah transisi pertama dari logo penuh ke logo pojok
+        logoAnimator.AnimateShrinkToCorner(() =>
         {
-            Debug.Log("Logo sink selesai, panggil main menu drop");
+            Debug.Log("Logo shrink to corner selesai, show main menu");
+            
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.SetActive(true);
+            }
+            
             mainMenuAnimator.AnimateDropIn();
         });
     }
@@ -166,18 +177,42 @@ public class MainMenuManager : MonoBehaviour
     {
         if (currentState != MenuState.MainMenu) return;
 
+        Debug.Log("[MainMenu] OnHighScoreClicked called");
+
         currentState = MenuState.HighScore;
 
+        // Main menu sink, lalu high score drop
         mainMenuAnimator.AnimateSinkOut(() =>
         {
-            highScoreAnimator.AnimateDropIn(() =>
+            Debug.Log("[MainMenu] Main menu sink complete, showing high score panel");
+            
+            // PENTING: Aktifkan panel sebelum animasi!
+            if (highScorePanel != null)
             {
-                // Refresh high score display setelah panel muncul
-                if (highScoreDisplay != null)
+                highScorePanel.SetActive(true);
+            }
+            else
+            {
+                Debug.LogError("[MainMenu] highScorePanel is NULL!");
+                return;
+            }
+
+            if (highScoreAnimator != null)
+            {
+                highScoreAnimator.AnimateDropIn(() =>
                 {
-                    highScoreDisplay.RefreshScores();
-                }
-            });
+                    Debug.Log("[MainMenu] High score panel animation complete");
+                    // Refresh high score display setelah panel muncul
+                    if (highScoreDisplay != null)
+                    {
+                        highScoreDisplay.RefreshScores();
+                    }
+                });
+            }
+            else
+            {
+                Debug.LogError("[MainMenu] highScoreAnimator is NULL!");
+            }
         });
     }
 
@@ -233,11 +268,25 @@ public class MainMenuManager : MonoBehaviour
     {
         if (currentState != MenuState.HighScore) return;
 
+        Debug.Log("[MainMenu] OnBackFromHighScore called");
+
         currentState = MenuState.MainMenu;
 
+        // High score sink, lalu main menu drop
         highScoreAnimator.AnimateSinkOut(() =>
         {
-            mainMenuAnimator.AnimateDropIn();
+            Debug.Log("[MainMenu] High score sink complete, showing main menu");
+            
+            // Aktifkan main menu panel
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.SetActive(true);
+            }
+
+            if (mainMenuAnimator != null)
+            {
+                mainMenuAnimator.AnimateDropIn();
+            }
         });
     }
 
