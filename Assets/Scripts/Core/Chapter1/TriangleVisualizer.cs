@@ -56,6 +56,12 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Offset label dari garis (jarak)")]
     public float labelOffset = 0.5f;
 
+    [Tooltip("Z-offset untuk label agar muncul di depan sprite")]
+    public float labelZOffset = -0.5f;
+
+    [Tooltip("Ukuran font untuk label angka sisi")]
+    public float labelFontSize = 10f;
+
     [Tooltip("Ukuran font simbol sudut siku-siku ∟")]
     public float rightAngleFontSize = 5f;
 
@@ -149,12 +155,15 @@ public class TriangleVisualizer : MonoBehaviour
         if (depanLabel != null)
         {
             depanLabel.text = depan.ToString();
+            depanLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
             // Offset label perpendicular ke garis (ke bawah dari garis)
             Vector3 direction = (bottomRight - bottomLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0); // Rotate 90° counterclockwise
-            // Posisi label di bawah garis depan
-            depanLabel.transform.position = midPoint + perpendicular * (-labelOffset * 1.5f);
+            // Posisi label di bawah garis depan dengan Z-offset
+            Vector3 labelPos = midPoint + perpendicular * (-labelOffset * 1.5f);
+            labelPos.z = labelZOffset; // Pastikan di depan sprite
+            depanLabel.transform.position = labelPos;
         }
 
         // SISI SAMPING (AB - Vertical di rotasi 0° - ADJACENT ke theta)
@@ -162,12 +171,15 @@ public class TriangleVisualizer : MonoBehaviour
         if (sampingLabel != null)
         {
             sampingLabel.text = samping.ToString();
+            sampingLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
             // Offset label perpendicular ke garis (ke kiri dari garis)
             Vector3 direction = (topLeft - bottomLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            // Posisi label di kiri garis samping
-            sampingLabel.transform.position = midPoint + perpendicular * (-labelOffset * 1.5f);
+            // Posisi label di kiri garis samping dengan Z-offset
+            Vector3 labelPos = midPoint + perpendicular * (-labelOffset * 1.5f);
+            labelPos.z = labelZOffset; // Pastikan di depan sprite
+            sampingLabel.transform.position = labelPos;
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -175,13 +187,16 @@ public class TriangleVisualizer : MonoBehaviour
         if (miringLabel != null)
         {
             miringLabel.text = miring.ToString();
+            miringLabel.fontSize = labelFontSize;
             Vector3 midPoint = (topLeft + bottomRight) / 2f;
 
             // Hitung perpendicular offset untuk label miring (ke kanan atas dari garis)
             Vector3 direction = (bottomRight - topLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            // Posisi label di luar segitiga (kanan atas dari garis miring)
-            miringLabel.transform.position = midPoint + perpendicular * (labelOffset * 1.5f);
+            // Posisi label di luar segitiga (kanan atas dari garis miring) dengan Z-offset
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 1.5f);
+            labelPos.z = labelZOffset; // Pastikan di depan sprite
+            miringLabel.transform.position = labelPos;
         }
 
         // SIMBOL THETA (di sudut lancip atas A - antara samping AB dan miring AC) - WORLD SPACE
