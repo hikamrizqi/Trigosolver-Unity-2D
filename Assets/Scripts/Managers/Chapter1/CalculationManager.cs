@@ -140,11 +140,12 @@ public class CalculationManager : MonoBehaviour
     {
         // Beri pemain waktu 1.5 detik untuk membaca feedback
         yield return new WaitForSeconds(1.5f);
-        
+
         // Animate triangle keluar
         if (uiManager != null && uiManager.triangleVisualizer != null)
         {
-            uiManager.triangleVisualizer.AnimateTriangleOut(() => {
+            uiManager.triangleVisualizer.AnimateTriangleOut(() =>
+            {
                 StartNewRound();
             });
         }

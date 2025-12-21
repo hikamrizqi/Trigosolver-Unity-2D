@@ -18,7 +18,7 @@ public class UIManagerChapter1 : MonoBehaviour
     [SerializeField] private TextMeshProUGUI feedbackText;
 
     [Header("Visualisasi Segitiga (Game World)")]
-    [SerializeField] private TriangleVisualizer triangleVisualizer; // Script visualizer untuk menggambar segitiga
+    [SerializeField] public TriangleVisualizer triangleVisualizer; // Script visualizer untuk menggambar segitiga
     // DEPRECATED: Labels now handled by TriangleVisualizer (World Space)
     // [SerializeField] private TextMeshProUGUI depanLabel_World;
     // [SerializeField] private TextMeshProUGUI sampingLabel_World;
