@@ -79,6 +79,9 @@ public class AnswerTile : MonoBehaviour
     {
         isInSlot = inSlot;
 
+        // Kill any existing tweens on this transform
+        transform.DOKill();
+
         // Change parent tapi keep world position
         Vector3 worldPos = transform.position;
         transform.SetParent(newParent, true);
@@ -105,12 +108,25 @@ public class AnswerTile : MonoBehaviour
     {
         isInSlot = false;
 
-        Vector3 worldPos = transform.position;
-        transform.SetParent(originalParent, true);
-        transform.position = worldPos;
+        // Kill any existing tweens on this transform
+        transform.DOKill();
 
-        transform.DOLocalMove(originalPosition, duration)
-            .SetEase(Ease.OutBack);
+        // Return to original parent
+        transform.SetParent(originalParent, false); // FALSE = reset local position
+
+        // Force reset anchored position (penting untuk Grid Layout Group)
+        RectTransform rect = transform as RectTransform;
+        if (rect != null)
+        {
+            rect.anchoredPosition = Vector2.zero;
+            rect.localScale = Vector3.one;
+            rect.localRotation = Quaternion.identity;
+        }
+
+        // Force rebuild layout
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(originalParent as RectTransform);
+
+        Debug.Log($"[AnswerTile] {Value} returned to pool, anchored position reset to (0,0)");
     }
 
     /// <summary>
