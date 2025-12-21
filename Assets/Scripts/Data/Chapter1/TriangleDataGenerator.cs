@@ -594,14 +594,14 @@ public class TriangleDataGenerator : MonoBehaviour
         tileData.WrongAnswers = new List<string>();
 
         // Kumpulkan semua angka yang sudah dipakai (termasuk jawaban benar)
-        HashSet<string> usedNumbers = new HashSet<string>
+        HashSet<string> usedNumbersSingle = new HashSet<string>
         {
             tileData.NumeratorCorrect,
             tileData.DenominatorCorrect
         };
 
         // Tambahkan angka dari soal (depan, samping, miring) - exclude yang sudah jadi jawaban benar
-        List<string> triangleNumbers = new List<string>
+        List<string> triangleNumbersSingle = new List<string>
         {
             data.Depan.ToString(),
             data.Samping.ToString(),
@@ -609,30 +609,30 @@ public class TriangleDataGenerator : MonoBehaviour
         };
 
         // Ambil maksimal 2 angka dari segitiga untuk distractor
-        foreach (string num in triangleNumbers)
+        foreach (string num in triangleNumbersSingle)
         {
-            if (!usedNumbers.Contains(num) && tileData.WrongAnswers.Count < 2)
+            if (!usedNumbersSingle.Contains(num) && tileData.WrongAnswers.Count < 2)
             {
                 tileData.WrongAnswers.Add(num);
-                usedNumbers.Add(num);
+                usedNumbersSingle.Add(num);
             }
         }
 
         // Generate angka random hingga total WrongAnswers = 4 (jadi total tiles = 2 correct + 4 wrong = 6)
-        int attempts = 0;
-        while (tileData.WrongAnswers.Count < 4 && attempts < 50)
+        int attemptsSingle = 0;
+        while (tileData.WrongAnswers.Count < 4 && attemptsSingle < 50)
         {
-            attempts++;
+            attemptsSingle++;
 
             // Random 1-2 digit (1-20 range)
             int randomNum = Random.Range(1, 21);
             string randomStr = randomNum.ToString();
 
             // Pastikan unique (belum ada di list)
-            if (!usedNumbers.Contains(randomStr))
+            if (!usedNumbersSingle.Contains(randomStr))
             {
                 tileData.WrongAnswers.Add(randomStr);
-                usedNumbers.Add(randomStr);
+                usedNumbersSingle.Add(randomStr);
             }
         }
 
