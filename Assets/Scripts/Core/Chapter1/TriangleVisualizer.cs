@@ -56,8 +56,21 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Offset label dari garis (jarak)")]
     public float labelOffset = 0.5f;
 
-    [Tooltip("Z-offset untuk label agar muncul di depan sprite")]
-    public float labelZOffset = -0.5f;
+    [Header("Manual Position Adjustment")]
+    [Tooltip("Multiplier offset untuk label DEPAN (default 2.0)")]
+    public float depanLabelMultiplier = 2f;
+
+    [Tooltip("Multiplier offset untuk label SAMPING (default 2.0)")]
+    public float sampingLabelMultiplier = 2f;
+
+    [Tooltip("Multiplier offset untuk label MIRING (default 2.0)")]
+    public float miringLabelMultiplier = 2f;
+
+    [Tooltip("Z-offset untuk label agar muncul di depan sprite (lebih negatif = lebih depan)")]
+    public float labelZOffset = -2f;
+
+    [Tooltip("Sorting order untuk label (lebih tinggi = lebih depan)")]
+    public int labelSortingOrder = 100;
 
     [Tooltip("Ukuran font untuk label angka sisi")]
     public float labelFontSize = 10f;
@@ -157,14 +170,15 @@ public class TriangleVisualizer : MonoBehaviour
             depanLabel.text = depan.ToString();
             depanLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
-            // Offset label perpendicular ke garis (ke BAWAH dari garis depan)
             Vector3 direction = (bottomRight - bottomLeft).normalized;
-            // Perpendicular clockwise (ke bawah dari garis horizontal)
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // Posisi label di bawah garis depan dengan Z-offset
-            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 2f);
-            labelPos.z = labelZOffset; // Pastikan di depan sprite
+            // ADJUST POSISI: Ubah depanLabelMultiplier di Inspector (default 2.0)
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * depanLabelMultiplier);
+            labelPos.z = labelZOffset;
             depanLabel.transform.position = labelPos;
+            // Set sorting order agar tidak tertutup
+            if (depanLabel.GetComponent<MeshRenderer>() != null)
+                depanLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
 
         // SISI SAMPING (AB - Vertical di rotasi 0° - ADJACENT ke theta)
@@ -174,14 +188,15 @@ public class TriangleVisualizer : MonoBehaviour
             sampingLabel.text = samping.ToString();
             sampingLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
-            // Offset label perpendicular ke garis (ke KIRI dari garis samping)
             Vector3 direction = (topLeft - bottomLeft).normalized;
-            // Perpendicular clockwise (ke kiri dari garis vertikal)
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // Posisi label di kiri garis samping dengan Z-offset
-            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 2f);
-            labelPos.z = labelZOffset; // Pastikan di depan sprite
+            // ADJUST POSISI: Ubah sampingLabelMultiplier di Inspector (default 2.0)
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * sampingLabelMultiplier);
+            labelPos.z = labelZOffset;
             sampingLabel.transform.position = labelPos;
+            // Set sorting order agar tidak tertutup
+            if (sampingLabel.GetComponent<MeshRenderer>() != null)
+                sampingLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -191,15 +206,15 @@ public class TriangleVisualizer : MonoBehaviour
             miringLabel.text = miring.ToString();
             miringLabel.fontSize = labelFontSize;
             Vector3 midPoint = (topLeft + bottomRight) / 2f;
-
-            // Offset label perpendicular ke garis (ke LUAR dari segitiga - kanan atas dari miring)
             Vector3 direction = (bottomRight - topLeft).normalized;
-            // Perpendicular counter-clockwise (ke kanan atas dari garis miring)
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            // Posisi label di luar segitiga dengan Z-offset
-            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 2f);
-            labelPos.z = labelZOffset; // Pastikan di depan sprite
+            // ADJUST POSISI: Ubah miringLabelMultiplier di Inspector (default 2.0)
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * miringLabelMultiplier);
+            labelPos.z = labelZOffset;
             miringLabel.transform.position = labelPos;
+            // Set sorting order agar tidak tertutup
+            if (miringLabel.GetComponent<MeshRenderer>() != null)
+                miringLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
 
         // SIMBOL THETA (di sudut lancip atas A - antara samping AB dan miring AC) - WORLD SPACE
@@ -221,10 +236,10 @@ public class TriangleVisualizer : MonoBehaviour
             thetaPosition.z = labelZOffset; // Z di depan sprite
             thetaLabel.transform.position = thetaPosition;
 
-            // Atur sorting order untuk TextMeshPro renderer
+            // Set sorting order agar tidak tertutup objek lain
             if (thetaLabel.GetComponent<MeshRenderer>() != null)
             {
-                thetaLabel.GetComponent<MeshRenderer>().sortingOrder = 10; // Lebih tinggi = di depan
+                thetaLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
             }
         }
 
@@ -244,8 +259,13 @@ public class TriangleVisualizer : MonoBehaviour
             Vector3 symbolPosition = bottomLeft + offset;
             symbolPosition.z = labelZOffset; // Z di depan sprite
 
-            // Set posisi dengan Z di depan garis
             rightAngleLabel.transform.position = symbolPosition;
+
+            // Set sorting order agar tidak tertutup objek lain
+            if (rightAngleLabel.GetComponent<MeshRenderer>() != null)
+            {
+                rightAngleLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
 
             // Rotasi simbol ∟ mengikuti sudut segitiga
             // Simbol ∟ default menghadap kanan-atas, rotasi sesuai orientasi sisi
