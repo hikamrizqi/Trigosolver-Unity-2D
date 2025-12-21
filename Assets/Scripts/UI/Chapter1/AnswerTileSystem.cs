@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -28,7 +29,7 @@ public class AnswerTileSystem : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private int poolSize = 5;          // Jumlah tiles (default 5)
     [SerializeField] private float animationDuration = 0.3f;
-    
+
     [Header("Entry Animation")]
     [SerializeField] private float entryAnimDuration = 0.5f;
     [SerializeField] private float entryStaggerDelay = 0.1f; // Delay antar tile
@@ -91,10 +92,26 @@ public class AnswerTileSystem : MonoBehaviour
         }
 
         Debug.Log($"[AnswerTileSystem] Setup question: {numerator}/{denominator}, Total tiles: {poolValues.Count}, Pool: {string.Join(", ", poolValues)}");
-        
-        // Animate tiles masuk dari offscreen
-        AnimateTilesIn();
+
+        // Wait for layout group to position tiles, then animate
+        StartCoroutine(AnimateTilesInDelayed());
     }
+    
+    /// <summary>
+    /// Delayed animation agar layout group selesai calculate positions
+    /// </summary>
+    private System.Collections.IEnumerator AnimateTilesInDelayed()
+    {
+        // Wait 1 frame untuk layout group selesai
+        yield return null;
+        
+        // Force layout rebuild
+        Canvas.ForceUpdateCanvases();
+        if (poolContainer != null)
+        {
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(poolContainer as RectTransform);
+        }
+        
 
     /// <summary>
     /// Move tile ke slot kosong
@@ -252,7 +269,7 @@ public class AnswerTileSystem : MonoBehaviour
             hiddenInputField.text = "";
         }
     }
-    
+
     /// <summary>
     /// Animasi tiles masuk dari offscreen dengan stagger
     /// Tiles dari KIRI, KANAN, dan BAWAH secara bergiliran
@@ -260,18 +277,18 @@ public class AnswerTileSystem : MonoBehaviour
     private void AnimateTilesIn()
     {
         if (allTiles == null || allTiles.Count == 0) return;
-        
+
         for (int i = 0; i < allTiles.Count; i++)
         {
             AnswerTile tile = allTiles[i];
             if (tile == null) continue;
-            
+
             RectTransform rectTransform = tile.GetComponent<RectTransform>();
             if (rectTransform == null) continue;
-            
+
             // Simpan posisi target
             Vector2 targetPos = rectTransform.anchoredPosition;
-            
+
             // Tentukan arah masuk berdasarkan index (pattern: kiri, kanan, bawah, repeat)
             Vector2 offscreenPos;
             switch (i % 3)
@@ -289,10 +306,10 @@ public class AnswerTileSystem : MonoBehaviour
                     offscreenPos = targetPos;
                     break;
             }
-            
+
             // Set ke posisi offscreen
             rectTransform.anchoredPosition = offscreenPos;
-            
+
             // Animate ke target position dengan stagger delay
             float delay = i * entryStaggerDelay;
             rectTransform.DOAnchorPos(targetPos, entryAnimDuration)
@@ -300,7 +317,7 @@ public class AnswerTileSystem : MonoBehaviour
                 .SetEase(entryEase);
         }
     }
-    
+
     /// <summary>
     /// Animasi tiles keluar ke offscreen (untuk next question)
     /// </summary>
@@ -311,20 +328,20 @@ public class AnswerTileSystem : MonoBehaviour
             onComplete?.Invoke();
             return;
         }
-        
+
         int completedCount = 0;
         int totalTiles = allTiles.Count;
-        
+
         for (int i = 0; i < allTiles.Count; i++)
         {
             AnswerTile tile = allTiles[i];
             if (tile == null) continue;
-            
+
             RectTransform rectTransform = tile.GetComponent<RectTransform>();
             if (rectTransform == null) continue;
-            
+
             Vector2 currentPos = rectTransform.anchoredPosition;
-            
+
             // Keluar ke arah berlawanan dari masuk
             Vector2 exitPos;
             switch (i % 3)
@@ -342,13 +359,14 @@ public class AnswerTileSystem : MonoBehaviour
                     exitPos = currentPos;
                     break;
             }
-            
+
             // Animate keluar dengan stagger
             float delay = i * (entryStaggerDelay * 0.5f); // Lebih cepat keluar
             rectTransform.DOAnchorPos(exitPos, entryAnimDuration * 0.8f)
                 .SetDelay(delay)
                 .SetEase(Ease.InBack)
-                .OnComplete(() => {
+                .OnComplete(() =>
+                {
                     completedCount++;
                     if (completedCount >= totalTiles)
                     {

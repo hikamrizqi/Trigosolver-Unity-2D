@@ -144,11 +144,12 @@ public class CalculationManager : MonoBehaviour
         // Flag untuk tracking animasi selesai
         bool triangleAnimDone = false;
         bool tilesAnimDone = false;
-        
+
         // Animate triangle keluar
         if (uiManager != null && uiManager.triangleVisualizer != null)
         {
-            uiManager.triangleVisualizer.AnimateTriangleOut(() => {
+            uiManager.triangleVisualizer.AnimateTriangleOut(() =>
+            {
                 triangleAnimDone = true;
                 if (tilesAnimDone) StartNewRound();
             });
@@ -157,11 +158,12 @@ public class CalculationManager : MonoBehaviour
         {
             triangleAnimDone = true;
         }
-        
+
         // Animate answer tiles keluar (parallel)
         if (AnswerTileSystem.Instance != null)
         {
-            AnswerTileSystem.Instance.AnimateTilesOut(() => {
+            AnswerTileSystem.Instance.AnimateTilesOut(() =>
+            {
                 tilesAnimDone = true;
                 if (triangleAnimDone) StartNewRound();
             });
@@ -170,7 +172,7 @@ public class CalculationManager : MonoBehaviour
         {
             tilesAnimDone = true;
         }
-        
+
         // Fallback jika tidak ada animator
         if (triangleAnimDone && tilesAnimDone)
         {
