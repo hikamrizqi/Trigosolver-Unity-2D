@@ -38,14 +38,14 @@ public class TriangleVisualizer : MonoBehaviour
     public Camera mainCamera;
 
     [Header("Visual Settings")]
-    [Tooltip("Skala dasar untuk sprites (1 = 1 unit Unity per nilai segitiga)")]
-    public float baseScale = 0.3f; // Reduced from 0.5f for portrait mode
+    [Tooltip("Skala dasar untuk sprites (1 = 1 unit Unity per nilai segitiga) - UBAH INI untuk memperbesar/memperkecil segitiga")]
+    public float baseScale = 0.5f; // Tingkatkan dari 0.3 agar tidak terlalu kecil
 
-    [Tooltip("Maksimal ukuran segitiga untuk auto-scaling (fit di layar)")]
-    public float maxTriangleSize = 5f; // Reduced from 8f for portrait mode
+    [Tooltip("Maksimal ukuran segitiga untuk auto-scaling (fit di layar) - Segitiga hanya dikecilkan jika melebihi ini")]
+    public float maxTriangleSize = 7f; // Tingkatkan dari 5 agar lebih toleran
 
     [Tooltip("Safety margin dari batas layar (dalam units)")]
-    public float safetyMargin = 0.5f; // Reduced from 1f for tighter fit
+    public float safetyMargin = 0.5f;
 
     [Tooltip("Gunakan auto-scaling agar semua segitiga fit di layar")]
     public bool useAutoScaling = true;
@@ -171,12 +171,12 @@ public class TriangleVisualizer : MonoBehaviour
             depanLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
             Vector3 direction = (bottomRight - bottomLeft).normalized;
+            // Perpendicular ke BAWAH (untuk label di bawah garis)
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // ADJUST POSISI: Ubah depanLabelMultiplier di Inspector (default 2.0)
+            // ADJUST: depanLabelMultiplier default 2.0 - ubah di Inspector untuk geser posisi
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * depanLabelMultiplier);
             labelPos.z = labelZOffset;
             depanLabel.transform.position = labelPos;
-            // Set sorting order agar tidak tertutup
             if (depanLabel.GetComponent<MeshRenderer>() != null)
                 depanLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
@@ -189,12 +189,12 @@ public class TriangleVisualizer : MonoBehaviour
             sampingLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
             Vector3 direction = (topLeft - bottomLeft).normalized;
+            // Perpendicular ke KIRI (untuk label di kiri garis)
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // ADJUST POSISI: Ubah sampingLabelMultiplier di Inspector (default 2.0)
+            // ADJUST: sampingLabelMultiplier default 2.0 - ubah di Inspector untuk geser posisi
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * sampingLabelMultiplier);
             labelPos.z = labelZOffset;
             sampingLabel.transform.position = labelPos;
-            // Set sorting order agar tidak tertutup
             if (sampingLabel.GetComponent<MeshRenderer>() != null)
                 sampingLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
@@ -207,12 +207,12 @@ public class TriangleVisualizer : MonoBehaviour
             miringLabel.fontSize = labelFontSize;
             Vector3 midPoint = (topLeft + bottomRight) / 2f;
             Vector3 direction = (bottomRight - topLeft).normalized;
+            // Perpendicular ke KANAN (untuk label di luar segitiga)
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            // ADJUST POSISI: Ubah miringLabelMultiplier di Inspector (default 2.0)
+            // ADJUST: miringLabelMultiplier default 2.0 - ubah di Inspector untuk geser posisi
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * miringLabelMultiplier);
             labelPos.z = labelZOffset;
             miringLabel.transform.position = labelPos;
-            // Set sorting order agar tidak tertutup
             if (miringLabel.GetComponent<MeshRenderer>() != null)
                 miringLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
