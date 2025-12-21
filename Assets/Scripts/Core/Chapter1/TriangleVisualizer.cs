@@ -77,23 +77,6 @@ public class TriangleVisualizer : MonoBehaviour
     private int currentMiring;
     private float currentRotation = 0f; // Rotasi segitiga saat ini
 
-    private void Start()
-    {
-        // Auto-adjust scale untuk portrait mode
-        bool isPortrait = Screen.height > Screen.width;
-        
-        if (isPortrait)
-        {
-            // Portrait mode: Kurangi scale agar fit
-            float portraitScaleFactor = 0.6f; // 60% dari landscape
-            baseScale *= portraitScaleFactor;
-            maxTriangleSize *= 0.65f;
-            safetyMargin *= 0.5f;
-            
-            Debug.Log($"[TriangleVisualizer] Portrait mode detected - Scale adjusted: baseScale={baseScale:F2}, maxSize={maxTriangleSize:F1}");
-        }
-    }
-
     /// <summary>
     /// Menggambar segitiga dengan nilai yang diberikan (tanpa rotasi - default 0°)
     /// </summary>
@@ -447,6 +430,20 @@ public class TriangleVisualizer : MonoBehaviour
     /// </summary>
     private void Start()
     {
+        // Auto-adjust scale untuk portrait mode
+        bool isPortrait = Screen.height > Screen.width;
+
+        if (isPortrait)
+        {
+            // Portrait mode: Kurangi scale agar fit
+            float portraitScaleFactor = 0.5f; // 50% dari landscape
+            baseScale *= portraitScaleFactor;
+            maxTriangleSize *= 0.6f;
+            safetyMargin *= 0.5f;
+
+            Debug.Log($"[TriangleVisualizer] Portrait mode detected - Scale adjusted: baseScale={baseScale:F2}, maxSize={maxTriangleSize:F1}");
+        }
+
         // Auto-assign main camera jika belum
         if (mainCamera == null)
         {
