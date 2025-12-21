@@ -157,11 +157,12 @@ public class TriangleVisualizer : MonoBehaviour
             depanLabel.text = depan.ToString();
             depanLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
-            // Offset label perpendicular ke garis (ke bawah dari garis)
+            // Offset label perpendicular ke garis (ke BAWAH dari garis depan)
             Vector3 direction = (bottomRight - bottomLeft).normalized;
-            Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0); // Rotate 90° counterclockwise
+            // Perpendicular clockwise (ke bawah dari garis horizontal)
+            Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
             // Posisi label di bawah garis depan dengan Z-offset
-            Vector3 labelPos = midPoint + perpendicular * (-labelOffset * 1.5f);
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 2f);
             labelPos.z = labelZOffset; // Pastikan di depan sprite
             depanLabel.transform.position = labelPos;
         }
@@ -173,11 +174,12 @@ public class TriangleVisualizer : MonoBehaviour
             sampingLabel.text = samping.ToString();
             sampingLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
-            // Offset label perpendicular ke garis (ke kiri dari garis)
+            // Offset label perpendicular ke garis (ke KIRI dari garis samping)
             Vector3 direction = (topLeft - bottomLeft).normalized;
-            Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
+            // Perpendicular clockwise (ke kiri dari garis vertikal)
+            Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
             // Posisi label di kiri garis samping dengan Z-offset
-            Vector3 labelPos = midPoint + perpendicular * (-labelOffset * 1.5f);
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 2f);
             labelPos.z = labelZOffset; // Pastikan di depan sprite
             sampingLabel.transform.position = labelPos;
         }
@@ -190,11 +192,12 @@ public class TriangleVisualizer : MonoBehaviour
             miringLabel.fontSize = labelFontSize;
             Vector3 midPoint = (topLeft + bottomRight) / 2f;
 
-            // Hitung perpendicular offset untuk label miring (ke kanan atas dari garis)
+            // Offset label perpendicular ke garis (ke LUAR dari segitiga - kanan atas dari miring)
             Vector3 direction = (bottomRight - topLeft).normalized;
+            // Perpendicular counter-clockwise (ke kanan atas dari garis miring)
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            // Posisi label di luar segitiga (kanan atas dari garis miring) dengan Z-offset
-            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 1.5f);
+            // Posisi label di luar segitiga dengan Z-offset
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * 2f);
             labelPos.z = labelZOffset; // Pastikan di depan sprite
             miringLabel.transform.position = labelPos;
         }
@@ -203,26 +206,20 @@ public class TriangleVisualizer : MonoBehaviour
         if (thetaLabel != null)
         {
             thetaLabel.text = "θ";
+            thetaLabel.fontSize = labelFontSize * 0.8f; // Sedikit lebih kecil dari label angka
+
             // Posisi theta di topLeft (titik A - sudut antara sisi samping AB dan sisi miring AC)
-            float thetaOffsetDistance = 0.8f;
+            float thetaOffsetDistance = labelOffset * 1.5f;
 
             // Hitung arah menuju "dalam" segitiga dari sudut theta
-            // Arah dari topLeft ke bottomLeft (sepanjang sisi samping AB)
-            Vector3 toSamping = (bottomLeft - topLeft).normalized;
-            // Arah dari topLeft ke bottomRight (sepanjang sisi miring AC)
-            Vector3 toMiring = (bottomRight - topLeft).normalized;
-            // Bisector (tengah-tengah antara dua arah)
+            Vector3 toSamping = (bottomLeft - topLeft).normalized;  // Arah ke bawah (samping AB)
+            Vector3 toMiring = (bottomRight - topLeft).normalized;   // Arah ke kanan bawah (miring AC)
+            // Bisector (tengah-tengah antara dua arah) - menuju dalam segitiga
             Vector3 inward = (toSamping + toMiring).normalized;
 
             Vector3 thetaPosition = topLeft + inward * thetaOffsetDistance;
+            thetaPosition.z = labelZOffset; // Z di depan sprite
             thetaLabel.transform.position = thetaPosition;
-
-            // Set Z-position agar theta di depan garis segitiga
-            thetaLabel.transform.position = new Vector3(
-                thetaLabel.transform.position.x,
-                thetaLabel.transform.position.y,
-                -2f  // Z negatif = lebih dekat ke kamera = di depan
-            );
 
             // Atur sorting order untuk TextMeshPro renderer
             if (thetaLabel.GetComponent<MeshRenderer>() != null)
@@ -235,31 +232,25 @@ public class TriangleVisualizer : MonoBehaviour
         if (rightAngleLabel != null)
         {
             rightAngleLabel.text = "∟"; // Unicode U+221F - Right Angle symbol
+            rightAngleLabel.fontSize = labelFontSize * 1.2f; // Lebih besar untuk visibility
 
             // Posisi di sudut siku-siku (bottomLeft = titik B)
-            // Hitung arah untuk offset simbol ke dalam segitiga
             Vector3 toRight = (bottomRight - bottomLeft).normalized; // Arah ke kanan (depan BC)
             Vector3 toUp = (topLeft - bottomLeft).normalized;        // Arah ke atas (samping AB)
 
             // Offset dari vertex agar simbol tidak pas di pojok
-            float offsetDistance = 0.5f;
+            float offsetDistance = labelOffset * 1.2f;
             Vector3 offset = (toRight + toUp).normalized * offsetDistance;
             Vector3 symbolPosition = bottomLeft + offset;
+            symbolPosition.z = labelZOffset; // Z di depan sprite
 
             // Set posisi dengan Z di depan garis
-            rightAngleLabel.transform.position = new Vector3(
-                symbolPosition.x,
-                symbolPosition.y,
-                -1.5f  // Di antara garis (0) dan theta (-2)
-            );
+            rightAngleLabel.transform.position = symbolPosition;
 
             // Rotasi simbol ∟ mengikuti sudut segitiga
             // Simbol ∟ default menghadap kanan-atas, rotasi sesuai orientasi sisi
             float angleToRight = Mathf.Atan2(toRight.y, toRight.x) * Mathf.Rad2Deg;
             rightAngleLabel.transform.rotation = Quaternion.Euler(0, 0, angleToRight);
-
-            // Set font size
-            rightAngleLabel.fontSize = rightAngleFontSize;
 
             // Set sorting order agar terlihat di depan garis
             if (rightAngleLabel.GetComponent<MeshRenderer>() != null)
