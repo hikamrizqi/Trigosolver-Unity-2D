@@ -107,7 +107,7 @@ public class LevelSelectionManager : MonoBehaviour
 
         // 3. Start game from appropriate question number
         int startingQuestion = (level == 1) ? 1 : 11;
-        
+
         if (calculationManager != null)
         {
             calculationManager.StartFromQuestion(startingQuestion);
@@ -171,16 +171,29 @@ public class LevelSelectionManager : MonoBehaviour
     /// </summary>
     private void ShowAllGameObjects(bool animated)
     {
-        GameObject[] objectsToShow = {
-            backgroundObject,
-            triangleVisualizerObject,
-            answerTileSystemObject,
+        // Only animate UI elements, world objects use their own animations
+        GameObject[] uiObjectsToAnimate = {
             questionPanelObject,
             interactiveButtonPanel,
             checkButtonObject
         };
 
-        foreach (GameObject obj in objectsToShow)
+        // World objects - activate tanpa animasi (mereka punya animasi sendiri)
+        GameObject[] worldObjectsToShow = {
+            backgroundObject,
+            triangleVisualizerObject,
+            answerTileSystemObject
+        };
+
+        // Show world objects first (no animation dari LevelSelectionManager)
+        foreach (GameObject obj in worldObjectsToShow)
+        {
+            if (obj != null)
+                obj.SetActive(true);
+        }
+
+        // Animate UI elements
+        foreach (GameObject obj in uiObjectsToAnimate)
         {
             if (obj == null) continue;
 
