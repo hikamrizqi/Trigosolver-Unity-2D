@@ -199,7 +199,21 @@ public class TriangleVisualizer : MonoBehaviour
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
             Vector3 direction = (bottomRight - bottomLeft).normalized;
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            float multiplier = (orientation == TriangleOrientation.Normal) ? depanLabelMultiplier : sampingLabelMultiplier;
+
+            // AUTO: Set multiplier berdasarkan posisi
+            // Alas (horizontal) = 1, Tegak (vertical) = -1
+            float multiplier;
+            if (orientation == TriangleOrientation.Normal)
+            {
+                // Normal: Depan di alas → multiplier = 1
+                multiplier = 1f;
+            }
+            else
+            {
+                // Swapped: Samping di alas → multiplier = 1
+                multiplier = 1f;
+            }
+
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * multiplier);
             labelPos.z = labelZOffset;
             horizontalLabel.transform.position = labelPos;
@@ -221,7 +235,21 @@ public class TriangleVisualizer : MonoBehaviour
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
             Vector3 direction = (topLeft - bottomLeft).normalized;
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            float multiplier = (orientation == TriangleOrientation.Normal) ? sampingLabelMultiplier : depanLabelMultiplier;
+
+            // AUTO: Set multiplier berdasarkan posisi
+            // Alas (horizontal) = 1, Tegak (vertical) = -1
+            float multiplier;
+            if (orientation == TriangleOrientation.Normal)
+            {
+                // Normal: Samping di tegak → multiplier = -1
+                multiplier = -1f;
+            }
+            else
+            {
+                // Swapped: Depan di tegak → multiplier = -1
+                multiplier = -1f;
+            }
+
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * multiplier);
             labelPos.z = labelZOffset;
             verticalLabel.transform.position = labelPos;
