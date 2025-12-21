@@ -102,6 +102,7 @@ public class TriangleVisualizer : MonoBehaviour
     private int currentSamping;
     private int currentMiring;
     private float currentRotation = 0f; // Rotasi segitiga saat ini
+    private TriangleOrientation currentOrientation = TriangleOrientation.Normal; // Orientasi saat ini
 
     /// <summary>
     /// Menggambar segitiga dengan nilai yang diberikan (tanpa rotasi - default 0°)
@@ -122,6 +123,7 @@ public class TriangleVisualizer : MonoBehaviour
         currentSamping = samping;
         currentMiring = miring;
         currentRotation = rotationAngle;
+        currentOrientation = orientation; // Simpan orientasi saat ini
 
         // Hitung scale dinamis agar segitiga fit di layar
         float dynamicScale = baseScale;
@@ -377,12 +379,30 @@ public class TriangleVisualizer : MonoBehaviour
 
     /// <summary>
     /// Highlight salah satu sisi segitiga dengan warna tertentu
+    /// PENTING: Jika orientation = Swapped, maka depan/samping button akan highlight sprite yang sesuai
     /// </summary>
     public void HighlightSide(string sideName, Color color)
     {
         ResetColors();
 
-        switch (sideName.ToLower())
+        // SWAP: Jika orientation = Swapped, tukar mapping depan/samping
+        string actualSideName = sideName.ToLower();
+        if (currentOrientation == TriangleOrientation.Swapped)
+        {
+            if (actualSideName == "depan")
+            {
+                // Button DEPAN → Sekarang highlight sprite SAMPING (karena depan sekarang di posisi tegak)
+                actualSideName = "samping";
+            }
+            else if (actualSideName == "samping")
+            {
+                // Button SAMPING → Sekarang highlight sprite DEPAN (karena samping sekarang di posisi alas)
+                actualSideName = "depan";
+            }
+            // "miring" tetap "miring" (tidak berubah)
+        }
+
+        switch (actualSideName)
         {
             case "depan":
                 if (depanSprite != null) depanSprite.color = color;
