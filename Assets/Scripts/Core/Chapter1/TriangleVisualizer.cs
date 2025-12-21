@@ -150,10 +150,11 @@ public class TriangleVisualizer : MonoBehaviour
         {
             depanLabel.text = depan.ToString();
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
-            // Offset label perpendicular ke garis
+            // Offset label perpendicular ke garis (ke bawah dari garis)
             Vector3 direction = (bottomRight - bottomLeft).normalized;
-            Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            depanLabel.transform.position = midPoint + perpendicular * (-labelOffset);
+            Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0); // Rotate 90° counterclockwise
+            // Posisi label di bawah garis depan
+            depanLabel.transform.position = midPoint + perpendicular * (-labelOffset * 1.5f);
         }
 
         // SISI SAMPING (AB - Vertical di rotasi 0° - ADJACENT ke theta)
@@ -162,10 +163,11 @@ public class TriangleVisualizer : MonoBehaviour
         {
             sampingLabel.text = samping.ToString();
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
-            // Offset label perpendicular ke garis
+            // Offset label perpendicular ke garis (ke kiri dari garis)
             Vector3 direction = (topLeft - bottomLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            sampingLabel.transform.position = midPoint + perpendicular * (-labelOffset);
+            // Posisi label di kiri garis samping
+            sampingLabel.transform.position = midPoint + perpendicular * (-labelOffset * 1.5f);
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -175,10 +177,11 @@ public class TriangleVisualizer : MonoBehaviour
             miringLabel.text = miring.ToString();
             Vector3 midPoint = (topLeft + bottomRight) / 2f;
 
-            // Hitung perpendicular offset untuk label miring
+            // Hitung perpendicular offset untuk label miring (ke kanan atas dari garis)
             Vector3 direction = (bottomRight - topLeft).normalized;
             Vector3 perpendicular = new Vector3(-direction.y, direction.x, 0);
-            miringLabel.transform.position = midPoint + perpendicular * labelOffset;
+            // Posisi label di luar segitiga (kanan atas dari garis miring)
+            miringLabel.transform.position = midPoint + perpendicular * (labelOffset * 1.5f);
         }
 
         // SIMBOL THETA (di sudut lancip atas A - antara samping AB dan miring AC) - WORLD SPACE
