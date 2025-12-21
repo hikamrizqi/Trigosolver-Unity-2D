@@ -196,21 +196,17 @@ public class TriangleVisualizer : MonoBehaviour
         }
 
         // Hitung posisi-posisi vertex segitiga SEBELUM rotasi
-        // ADJUSTMENT: Berbeda untuk NORMAL dan SWAPPED orientation
+        // ADJUSTMENT: HANYA untuk SWAPPED orientation, geser ke kanan
         Vector3 adjustedCenter = centerPosition;
-        
-        if (orientation == TriangleOrientation.Normal)
+
+        if (orientation == TriangleOrientation.Swapped)
         {
-            // NORMAL (siku di kiri): Geser sedikit ke kiri agar balance
-            float horizontalWidth = depan * dynamicScale;
-            adjustedCenter += new Vector3(-horizontalWidth * 0.15f, 0, 0); // Geser 15% ke KIRI
-        }
-        else // Swapped
-        {
-            // SWAPPED (siku di kanan): Geser besar ke kanan agar tidak overflow ke kiri
+            // SWAPPED (siku di kanan): Geser ke kanan agar tidak overflow ke kiri
+            // Gunakan width yang lebih besar untuk memastikan tidak overflow
             float horizontalWidth = samping * dynamicScale;
-            adjustedCenter += new Vector3(horizontalWidth * 0.65f, 0, 0); // Geser 65% ke KANAN
+            adjustedCenter += new Vector3(horizontalWidth * 1.0f, 0, 0); // Geser 100% dari width ke KANAN
         }
+        // NORMAL (siku di kiri): Tidak perlu adjustment, posisi centerPosition sudah pas
 
         Vector3 basePosition = transform.position + adjustedCenter;
 
