@@ -19,6 +19,7 @@ public class MainMenuManager : MonoBehaviour
 
     [Tooltip("Panel Mode Cerita Selection (Chapter selection)")]
     public GameObject modeCeritaSelectionPanel;
+    public GameObject highScorePanel;
 
     [Header("High Score Display")]
     [Tooltip("High Score Display component (optional)")]
@@ -29,6 +30,7 @@ public class MainMenuManager : MonoBehaviour
     private MenuAnimationController mainMenuAnimator;
     private MenuAnimationController modeSelectionAnimator;
     private MenuAnimationController modeCeritaAnimator;
+    private MenuAnimationController highScoreAnimator;
 
     [Header("Click to Continue")]
     [Tooltip("Aktifkan click anywhere untuk logo panel")]
@@ -39,7 +41,8 @@ public class MainMenuManager : MonoBehaviour
         Logo,
         MainMenu,
         ModeSelection,
-        ModeCeritaSelection
+        ModeCeritaSelection,
+        HighScore
     }
 
     private MenuState currentState;
@@ -50,6 +53,7 @@ public class MainMenuManager : MonoBehaviour
         mainMenuPanel.SetActive(false);
         modeSelectionPanel.SetActive(false);
         modeCeritaSelectionPanel.SetActive(false);
+        highScorePanel.SetActive(false);
     }
 
     private void Start()
@@ -59,13 +63,14 @@ public class MainMenuManager : MonoBehaviour
         mainMenuAnimator = mainMenuPanel.GetComponent<MenuAnimationController>();
         modeSelectionAnimator = modeSelectionPanel.GetComponent<MenuAnimationController>();
         modeCeritaAnimator = modeCeritaSelectionPanel.GetComponent<MenuAnimationController>();
+        highScoreAnimator = highScorePanel.GetComponent<MenuAnimationController>();
 
         // Validasi
         if (logoAnimator == null) Debug.LogError("Logo panel tidak memiliki MenuAnimationController!");
         if (mainMenuAnimator == null) Debug.LogError("Main Menu panel tidak memiliki MenuAnimationController!");
         if (modeSelectionAnimator == null) Debug.LogError("Mode Selection panel tidak memiliki MenuAnimationController!");
         if (modeCeritaAnimator == null) Debug.LogError("Mode Cerita Selection panel tidak memiliki MenuAnimationController!");
-
+        if (highScoreAnimator == null) Debug.LogWarning("High Score panel tidak memiliki MenuAnimationController!");
         // Mulai dari logo
         currentState = MenuState.Logo;
         ShowLogo();
@@ -135,14 +140,7 @@ public class MainMenuManager : MonoBehaviour
         logoAnimator.AnimateSinkOut(() =>
         {
             Debug.Log("Logo sink selesai, panggil main menu drop");
-            mainMenuAnimator.AnimateDropIn(() =>
-            {
-                // Refresh high score display when main menu appears
-                if (highScoreDisplay != null)
-                {
-                    highScoreDisplay.RefreshScores();
-                }
-            });
+            mainMenuAnimator.AnimateDropIn();
         });
     }
 
@@ -158,6 +156,28 @@ public class MainMenuManager : MonoBehaviour
         mainMenuAnimator.AnimateSinkOut(() =>
         {
             modeSelectionAnimator.AnimateDropIn();
+        });
+    }
+
+    /// <summary>
+    /// Transisi dari Main Menu ke High Score Panel
+    /// </summary>
+    public void OnHighScoreClicked()
+    {
+        if (currentState != MenuState.MainMenu) return;
+
+        currentState = MenuState.HighScore;
+
+        mainMenuAnimator.AnimateSinkOut(() =>
+        {
+            highScoreAnimator.AnimateDropIn(() =>
+            {
+                // Refresh high score display setelah panel muncul
+                if (highScoreDisplay != null)
+                {
+                    highScoreDisplay.RefreshScores();
+                }
+            });
         });
     }
 
@@ -201,6 +221,21 @@ public class MainMenuManager : MonoBehaviour
         currentState = MenuState.MainMenu;
 
         modeSelectionAnimator.AnimateSinkOut(() =>
+        {
+            mainMenuAnimator.AnimateDropIn();
+        });
+    }
+
+    /// <summary>
+    /// Back dari High Score Panel ke Main Menu
+    /// </summary>
+    public void OnBackFromHighScore()
+    {
+        if (currentState != MenuState.HighScore) return;
+
+        currentState = MenuState.MainMenu;
+
+        highScoreAnimator.AnimateSinkOut(() =>
         {
             mainMenuAnimator.AnimateDropIn();
         });
