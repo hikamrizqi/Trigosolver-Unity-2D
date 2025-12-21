@@ -25,6 +25,13 @@ public enum DifficultyLevel
     Hard        // Soal 21-30: Inverse problems, segitiga rotasi kompleks
 }
 
+// Orientasi segitiga: swap posisi depan/samping
+public enum TriangleOrientation
+{
+    Normal,   // Depan=alas, Samping=tegak, Theta di topLeft
+    Swapped   // Samping=alas, Depan=tegak, Theta di bottomRight
+}
+
 [System.Serializable]
 public class AnswerTileData
 {
@@ -43,6 +50,9 @@ public class TriangleData
 
     // Rotasi visual segitiga (dalam derajat)
     public float RotationAngle; // 0°, 90°, 180°, 270° untuk variasi visual
+
+    // Orientasi segitiga: swap posisi depan/samping
+    public TriangleOrientation Orientation; // Normal atau Swapped
 
     // Pertanyaan & jawaban
     public QuestionType TypeSoal;           // Tipe soal
@@ -158,6 +168,9 @@ public class TriangleDataGenerator : MonoBehaviour
             float[] rotations = { 0f, 90f, 180f, 270f };
             data.RotationAngle = rotations[questionNumber % 4];
         }
+
+        // Random orientation: kadang swap depan/samping
+        data.Orientation = (Random.Range(0, 2) == 0) ? TriangleOrientation.Normal : TriangleOrientation.Swapped;
 
         // Generate soal berdasarkan difficulty
         GenerateQuestionContent(data, difficulty, questionNumber);

@@ -112,10 +112,11 @@ public class TriangleVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// Menggambar segitiga dengan nilai dan rotasi yang diberikan
+    /// Menggambar segitiga dengan nilai, rotasi, dan orientasi yang diberikan
     /// Rotasi: 0° = standard (theta di kiri bawah), 90° = theta di kiri atas, 180° = theta di kanan atas, 270° = theta di kanan bawah
+    /// Orientation: Normal (depan=alas, samping=tegak) atau Swapped (samping=alas, depan=tegak)
     /// </summary>
-    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle)
+    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle, TriangleOrientation orientation = TriangleOrientation.Normal)
     {
         currentDepan = depan;
         currentSamping = samping;
@@ -147,17 +148,32 @@ public class TriangleVisualizer : MonoBehaviour
             }
         }
 
+        // SWAP: Tukar depan/samping jika orientation = Swapped
+        int actualDepan = depan;
+        int actualSamping = samping;
+        if (orientation == TriangleOrientation.Swapped)
+        {
+            actualDepan = samping;    // Depan jadi tegak
+            actualSamping = depan;    // Samping jadi alas
+            Debug.Log($"[Orientation] SWAPPED: Depan={actualDepan} (tegak), Samping={actualSamping} (alas), Theta akan pindah ke bottomRight");
+        }
+        else
+        {
+            Debug.Log($"[Orientation] NORMAL: Depan={actualDepan} (alas), Samping={actualSamping} (tegak), Theta di topLeft");
+        }
+
         // Hitung posisi-posisi vertex segitiga SEBELUM rotasi
         Vector3 basePosition = transform.position + centerPosition;
 
         // Segitiga siku-siku dengan sudut siku di origin (0,0) relatif
-        // PENTING: Theta di topLeft (sudut A), sudut siku di bottomLeft (sudut B)
-        // BC (horizontal) = DEPAN (opposite dari theta)
-        // AB (vertical) = SAMPING (adjacent ke theta)
+        // NORMAL: Theta di topLeft, sudut siku di bottomLeft
+        // SWAPPED: Theta di bottomRight, sudut siku di bottomLeft
+        // BC (horizontal) = actualSamping (alas)
+        // AB (vertical) = actualDepan (tegak)
         // AC (diagonal) = MIRING (hypotenuse)
         Vector3 bottomLeft = Vector3.zero;
-        Vector3 bottomRight = new Vector3(depan * dynamicScale, 0, 0);  // BC = horizontal = DEPAN
-        Vector3 topLeft = new Vector3(0, samping * dynamicScale, 0);    // AB = vertical = SAMPING
+        Vector3 bottomRight = new Vector3(actualSamping * dynamicScale, 0, 0);  // BC = horizontal = alas
+        Vector3 topLeft = new Vector3(0, actualDepan * dynamicScale, 0);        // AB = vertical = tegak
 
         // ROTASI: Rotasi semua vertex di sekitar origin
         float rotRad = rotationAngle * Mathf.Deg2Rad;
@@ -170,40 +186,42 @@ public class TriangleVisualizer : MonoBehaviour
         bottomRight += basePosition;
         topLeft += basePosition;
 
-        // SISI DEPAN (BC - Horizontal di rotasi 0° - OPPOSITE dari theta)
-        PositionSprite(depanSprite, bottomLeft, bottomRight, depan);
-        if (depanLabel != null)
-        {
-            depanLabel.text = depan.ToString();
-            depanLabel.fontSize = labelFontSize;
-            Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
-            Vector3 direction = (bottomRight - bottomLeft).normalized;
-            // Perpendicular ke BAWAH (untuk label di bawah garis)
-            Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // ADJUST: depanLabelMultiplier default 2.0 - ubah di Inspector untuk geser posisi
-            Vector3 labelPos = midPoint + perpendicular * (labelOffset * depanLabelMultiplier);
-            labelPos.z = labelZOffset;
-            depanLabel.transform.position = labelPos;
-            if (depanLabel.GetComponent<MeshRenderer>() != null)
-                depanLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
-        }
-
-        // SISI SAMPING (AB - Vertical di rotasi 0° - ADJACENT ke theta)
-        PositionSprite(sampingSprite, bottomLeft, topLeft, samping);
+        // SISI SAMPING (BC - Horizontal - ALAS)
+        // Normal: Samping = alas, Swapped: Depan = alas
+        PositionSprite(sampingSprite, bottomLeft, bottomRight, actualSamping);
         if (sampingLabel != null)
         {
-            sampingLabel.text = samping.ToString();
+            sampingLabel.text = actualSamping.ToString();
             sampingLabel.fontSize = labelFontSize;
-            Vector3 midPoint = (bottomLeft + topLeft) / 2f;
-            Vector3 direction = (topLeft - bottomLeft).normalized;
-            // Perpendicular ke KIRI (untuk label di kiri garis)
+            Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
+            Vector3 direction = (bottomRight - bottomLeft).normalized;
+            // Perpendicular ke BAWAH (untuk label di bawah garis horizontal)
             Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
-            // ADJUST: sampingLabelMultiplier default 2.0 - ubah di Inspector untuk geser posisi
+            // ADJUST: sampingLabelMultiplier di Inspector
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * sampingLabelMultiplier);
             labelPos.z = labelZOffset;
             sampingLabel.transform.position = labelPos;
             if (sampingLabel.GetComponent<MeshRenderer>() != null)
                 sampingLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+        }
+
+        // SISI DEPAN (AB - Vertical - TEGAK)
+        // Normal: Depan = tegak, Swapped: Samping = tegak
+        PositionSprite(depanSprite, bottomLeft, topLeft, actualDepan);
+        if (depanLabel != null)
+        {
+            depanLabel.text = actualDepan.ToString();
+            depanLabel.fontSize = labelFontSize;
+            Vector3 midPoint = (bottomLeft + topLeft) / 2f;
+            Vector3 direction = (topLeft - bottomLeft).normalized;
+            // Perpendicular ke KIRI (untuk label di kiri garis vertikal)
+            Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
+            // ADJUST: depanLabelMultiplier di Inspector
+            Vector3 labelPos = midPoint + perpendicular * (labelOffset * depanLabelMultiplier);
+            labelPos.z = labelZOffset;
+            depanLabel.transform.position = labelPos;
+            if (depanLabel.GetComponent<MeshRenderer>() != null)
+                depanLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -224,7 +242,9 @@ public class TriangleVisualizer : MonoBehaviour
                 miringLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
         }
 
-        // SIMBOL THETA (di sudut lancip atas A - antara samping AB dan miring AC) - WORLD SPACE
+        // SIMBOL THETA (di sudut lancip - antara samping dan miring) - WORLD SPACE
+        // NORMAL: Theta di topLeft (antara AB dan AC)
+        // SWAPPED: Theta di bottomRight (antara BC dan AC)
         if (thetaLabel != null)
         {
             thetaLabel.text = "θ";
@@ -233,13 +253,24 @@ public class TriangleVisualizer : MonoBehaviour
             // ADJUST: thetaOffsetMultiplier di Inspector (default 1.5) - ubah ke 1.0 atau 0.8 untuk lebih dekat
             float thetaOffsetDistance = labelOffset * thetaOffsetMultiplier;
 
-            // Hitung arah menuju "dalam" segitiga dari sudut theta
-            Vector3 toSamping = (bottomLeft - topLeft).normalized;  // Arah ke bawah (samping AB)
-            Vector3 toMiring = (bottomRight - topLeft).normalized;   // Arah ke kanan bawah (miring AC)
-            // Bisector (tengah-tengah antara dua arah) - menuju dalam segitiga
-            Vector3 inward = (toSamping + toMiring).normalized;
+            Vector3 thetaPosition;
+            if (orientation == TriangleOrientation.Normal)
+            {
+                // Theta di topLeft (sudut A) - antara AB dan AC
+                Vector3 toSamping = (bottomLeft - topLeft).normalized;  // Arah ke bawah (AB)
+                Vector3 toMiring = (bottomRight - topLeft).normalized;  // Arah ke kanan bawah (AC)
+                Vector3 inward = (toSamping + toMiring).normalized;     // Bisector menuju dalam
+                thetaPosition = topLeft + inward * thetaOffsetDistance;
+            }
+            else // Swapped
+            {
+                // Theta di bottomRight (sudut C) - antara BC dan CA
+                Vector3 toSamping = (bottomLeft - bottomRight).normalized;  // Arah ke kiri (BC)
+                Vector3 toMiring = (topLeft - bottomRight).normalized;      // Arah ke kiri atas (CA)
+                Vector3 inward = (toSamping + toMiring).normalized;         // Bisector menuju dalam
+                thetaPosition = bottomRight + inward * thetaOffsetDistance;
+            }
 
-            Vector3 thetaPosition = topLeft + inward * thetaOffsetDistance;
             thetaPosition.z = labelZOffset; // Z di depan sprite
             thetaLabel.transform.position = thetaPosition;
 

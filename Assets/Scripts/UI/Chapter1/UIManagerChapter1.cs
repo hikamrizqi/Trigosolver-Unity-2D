@@ -83,13 +83,13 @@ public class UIManagerChapter1 : MonoBehaviour
         // if (miringLabel_World != null) miringLabel_World.text = data.Miring.ToString();
 
 
-        // Gunakan TriangleVisualizer untuk menggambar segitiga DENGAN ROTASI
+        // Gunakan TriangleVisualizer untuk menggambar segitiga DENGAN ROTASI DAN ORIENTATION
         if (triangleVisualizer != null)
         {
-            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle);
+            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation);
 
-            // Log difficulty & rotation untuk debugging
-            Debug.Log($"[Chapter1] Soal #{progres}/{totalSoal} | Difficulty: {data.Difficulty} | Rotation: {data.RotationAngle}°");
+            // Log difficulty, rotation, dan orientation untuk debugging
+            Debug.Log($"[Chapter1] Soal #{progres}/{totalSoal} | Difficulty: {data.Difficulty} | Rotation: {data.RotationAngle}° | Orientation: {data.Orientation}");
         }
         else
         {
