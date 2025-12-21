@@ -39,13 +39,13 @@ public class TriangleVisualizer : MonoBehaviour
 
     [Header("Visual Settings")]
     [Tooltip("Skala dasar untuk sprites (1 = 1 unit Unity per nilai segitiga)")]
-    public float baseScale = 0.5f;
+    public float baseScale = 0.3f; // Reduced from 0.5f for portrait mode
 
     [Tooltip("Maksimal ukuran segitiga untuk auto-scaling (fit di layar)")]
-    public float maxTriangleSize = 8f;
+    public float maxTriangleSize = 5f; // Reduced from 8f for portrait mode
 
     [Tooltip("Safety margin dari batas layar (dalam units)")]
-    public float safetyMargin = 1f;
+    public float safetyMargin = 0.5f; // Reduced from 1f for tighter fit
 
     [Tooltip("Gunakan auto-scaling agar semua segitiga fit di layar")]
     public bool useAutoScaling = true;
