@@ -205,22 +205,31 @@ public class TriangleVisualizer : MonoBehaviour
         // ADJUSTMENT: HANYA untuk SWAPPED orientation, geser ke kanan
         Vector3 adjustedCenter = centerPosition;
 
-        Debug.Log($"[Position Debug] Orientation: {orientation}, CenterPosition: {centerPosition}");
+        Debug.Log($"[Position Debug] Orientation: {orientation}, CenterPosition: {centerPosition}, Depan: {depan}, Samping: {samping}, Scale: {dynamicScale:F2}");
 
         if (orientation == TriangleOrientation.Swapped)
         {
             // SWAPPED (siku di kanan): Geser untuk mencegah overflow
-            // Gunakan width yang lebih besar untuk memastikan tidak overflow
+            // SMART ADJUSTMENT: Hitung berdasarkan ukuran segitiga yang sebenarnya
             float horizontalWidth = samping * dynamicScale;
-
-            // Adjustable: Ubah multiplier di Inspector untuk mengatur seberapa jauh geser
-            Vector3 offsetAmount = new Vector3(horizontalWidth * swappedHorizontalOffsetMultiplier, 0, 0);
+            float verticalHeight = depan * dynamicScale;
+            
+            // Hitung posisi agar segitiga pas di tengah frame
+            // Untuk swapped: siku di kanan, jadi geser ke kanan sebesar setengah width
+            float autoOffsetX = horizontalWidth * 0.5f; // Geser 50% dari width sebagai baseline
+            
+            // Jika user sudah set manual multiplier (bukan default 1.0), pakai itu
+            float finalMultiplier = (Mathf.Abs(swappedHorizontalOffsetMultiplier - 1.0f) > 0.01f) 
+                ? swappedHorizontalOffsetMultiplier 
+                : 0.5f; // Auto: 50% offset
+            
+            Vector3 offsetAmount = new Vector3(horizontalWidth * finalMultiplier, 0, 0);
             adjustedCenter += offsetAmount;
 
             // Additional manual offset (bisa diatur di Inspector)
             adjustedCenter += swappedPositionOffset;
 
-            Debug.Log($"[SWAPPED/MIRROR] Siku di KANAN - Width: {horizontalWidth:F2}, Offset: {offsetAmount}, Manual Offset: {swappedPositionOffset}, Final Center: {adjustedCenter}");
+            Debug.Log($"[SWAPPED/MIRROR] Siku di KANAN - Width: {horizontalWidth:F2}, Height: {verticalHeight:F2}, Multiplier: {finalMultiplier:F2}, Offset: {offsetAmount}, Manual: {swappedPositionOffset}, Final Center: {adjustedCenter}");
         }
         else
         {
