@@ -27,7 +27,7 @@ public class HighScoreManager : MonoBehaviour
     private const string CHAPTER1_LEVEL2_KEY = "Chapter1_Level2_HighScore";
     private const string CHAPTER1_LEVEL3_KEY = "Chapter1_Level3_HighScore";
     private const string CHAPTER1_TOTAL_KEY = "Chapter1_Total_HighScore";
-    
+
     private const string CHAPTER1_LEVEL1_DATE_KEY = "Chapter1_Level1_Date";
     private const string CHAPTER1_LEVEL2_DATE_KEY = "Chapter1_Level2_Date";
     private const string CHAPTER1_LEVEL3_DATE_KEY = "Chapter1_Level3_Date";
@@ -60,7 +60,7 @@ public class HighScoreManager : MonoBehaviour
             PlayerPrefs.SetInt(CHAPTER1_LEVEL1_KEY, score);
             PlayerPrefs.SetString(CHAPTER1_LEVEL1_DATE_KEY, DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
             PlayerPrefs.Save();
-            
+
             Debug.Log($"[HighScore] New Level 1 High Score: {score}");
         }
     }
@@ -76,7 +76,7 @@ public class HighScoreManager : MonoBehaviour
             PlayerPrefs.SetInt(CHAPTER1_LEVEL2_KEY, score);
             PlayerPrefs.SetString(CHAPTER1_LEVEL2_DATE_KEY, DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
             PlayerPrefs.Save();
-            
+
             Debug.Log($"[HighScore] New Level 2 High Score: {score}");
         }
     }
@@ -92,7 +92,7 @@ public class HighScoreManager : MonoBehaviour
             PlayerPrefs.SetInt(CHAPTER1_LEVEL3_KEY, score);
             PlayerPrefs.SetString(CHAPTER1_LEVEL3_DATE_KEY, DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
             PlayerPrefs.Save();
-            
+
             Debug.Log($"[HighScore] New Level 3 High Score: {score}");
         }
     }
@@ -108,7 +108,7 @@ public class HighScoreManager : MonoBehaviour
             PlayerPrefs.SetInt(CHAPTER1_TOTAL_KEY, score);
             PlayerPrefs.SetString(CHAPTER1_TOTAL_DATE_KEY, DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
             PlayerPrefs.Save();
-            
+
             Debug.Log($"[HighScore] New Total High Score: {score}");
         }
     }
@@ -199,7 +199,7 @@ public class HighScoreManager : MonoBehaviour
         PlayerPrefs.DeleteKey(CHAPTER1_LEVEL3_DATE_KEY);
         PlayerPrefs.DeleteKey(CHAPTER1_TOTAL_DATE_KEY);
         PlayerPrefs.Save();
-        
+
         Debug.Log("[HighScore] All scores reset!");
     }
 
@@ -208,7 +208,7 @@ public class HighScoreManager : MonoBehaviour
     /// </summary>
     public bool HasPlayedBefore()
     {
-        return PlayerPrefs.HasKey(CHAPTER1_LEVEL1_KEY) || 
+        return PlayerPrefs.HasKey(CHAPTER1_LEVEL1_KEY) ||
                PlayerPrefs.HasKey(CHAPTER1_LEVEL2_KEY) ||
                PlayerPrefs.HasKey(CHAPTER1_LEVEL3_KEY) ||
                PlayerPrefs.HasKey(CHAPTER1_TOTAL_KEY);

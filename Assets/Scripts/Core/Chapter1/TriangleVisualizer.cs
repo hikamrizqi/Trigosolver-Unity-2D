@@ -41,6 +41,16 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Label untuk sudut B (World Space) - SOAL 11-20")]
     public TextMeshPro angleLabelB;
 
+    [Header("Vertex Labels (Soal 21-30 - Level 3)")]
+    [Tooltip("Label untuk vertex A (World Space) - SOAL 21-30")]
+    public TextMeshPro vertexLabelA;
+
+    [Tooltip("Label untuk vertex B (World Space) - SOAL 21-30")]
+    public TextMeshPro vertexLabelB;
+
+    [Tooltip("Label untuk vertex C (World Space) - SOAL 21-30")]
+    public TextMeshPro vertexLabelC;
+
     [Header("Camera Reference")]
     [Tooltip("Camera untuk konversi world to screen point")]
     public Camera mainCamera;
@@ -132,6 +142,7 @@ public class TriangleVisualizer : MonoBehaviour
     private float currentRotation = 0f; // Rotasi segitiga saat ini
     private TriangleOrientation currentOrientation = TriangleOrientation.Normal; // Orientasi saat ini
     private bool currentIsDualQuestion = false; // True jika soal 11-20 (pakai A dan B)
+    private bool currentIsLevel3 = false; // True jika soal 21-30 (pakai vertex A, B, C)
 
     /// <summary>
     /// Menggambar segitiga dengan nilai yang diberikan (tanpa rotasi - default 0°)
@@ -154,8 +165,9 @@ public class TriangleVisualizer : MonoBehaviour
     /// <summary>
     /// Menggambar segitiga dengan nilai, rotasi, orientasi, dan tipe soal yang diberikan
     /// isDualQuestion: true untuk soal 11-20 (pakai A dan B), false untuk soal 1-10 (pakai theta)
+    /// isLevel3: true untuk soal 21-30 (pakai vertex A, B, C)
     /// </summary>
-    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle, TriangleOrientation orientation, bool isDualQuestion)
+    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle, TriangleOrientation orientation, bool isDualQuestion, bool isLevel3 = false)
     {
         currentDepan = depan;
         currentSamping = samping;
@@ -163,6 +175,7 @@ public class TriangleVisualizer : MonoBehaviour
         currentRotation = rotationAngle;
         currentOrientation = orientation; // Simpan orientasi saat ini
         currentIsDualQuestion = isDualQuestion; // Simpan tipe soal
+        currentIsLevel3 = isLevel3; // Simpan flag Level 3
 
         // Hitung scale dinamis agar segitiga fit di layar
         float dynamicScale = baseScale;
@@ -497,12 +510,98 @@ public class TriangleVisualizer : MonoBehaviour
                     angleLabelB.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
             }
         }
-        else // Hide A and B untuk soal 1-10
+        else // Hide A and B untuk soal 1-10 dan Level 3
         {
             if (angleLabelA != null)
                 angleLabelA.gameObject.SetActive(false);
             if (angleLabelB != null)
                 angleLabelB.gameObject.SetActive(false);
+        }
+
+        // VERTEX LABELS A, B, C (untuk soal 21-30 - Level 3 Pythagoras)
+        if (currentIsLevel3)
+        {
+            float vertexOffsetDistance = labelOffset * 1.8f; // Slightly further from vertex
+
+            // VERTEX A (topLeft for normal, bottomRight for swapped)
+            if (vertexLabelA != null)
+            {
+                vertexLabelA.gameObject.SetActive(true);
+                vertexLabelA.text = "A";
+                vertexLabelA.fontSize = labelFontSize * 1.0f;
+
+                Vector3 vertexAPosition;
+                if (orientation == TriangleOrientation.Normal)
+                {
+                    // A di topLeft - offset ke arah luar (kiri atas)
+                    Vector3 outward = (topLeft - center).normalized;
+                    vertexAPosition = topLeft + outward * vertexOffsetDistance;
+                }
+                else // Swapped
+                {
+                    // A di bottomRight - offset ke arah luar (kanan bawah)
+                    Vector3 outward = (bottomRight - center).normalized;
+                    vertexAPosition = bottomRight + outward * vertexOffsetDistance;
+                }
+
+                vertexAPosition.z = labelZOffset;
+                vertexLabelA.transform.position = vertexAPosition;
+                if (vertexLabelA.GetComponent<MeshRenderer>() != null)
+                    vertexLabelA.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
+
+            // VERTEX B (bottomLeft - always at right angle)
+            if (vertexLabelB != null)
+            {
+                vertexLabelB.gameObject.SetActive(true);
+                vertexLabelB.text = "B";
+                vertexLabelB.fontSize = labelFontSize * 1.0f;
+
+                // B di bottomLeft - offset ke arah luar (kiri bawah)
+                Vector3 outward = (bottomLeft - center).normalized;
+                Vector3 vertexBPosition = bottomLeft + outward * vertexOffsetDistance;
+                vertexBPosition.z = labelZOffset;
+
+                vertexLabelB.transform.position = vertexBPosition;
+                if (vertexLabelB.GetComponent<MeshRenderer>() != null)
+                    vertexLabelB.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
+
+            // VERTEX C (bottomRight for normal, topLeft for swapped)
+            if (vertexLabelC != null)
+            {
+                vertexLabelC.gameObject.SetActive(true);
+                vertexLabelC.text = "C";
+                vertexLabelC.fontSize = labelFontSize * 1.0f;
+
+                Vector3 vertexCPosition;
+                if (orientation == TriangleOrientation.Normal)
+                {
+                    // C di bottomRight - offset ke arah luar (kanan bawah)
+                    Vector3 outward = (bottomRight - center).normalized;
+                    vertexCPosition = bottomRight + outward * vertexOffsetDistance;
+                }
+                else // Swapped
+                {
+                    // C di topLeft - offset ke arah luar (kiri atas)
+                    Vector3 outward = (topLeft - center).normalized;
+                    vertexCPosition = topLeft + outward * vertexOffsetDistance;
+                }
+
+                vertexCPosition.z = labelZOffset;
+                vertexLabelC.transform.position = vertexCPosition;
+                if (vertexLabelC.GetComponent<MeshRenderer>() != null)
+                    vertexLabelC.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
+        }
+        else // Hide vertex labels untuk soal 1-20
+        {
+            if (vertexLabelA != null)
+                vertexLabelA.gameObject.SetActive(false);
+            if (vertexLabelB != null)
+                vertexLabelB.gameObject.SetActive(false);
+            if (vertexLabelC != null)
+                vertexLabelC.gameObject.SetActive(false);
         }
 
         // SIMBOL SUDUT SIKU-SIKU ∟ (di sudut B - bottomLeft) - 90 derajat

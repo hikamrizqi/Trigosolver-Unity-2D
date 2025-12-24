@@ -97,10 +97,12 @@ public class UIManagerChapter1 : MonoBehaviour
         // Gunakan TriangleVisualizer untuk menggambar segitiga DENGAN ROTASI DAN ORIENTATION
         if (triangleVisualizer != null)
         {
-            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation, data.IsDualQuestion);
+            // Detect if Level 3 (Pythagoras questions) to show vertex labels A, B, C
+            bool isLevel3 = data.AnswerTileData != null && data.AnswerTileData.IsSingleAnswer;
+            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation, data.IsDualQuestion, isLevel3);
 
             // Log difficulty, rotation, orientation, dan question type untuk debugging
-            string questionType = data.IsDualQuestion ? "DUAL (A & B)" : "SINGLE (θ)";
+            string questionType = data.IsDualQuestion ? "DUAL (A & B)" : isLevel3 ? "LEVEL 3 (A, B, C)" : "SINGLE (θ)";
             Debug.Log($"[Chapter1] Soal #{progres}/{totalSoal} | Type: {questionType} | Difficulty: {data.Difficulty} | Rotation: {data.RotationAngle}° | Orientation: {data.Orientation}");
         }
         else
