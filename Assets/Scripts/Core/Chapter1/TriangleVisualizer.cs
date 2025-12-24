@@ -222,28 +222,28 @@ public class TriangleVisualizer : MonoBehaviour
 
             // Calculate safe bounds
             float maxSafeRightEdge = screenHalfWidth - safetyMargin;
-            
+
             // Calculate optimal center position
             // Right edge = centerX + horizontalWidth
             // We want: centerX + horizontalWidth <= maxSafeRightEdge
             // So: centerX <= maxSafeRightEdge - horizontalWidth
             float maxSafeCenterX = maxSafeRightEdge - horizontalWidth;
-            
+
             // Optimal: center triangle in available space (left half of screen)
             // Available space: from 0 to maxSafeCenterX
             float optimalCenterX = maxSafeCenterX * 0.5f; // Center in available space
-            
+
             // Clamp to ensure it's positive and safe
             float finalOffsetX = Mathf.Max(0, optimalCenterX);
-            
+
             adjustedCenter += new Vector3(finalOffsetX, 0, 0);
 
             // Verify bounds
             float finalRightEdge = adjustedCenter.x + horizontalWidth;
-            
+
             Debug.Log($"[SWAPPED AUTO] Width: {horizontalWidth:F2}, MaxSafeRight: {maxSafeRightEdge:F2}, MaxSafeCenter: {maxSafeCenterX:F2}, OptimalCenter: {optimalCenterX:F2}, FinalOffset: {finalOffsetX:F2}");
             Debug.Log($"[SWAPPED] Final Center: {adjustedCenter}, RightEdge: {finalRightEdge:F2} (Must be < {maxSafeRightEdge:F2})");
-            
+
             if (finalRightEdge > maxSafeRightEdge)
             {
                 Debug.LogError($"[CRITICAL BUG] Triangle STILL overflow after calculation! RightEdge: {finalRightEdge:F2} > Safe: {maxSafeRightEdge:F2}");
