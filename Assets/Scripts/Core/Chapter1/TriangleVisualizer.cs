@@ -521,6 +521,8 @@ public class TriangleVisualizer : MonoBehaviour
         // VERTEX LABELS A, B, C (untuk soal 21-30 - Level 3 Pythagoras)
         if (currentIsLevel3)
         {
+            // Calculate triangle center for outward positioning
+            Vector3 triangleCenter = (topLeft + bottomLeft + bottomRight) / 3f;
             float vertexOffsetDistance = labelOffset * 1.8f; // Slightly further from vertex
 
             // VERTEX A (topLeft for normal, bottomRight for swapped)
@@ -534,13 +536,13 @@ public class TriangleVisualizer : MonoBehaviour
                 if (orientation == TriangleOrientation.Normal)
                 {
                     // A di topLeft - offset ke arah luar (kiri atas)
-                    Vector3 outward = (topLeft - center).normalized;
+                    Vector3 outward = (topLeft - triangleCenter).normalized;
                     vertexAPosition = topLeft + outward * vertexOffsetDistance;
                 }
                 else // Swapped
                 {
                     // A di bottomRight - offset ke arah luar (kanan bawah)
-                    Vector3 outward = (bottomRight - center).normalized;
+                    Vector3 outward = (bottomRight - triangleCenter).normalized;
                     vertexAPosition = bottomRight + outward * vertexOffsetDistance;
                 }
 
@@ -558,7 +560,7 @@ public class TriangleVisualizer : MonoBehaviour
                 vertexLabelB.fontSize = labelFontSize * 1.0f;
 
                 // B di bottomLeft - offset ke arah luar (kiri bawah)
-                Vector3 outward = (bottomLeft - center).normalized;
+                Vector3 outward = (bottomLeft - triangleCenter).normalized;
                 Vector3 vertexBPosition = bottomLeft + outward * vertexOffsetDistance;
                 vertexBPosition.z = labelZOffset;
 
@@ -578,13 +580,13 @@ public class TriangleVisualizer : MonoBehaviour
                 if (orientation == TriangleOrientation.Normal)
                 {
                     // C di bottomRight - offset ke arah luar (kanan bawah)
-                    Vector3 outward = (bottomRight - center).normalized;
+                    Vector3 outward = (bottomRight - triangleCenter).normalized;
                     vertexCPosition = bottomRight + outward * vertexOffsetDistance;
                 }
                 else // Swapped
                 {
                     // C di topLeft - offset ke arah luar (kiri atas)
-                    Vector3 outward = (topLeft - center).normalized;
+                    Vector3 outward = (topLeft - triangleCenter).normalized;
                     vertexCPosition = topLeft + outward * vertexOffsetDistance;
                 }
 
