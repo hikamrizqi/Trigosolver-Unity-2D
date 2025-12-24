@@ -82,7 +82,7 @@ public class TriangleVisualizer : MonoBehaviour
     public float miringLabelMultiplier = 2f;
 
     [Tooltip("Horizontal offset untuk segitiga saat MIRROR/SWAPPED orientation (default 1.0 = 100% width)")]
-    public float swappedHorizontalOffsetMultiplier = 1.0f;
+    public float swappedHorizontalOffsetMultiplier = 5.0f;
 
     [Tooltip("Additional manual offset untuk segitiga MIRROR (X, Y, Z)")]
     public Vector3 swappedPositionOffset = Vector3.zero;
@@ -205,19 +205,26 @@ public class TriangleVisualizer : MonoBehaviour
         // ADJUSTMENT: HANYA untuk SWAPPED orientation, geser ke kanan
         Vector3 adjustedCenter = centerPosition;
 
+        Debug.Log($"[Position Debug] Orientation: {orientation}, CenterPosition: {centerPosition}");
+
         if (orientation == TriangleOrientation.Swapped)
         {
             // SWAPPED (siku di kanan): Geser untuk mencegah overflow
             // Gunakan width yang lebih besar untuk memastikan tidak overflow
             float horizontalWidth = samping * dynamicScale;
-            
+
             // Adjustable: Ubah multiplier di Inspector untuk mengatur seberapa jauh geser
-            adjustedCenter += new Vector3(horizontalWidth * swappedHorizontalOffsetMultiplier, 0, 0);
-            
+            Vector3 offsetAmount = new Vector3(horizontalWidth * swappedHorizontalOffsetMultiplier, 0, 0);
+            adjustedCenter += offsetAmount;
+
             // Additional manual offset (bisa diatur di Inspector)
             adjustedCenter += swappedPositionOffset;
-            
-            Debug.Log($"[Mirror Adjustment] Width: {horizontalWidth:F2}, Offset: {horizontalWidth * swappedHorizontalOffsetMultiplier:F2}, Final Center: {adjustedCenter}");
+
+            Debug.Log($"[SWAPPED/MIRROR] Siku di KANAN - Width: {horizontalWidth:F2}, Offset: {offsetAmount}, Manual Offset: {swappedPositionOffset}, Final Center: {adjustedCenter}");
+        }
+        else
+        {
+            Debug.Log($"[NORMAL] Siku di KIRI - No adjustment, using original centerPosition: {adjustedCenter}");
         }
         // NORMAL (siku di kiri): Tidak perlu adjustment, posisi centerPosition sudah pas
 
