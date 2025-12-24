@@ -590,7 +590,7 @@ public class TriangleDataGenerator : MonoBehaviour
                 break;
         }
 
-        // Generate tiles: Total 6 tiles (2 correct + 4 distractor)
+        // Generate tiles: Total 8 tiles (2 correct + 6 distractor)
         tileData.WrongAnswers = new List<string>();
 
         // Kumpulkan semua angka yang sudah dipakai (termasuk jawaban benar)
@@ -608,24 +608,24 @@ public class TriangleDataGenerator : MonoBehaviour
             data.Miring.ToString()
         };
 
-        // Ambil maksimal 2 angka dari segitiga untuk distractor
+        // Ambil semua angka dari segitiga untuk distractor (maksimal 3)
         foreach (string num in triangleNumbersSingle)
         {
-            if (!usedNumbersSingle.Contains(num) && tileData.WrongAnswers.Count < 2)
+            if (!usedNumbersSingle.Contains(num))
             {
                 tileData.WrongAnswers.Add(num);
                 usedNumbersSingle.Add(num);
             }
         }
 
-        // Generate angka random hingga total WrongAnswers = 4 (jadi total tiles = 2 correct + 4 wrong = 6)
+        // Generate angka random hingga total WrongAnswers = 6 (jadi total tiles = 2 correct + 6 wrong = 8)
         int attemptsSingle = 0;
-        while (tileData.WrongAnswers.Count < 4 && attemptsSingle < 50)
+        while (tileData.WrongAnswers.Count < 6 && attemptsSingle < 50)
         {
             attemptsSingle++;
 
-            // Random 1-2 digit (1-20 range)
-            int randomNum = Random.Range(1, 21);
+            // Random 1-2 digit (1-25 range, diperluas untuk variasi)
+            int randomNum = Random.Range(1, 26);
             string randomStr = randomNum.ToString();
 
             // Pastikan unique (belum ada di list)
