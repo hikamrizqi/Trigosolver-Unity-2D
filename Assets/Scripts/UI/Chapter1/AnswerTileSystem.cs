@@ -29,6 +29,10 @@ public class AnswerTileSystem : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dualSlashText1; // "/" fraction 1
     [SerializeField] private TextMeshProUGUI dualSlashText2; // "/" fraction 2
 
+    [Header("Answer Slots - Single Answer (Soal 21-30 - Level 3)")]
+    [SerializeField] private GameObject singleAnswerSlotContainer;  // Container untuk 1 slot (multiple choice)
+    [SerializeField] private Transform singleAnswerSlotTransform;   // Single slot untuk jawaban integer
+
     [Header("Answer Pool (Pilihan Jawaban)")]
     [SerializeField] private Transform poolContainer;   // Container untuk 5 tiles
     [SerializeField] private GameObject tilePrefab;     // Prefab untuk AnswerTile
@@ -57,9 +61,11 @@ public class AnswerTileSystem : MonoBehaviour
     private string correctDenominator; // Angka bawah 1
     private string correctNumerator2;  // Angka atas 2 (untuk soal 11-20 pertanyaan kedua)
     private string correctDenominator2; // Angka bawah 2
+    private string correctSingleAnswer; // Jawaban tunggal (untuk soal 21-30 Level 3)
 
     // Track question type
     private bool currentIsDualQuestion = false;
+    private bool currentIsSingleAnswer = false; // Level 3 mode
 
     private void Awake()
     {
@@ -150,6 +156,60 @@ public class AnswerTileSystem : MonoBehaviour
     }
 
     /// <summary>
+    /// Setup soal Level 3 (single answer multiple choice) - soal 21-30
+    /// 1 jawaban benar + 5 pilihan salah = total 6 tiles
+    /// </summary>
+    public void SetupSingleAnswerQuestion(string correctAnswer, List<string> wrongAnswers)
+    {
+        // Simpan jawaban benar
+        correctSingleAnswer = correctAnswer;
+        currentIsSingleAnswer = true;
+        currentIsDualQuestion = false;
+
+        // Show/hide containers
+        if (singleQuestionSlotContainer != null)
+            singleQuestionSlotContainer.SetActive(false);
+
+        if (dualQuestionSlotContainer != null)
+            dualQuestionSlotContainer.SetActive(false);
+
+        if (singleAnswerSlotContainer != null)
+            singleAnswerSlotContainer.SetActive(true);
+
+        // Reset slots
+        ResetSlots();
+
+        // Destroy tiles lama
+        foreach (var tile in allTiles)
+        {
+            if (tile != null) Destroy(tile.gameObject);
+        }
+        allTiles.Clear();
+
+        // Buat pool: 1 correct + 5 wrong = 6 tiles
+        List<string> poolValues = new List<string>();
+        poolValues.Add(correctAnswer);
+        poolValues.AddRange(wrongAnswers);
+
+        // Shuffle untuk random order
+        poolValues = poolValues.OrderBy(x => Random.value).ToList();
+
+        // Instantiate tiles
+        for (int i = 0; i < poolValues.Count; i++)
+        {
+            GameObject tileObj = Instantiate(tilePrefab, poolContainer);
+            AnswerTile tile = tileObj.GetComponent<AnswerTile>();
+            tile.Setup(poolValues[i]);
+            allTiles.Add(tile);
+        }
+
+        Debug.Log($"[AnswerTileSystem] Setup SINGLE ANSWER (Level 3): Correct={correctAnswer}, Total tiles: {poolValues.Count}, Pool: {string.Join(", ", poolValues)}");
+
+        // Wait for layout group to position tiles, then animate
+        StartCoroutine(AnimateTilesInDelayed());
+    }
+
+    /// <summary>
     /// Delayed animation agar layout group selesai calculate positions
     /// </summary>
     private System.Collections.IEnumerator AnimateTilesInDelayed()
@@ -181,7 +241,22 @@ public class AnswerTileSystem : MonoBehaviour
         // Tentukan slot target berdasarkan question type
         Transform targetSlot;
 
-        if (currentIsDualQuestion)
+        if (currentIsSingleAnswer)
+        {
+            // SINGLE ANSWER (Level 3): Only 1 slot
+            if (currentSlot1Tile == null)
+            {
+                currentSlot1Tile = tile;
+                targetSlot = singleAnswerSlotTransform;
+                Debug.Log($"[AnswerTileSystem] SINGLE ANSWER (Level 3): Moving {tile.Value} to SingleAnswerSlot");
+            }
+            else
+            {
+                Debug.LogWarning($"[AnswerTileSystem] Single answer slot full! Cannot move {tile.Value}");
+                return;
+            }
+        }
+        else if (currentIsDualQuestion)
         {
             // DUAL QUESTION: Fill order → dualSlot1 → dualSlot2 → dualSlot3 → dualSlot4
             if (currentSlot1Tile == null)
@@ -346,7 +421,12 @@ public class AnswerTileSystem : MonoBehaviour
     /// </summary>
     public bool IsAnswerComplete()
     {
-        if (currentIsDualQuestion)
+        if (currentIsSingleAnswer)
+        {
+            // Single answer (Level 3): hanya 1 slot yang perlu terisi
+            return currentSlot1Tile != null;
+        }
+        else if (currentIsDualQuestion)
         {
             // Dual question: 4 slots harus terisi semua
             return currentSlot1Tile != null && currentSlot2Tile != null &&
@@ -366,7 +446,12 @@ public class AnswerTileSystem : MonoBehaviour
     {
         if (!IsAnswerComplete()) return "";
 
-        if (currentIsDualQuestion)
+        if (currentIsSingleAnswer)
+        {
+            // Level 3: Return single integer value
+            return currentSlot1Tile.Value;
+        }
+        else if (currentIsDualQuestion)
         {
             return $"{currentSlot1Tile.Value}/{currentSlot2Tile.Value}|{currentSlot3Tile.Value}/{currentSlot4Tile.Value}";
         }

@@ -25,10 +25,12 @@ public class HighScoreManager : MonoBehaviour
     // PlayerPrefs Keys
     private const string CHAPTER1_LEVEL1_KEY = "Chapter1_Level1_HighScore";
     private const string CHAPTER1_LEVEL2_KEY = "Chapter1_Level2_HighScore";
+    private const string CHAPTER1_LEVEL3_KEY = "Chapter1_Level3_HighScore";
     private const string CHAPTER1_TOTAL_KEY = "Chapter1_Total_HighScore";
     
     private const string CHAPTER1_LEVEL1_DATE_KEY = "Chapter1_Level1_Date";
     private const string CHAPTER1_LEVEL2_DATE_KEY = "Chapter1_Level2_Date";
+    private const string CHAPTER1_LEVEL3_DATE_KEY = "Chapter1_Level3_Date";
     private const string CHAPTER1_TOTAL_DATE_KEY = "Chapter1_Total_Date";
 
     private void Awake()
@@ -80,7 +82,23 @@ public class HighScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Save total score Chapter 1 (gabungan Level 1 + Level 2)
+    /// Save score untuk Level 3 (Soal 21-30)
+    /// </summary>
+    public void SaveLevel3Score(int score)
+    {
+        int currentHighScore = GetLevel3HighScore();
+        if (score > currentHighScore)
+        {
+            PlayerPrefs.SetInt(CHAPTER1_LEVEL3_KEY, score);
+            PlayerPrefs.SetString(CHAPTER1_LEVEL3_DATE_KEY, DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+            PlayerPrefs.Save();
+            
+            Debug.Log($"[HighScore] New Level 3 High Score: {score}");
+        }
+    }
+
+    /// <summary>
+    /// Save total score Chapter 1 (gabungan Level 1 + Level 2 + Level 3)
     /// </summary>
     public void SaveTotalScore(int score)
     {
@@ -116,6 +134,14 @@ public class HighScoreManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Dapatkan high score Level 3
+    /// </summary>
+    public int GetLevel3HighScore()
+    {
+        return PlayerPrefs.GetInt(CHAPTER1_LEVEL3_KEY, 0);
+    }
+
+    /// <summary>
     /// Dapatkan total high score Chapter 1
     /// </summary>
     public int GetTotalHighScore()
@@ -140,6 +166,14 @@ public class HighScoreManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Dapatkan tanggal high score Level 3
+    /// </summary>
+    public string GetLevel3Date()
+    {
+        return PlayerPrefs.GetString(CHAPTER1_LEVEL3_DATE_KEY, "-");
+    }
+
+    /// <summary>
     /// Dapatkan tanggal total high score
     /// </summary>
     public string GetTotalDate()
@@ -158,9 +192,11 @@ public class HighScoreManager : MonoBehaviour
     {
         PlayerPrefs.DeleteKey(CHAPTER1_LEVEL1_KEY);
         PlayerPrefs.DeleteKey(CHAPTER1_LEVEL2_KEY);
+        PlayerPrefs.DeleteKey(CHAPTER1_LEVEL3_KEY);
         PlayerPrefs.DeleteKey(CHAPTER1_TOTAL_KEY);
         PlayerPrefs.DeleteKey(CHAPTER1_LEVEL1_DATE_KEY);
         PlayerPrefs.DeleteKey(CHAPTER1_LEVEL2_DATE_KEY);
+        PlayerPrefs.DeleteKey(CHAPTER1_LEVEL3_DATE_KEY);
         PlayerPrefs.DeleteKey(CHAPTER1_TOTAL_DATE_KEY);
         PlayerPrefs.Save();
         
@@ -174,6 +210,7 @@ public class HighScoreManager : MonoBehaviour
     {
         return PlayerPrefs.HasKey(CHAPTER1_LEVEL1_KEY) || 
                PlayerPrefs.HasKey(CHAPTER1_LEVEL2_KEY) ||
+               PlayerPrefs.HasKey(CHAPTER1_LEVEL3_KEY) ||
                PlayerPrefs.HasKey(CHAPTER1_TOTAL_KEY);
     }
 
@@ -186,9 +223,11 @@ public class HighScoreManager : MonoBehaviour
         {
             level1HighScore = GetLevel1HighScore(),
             level2HighScore = GetLevel2HighScore(),
+            level3HighScore = GetLevel3HighScore(),
             totalHighScore = GetTotalHighScore(),
             level1Date = GetLevel1Date(),
             level2Date = GetLevel2Date(),
+            level3Date = GetLevel3Date(),
             totalDate = GetTotalDate()
         };
     }
@@ -204,13 +243,15 @@ public class ScoreSummary
 {
     public int level1HighScore;
     public int level2HighScore;
+    public int level3HighScore;
     public int totalHighScore;
     public string level1Date;
     public string level2Date;
+    public string level3Date;
     public string totalDate;
 
     public override string ToString()
     {
-        return $"Level 1: {level1HighScore} | Level 2: {level2HighScore} | Total: {totalHighScore}";
+        return $"Level 1: {level1HighScore} | Level 2: {level2HighScore} | Level 3: {level3HighScore} | Total: {totalHighScore}";
     }
 }

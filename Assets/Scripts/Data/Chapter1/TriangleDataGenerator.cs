@@ -35,8 +35,16 @@ public enum TriangleOrientation
 [System.Serializable]
 public class AnswerTileData
 {
+    // Mode: single answer (Level 3) atau fraction (Level 1-2)
+    public bool IsSingleAnswer;         // True = 1 slot (Level 3), False = 2 slots (Level 1-2)
+
+    // Single answer mode (Level 3: soal 21-30)
+    public string SingleCorrectAnswer;  // Jawaban benar tunggal (misal: "20")
+
+    // Fraction mode (Level 1-2: soal 1-20)
     public string NumeratorCorrect;     // Pembilang yang benar (untuk soal 1-10 atau jawaban A di soal 11-20)
     public string DenominatorCorrect;   // Penyebut yang benar (untuk soal 1-10 atau jawaban A di soal 11-20)
+
     public List<string> WrongAnswers;   // Jawaban salah (distractor)
 
     // Untuk dual question (soal 11-20)
@@ -186,7 +194,7 @@ public class TriangleDataGenerator : MonoBehaviour
         GenerateQuestionContent(data, difficulty, questionNumber);
 
         // Generate answer tile data untuk button-based input
-        data.AnswerTileData = GenerateAnswerTileData(data);
+        data.AnswerTileData = GenerateAnswerTileData(data, questionNumber);
 
         return data;
     }
@@ -196,6 +204,13 @@ public class TriangleDataGenerator : MonoBehaviour
     /// </summary>
     private void GenerateQuestionContent(TriangleData data, DifficultyLevel difficulty, int questionNumber)
     {
+        // Soal 21-30: LEVEL 3 - PYTHAGORAS (single answer, multiple choice)
+        if (questionNumber >= 21 && questionNumber <= 30)
+        {
+            GeneratePythagoreanQuestionLevel3(data, questionNumber);
+            return;
+        }
+
         // Soal 11-20: DUAL QUESTION (2 sudut A dan B, 4 jawaban)
         if (questionNumber >= 11 && questionNumber <= 20)
         {
@@ -415,6 +430,51 @@ public class TriangleDataGenerator : MonoBehaviour
     }
 
     /// <summary>
+    /// Generate pertanyaan Pythagoras untuk Level 3 (soal 21-30)
+    /// Diberikan 2 sisi, cari sisi ketiga dengan jawaban integer (single answer, multiple choice)
+    /// Contoh: AB=16cm, BC=12cm, cari AC menggunakan Pythagoras
+    /// </summary>
+    private void GeneratePythagoreanQuestionLevel3(TriangleData data, int questionNumber)
+    {
+        // Untuk Level 3, kita cari pola soal berdasarkan nomor
+        // Variasi: cari sisi miring, cari sisi alas, atau cari sisi tinggi
+        int type = (questionNumber - 21) % 3;
+
+        switch (type)
+        {
+            case 0: // Diberikan depan & samping, cari miring (sisi miring)
+                data.TypeSoal = QuestionType.FindPythagorean;
+                data.SoalDisederhanakan = "Pythagoras: AC";
+                data.PertanyaanText = $"Panjang AC pada segitiga ABC di atas adalah ...";
+                data.JawabanBenar = data.Miring;
+                data.InfoTambahan = $"AB = {data.Samping} cm, BC = {data.Depan} cm";
+                data.SisiDiketahui1 = data.Samping; // AB (alas)
+                data.SisiDiketahui2 = data.Depan;   // BC (tinggi)
+                break;
+
+            case 1: // Diberikan depan & miring, cari samping (sisi alas)
+                data.TypeSoal = QuestionType.FindPythagorean;
+                data.SoalDisederhanakan = "Pythagoras: AB";
+                data.PertanyaanText = $"Panjang AB pada segitiga ABC di atas adalah ...";
+                data.JawabanBenar = data.Samping;
+                data.InfoTambahan = $"AC = {data.Miring} cm, BC = {data.Depan} cm";
+                data.SisiDiketahui1 = data.Miring;  // AC (sisi miring)
+                data.SisiDiketahui2 = data.Depan;   // BC (tinggi)
+                break;
+
+            case 2: // Diberikan samping & miring, cari depan (sisi tinggi)
+                data.TypeSoal = QuestionType.FindPythagorean;
+                data.SoalDisederhanakan = "Pythagoras: BC";
+                data.PertanyaanText = $"Panjang BC pada segitiga ABC di atas adalah ...";
+                data.JawabanBenar = data.Depan;
+                data.InfoTambahan = $"AB = {data.Samping} cm, AC = {data.Miring} cm";
+                data.SisiDiketahui1 = data.Samping; // AB (alas)
+                data.SisiDiketahui2 = data.Miring;  // AC (sisi miring)
+                break;
+        }
+    }
+
+    /// <summary>
     /// Generate distractor answers untuk Duolingo-style input
     /// Return 3 angka salah untuk pool (total 5: 2 correct + 3 wrong)
     /// </summary>
@@ -462,9 +522,15 @@ public class TriangleDataGenerator : MonoBehaviour
     /// <summary>
     /// Generate answer tile data untuk button-based input (format pecahan)
     /// </summary>
-    private AnswerTileData GenerateAnswerTileData(TriangleData data)
+    private AnswerTileData GenerateAnswerTileData(TriangleData data, int questionNumber)
     {
         AnswerTileData tileData = new AnswerTileData();
+
+        // LEVEL 3 (Soal 21-30): PYTHAGORAS - SINGLE ANSWER dengan 6 pilihan multiple choice
+        if (questionNumber >= 21 && questionNumber <= 30)
+        {
+            return GenerateAnswerTileDataLevel3(data);
+        }
 
         // DUAL QUESTION (Soal 11-20): 4 jawaban benar + 2 distractor = 6 tiles
         if (data.IsDualQuestion)
@@ -637,6 +703,66 @@ public class TriangleDataGenerator : MonoBehaviour
         }
 
         Debug.Log($"[TriangleDataGenerator] Generated {tileData.WrongAnswers.Count + 2} tiles (2 correct + {tileData.WrongAnswers.Count} distractor)");
+
+        return tileData;
+    }
+
+    /// <summary>
+    /// Generate answer tile data untuk Level 3 (single answer multiple choice)
+    /// Total 6 tiles: 1 jawaban benar + 5 pilihan salah
+    /// </summary>
+    private AnswerTileData GenerateAnswerTileDataLevel3(TriangleData data)
+    {
+        AnswerTileData tileData = new AnswerTileData();
+
+        // Set flag untuk single answer mode
+        tileData.IsSingleAnswer = true;
+
+        // Jawaban benar adalah integer (dari Pythagoras)
+        int correctAnswer = (int)data.JawabanBenar;
+        tileData.SingleCorrectAnswer = correctAnswer.ToString();
+
+        Debug.Log($"[Level3] Correct Answer: {correctAnswer}");
+
+        // Generate 5 jawaban salah yang dekat dengan jawaban benar
+        tileData.WrongAnswers = new List<string>();
+        HashSet<int> usedNumbers = new HashSet<int> { correctAnswer };
+
+        // Strategy: Generate numbers around correct answer (±1, ±2, ±3, ±4, ±5)
+        List<int> offsets = new List<int> { -3, -2, -1, 1, 2, 3, -4, 4, -5, 5 };
+
+        foreach (int offset in offsets)
+        {
+            if (tileData.WrongAnswers.Count >= 5) break;
+
+            int candidate = correctAnswer + offset;
+
+            // Pastikan positif dan belum dipakai
+            if (candidate > 0 && !usedNumbers.Contains(candidate))
+            {
+                tileData.WrongAnswers.Add(candidate.ToString());
+                usedNumbers.Add(candidate);
+            }
+        }
+
+        // Jika masih kurang, generate random dalam range yang masuk akal
+        int attempts = 0;
+        while (tileData.WrongAnswers.Count < 5 && attempts < 30)
+        {
+            attempts++;
+
+            // Random number dalam range ±8 dari jawaban benar
+            int randomOffset = Random.Range(-8, 9);
+            int candidate = correctAnswer + randomOffset;
+
+            if (candidate > 0 && !usedNumbers.Contains(candidate))
+            {
+                tileData.WrongAnswers.Add(candidate.ToString());
+                usedNumbers.Add(candidate);
+            }
+        }
+
+        Debug.Log($"[Level3] Generated 6 tiles: 1 correct ({correctAnswer}) + 5 wrong ({string.Join(", ", tileData.WrongAnswers)})");
 
         return tileData;
     }

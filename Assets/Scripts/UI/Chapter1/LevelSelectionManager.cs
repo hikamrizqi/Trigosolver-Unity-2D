@@ -5,7 +5,7 @@ using System.Collections;
 
 /// <summary>
 /// Manages level selection UI at the start of Chapter 1
-/// Shows 2 buttons: Level 1 (Soal 1-10) and Level 2 (Soal 11-20)
+/// Shows 3 buttons: Level 1 (Soal 1-10), Level 2 (Soal 11-20), and Level 3 (Soal 21-30)
 /// </summary>
 public class LevelSelectionManager : MonoBehaviour
 {
@@ -13,6 +13,7 @@ public class LevelSelectionManager : MonoBehaviour
     [SerializeField] private GameObject levelSelectionPanel;
     [SerializeField] private Button level1Button;
     [SerializeField] private Button level2Button;
+    [SerializeField] private Button level3Button;
 
     [Header("Game Objects to Hide/Show")]
     [SerializeField] private GameObject triangleVisualizerObject;
@@ -40,6 +41,9 @@ public class LevelSelectionManager : MonoBehaviour
 
         if (level2Button != null)
             level2Button.onClick.AddListener(() => OnLevelSelected(2));
+
+        if (level3Button != null)
+            level3Button.onClick.AddListener(() => OnLevelSelected(3));
     }
 
     private void Start()
@@ -106,7 +110,13 @@ public class LevelSelectionManager : MonoBehaviour
         yield return new WaitForSeconds(animationDuration + 0.2f);
 
         // 3. Start game from appropriate question number
-        int startingQuestion = (level == 1) ? 1 : 11;
+        int startingQuestion;
+        if (level == 1)
+            startingQuestion = 1;
+        else if (level == 2)
+            startingQuestion = 11;
+        else // level == 3
+            startingQuestion = 21;
 
         if (calculationManager != null)
         {

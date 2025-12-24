@@ -81,9 +81,19 @@ public class CalculationManager : MonoBehaviour
         // 2. Cek apakah jawaban sudah lengkap (semua slot terisi)
         if (!answerTileSystem.IsAnswerComplete())
         {
-            string message = dataSoalSaatIni.IsDualQuestion ?
-                "Isi keempat slot dengan tile terlebih dahulu!" :
-                "Isi kedua slot dengan tile terlebih dahulu!";
+            string message;
+            if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsSingleAnswer)
+            {
+                message = "Pilih salah satu jawaban terlebih dahulu!";
+            }
+            else if (dataSoalSaatIni.IsDualQuestion)
+            {
+                message = "Isi keempat slot dengan tile terlebih dahulu!";
+            }
+            else
+            {
+                message = "Isi kedua slot dengan tile terlebih dahulu!";
+            }
             uiManager.ShowFeedback(false, message);
             return;
         }
@@ -94,7 +104,24 @@ public class CalculationManager : MonoBehaviour
 
         bool isCorrect;
 
-        if (dataSoalSaatIni.IsDualQuestion)
+        // Check if this is Level 3 (single answer mode)
+        if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsSingleAnswer)
+        {
+            // LEVEL 3: Single answer integer verification
+            if (!int.TryParse(answer.Trim(), out int playerAnswer))
+            {
+                Debug.LogError($"[CalculationManager] Invalid single answer format: {answer}");
+                HandleWrongAnswer("Format jawaban salah!");
+                return;
+            }
+
+            // Compare integer answer with correct answer (exact match)
+            int correctAnswer = (int)dataSoalSaatIni.JawabanBenar;
+            isCorrect = (playerAnswer == correctAnswer);
+
+            Debug.Log($"[CalculationManager] Single Answer (Level 3) Check - Player: {playerAnswer} vs Correct: {correctAnswer} ({isCorrect})");
+        }
+        else if (dataSoalSaatIni.IsDualQuestion)
         {
             // DUAL QUESTION: Verifikasi 4 nilai (format: "num1/den1|num2/den2")
             string[] fractions = answer.Split('|');
@@ -292,9 +319,15 @@ public class CalculationManager : MonoBehaviour
             HighScoreManager.Instance.SaveLevel2Score(score);
             Debug.Log($"[Score] Level 2 completed with score: {score}");
         }
+        else if (startingQuestion == 21)
+        {
+            // Level 3 (Soal 21-30)
+            HighScoreManager.Instance.SaveLevel3Score(score);
+            Debug.Log($"[Score] Level 3 completed with score: {score}");
+        }
 
-        // If player completes entire chapter (20 questions), save total score
-        if (progres >= 20)
+        // If player completes entire chapter (30 questions), save total score
+        if (progres >= 30)
         {
             int totalScore = HighScoreManager.Instance.GetLevel1HighScore() +
                            HighScoreManager.Instance.GetLevel2HighScore();

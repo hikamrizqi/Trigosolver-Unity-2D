@@ -112,15 +112,29 @@ public class UIManagerChapter1 : MonoBehaviour
         // Setup answer tiles dengan jawaban benar dan distractor
         if (answerTileSystem != null && data.AnswerTileData != null)
         {
-            answerTileSystem.SetupQuestion(
-                data.AnswerTileData.NumeratorCorrect,
-                data.AnswerTileData.DenominatorCorrect,
-                data.AnswerTileData.NumeratorCorrect2,
-                data.AnswerTileData.DenominatorCorrect2,
-                data.AnswerTileData.WrongAnswers,
-                data.IsDualQuestion
-            );
-            Debug.Log($"[UIManager] Answer tiles spawned for question {progres} - Type: {(data.IsDualQuestion ? "DUAL" : "SINGLE")}");
+            // Check if this is Level 3 (single answer mode)
+            if (data.AnswerTileData.IsSingleAnswer)
+            {
+                // Level 3: Single answer multiple choice
+                answerTileSystem.SetupSingleAnswerQuestion(
+                    data.AnswerTileData.SingleCorrectAnswer,
+                    data.AnswerTileData.WrongAnswers
+                );
+                Debug.Log($"[UIManager] Answer tiles spawned for question {progres} - Type: SINGLE ANSWER (Level 3)");
+            }
+            else
+            {
+                // Level 1-2: Fraction mode
+                answerTileSystem.SetupQuestion(
+                    data.AnswerTileData.NumeratorCorrect,
+                    data.AnswerTileData.DenominatorCorrect,
+                    data.AnswerTileData.NumeratorCorrect2,
+                    data.AnswerTileData.DenominatorCorrect2,
+                    data.AnswerTileData.WrongAnswers,
+                    data.IsDualQuestion
+                );
+                Debug.Log($"[UIManager] Answer tiles spawned for question {progres} - Type: {(data.IsDualQuestion ? "DUAL" : "SINGLE")}");
+            }
         }
         else
         {
