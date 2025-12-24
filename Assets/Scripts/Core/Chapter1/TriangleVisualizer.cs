@@ -81,6 +81,12 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Multiplier offset untuk label MIRING (default 2.0)")]
     public float miringLabelMultiplier = 2f;
 
+    [Tooltip("Horizontal offset untuk segitiga saat MIRROR/SWAPPED orientation (default 1.0 = 100% width)")]
+    public float swappedHorizontalOffsetMultiplier = 1.0f;
+
+    [Tooltip("Additional manual offset untuk segitiga MIRROR (X, Y, Z)")]
+    public Vector3 swappedPositionOffset = Vector3.zero;
+
     [Tooltip("Z-offset untuk label agar muncul di depan sprite (lebih negatif = lebih depan)")]
     public float labelZOffset = -2f;
 
@@ -201,10 +207,17 @@ public class TriangleVisualizer : MonoBehaviour
 
         if (orientation == TriangleOrientation.Swapped)
         {
-            // SWAPPED (siku di kanan): Geser ke kanan agar tidak overflow ke kiri
+            // SWAPPED (siku di kanan): Geser untuk mencegah overflow
             // Gunakan width yang lebih besar untuk memastikan tidak overflow
             float horizontalWidth = samping * dynamicScale;
-            adjustedCenter += new Vector3(horizontalWidth * 1.0f, 0, 0); // Geser 100% dari width ke KANAN
+            
+            // Adjustable: Ubah multiplier di Inspector untuk mengatur seberapa jauh geser
+            adjustedCenter += new Vector3(horizontalWidth * swappedHorizontalOffsetMultiplier, 0, 0);
+            
+            // Additional manual offset (bisa diatur di Inspector)
+            adjustedCenter += swappedPositionOffset;
+            
+            Debug.Log($"[Mirror Adjustment] Width: {horizontalWidth:F2}, Offset: {horizontalWidth * swappedHorizontalOffsetMultiplier:F2}, Final Center: {adjustedCenter}");
         }
         // NORMAL (siku di kiri): Tidak perlu adjustment, posisi centerPosition sudah pas
 

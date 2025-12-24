@@ -145,12 +145,12 @@ public class MainMenuManager : MonoBehaviour
         logoAnimator.AnimateShrinkToCorner(() =>
         {
             Debug.Log("Logo shrink to corner selesai, show main menu");
-            
+
             if (mainMenuPanel != null)
             {
                 mainMenuPanel.SetActive(true);
             }
-            
+
             mainMenuAnimator.AnimateDropIn();
         });
     }
@@ -185,7 +185,7 @@ public class MainMenuManager : MonoBehaviour
         mainMenuAnimator.AnimateSinkOut(() =>
         {
             Debug.Log("[MainMenu] Main menu sink complete, showing high score panel");
-            
+
             // PENTING: Aktifkan panel sebelum animasi!
             if (highScorePanel != null)
             {
@@ -276,7 +276,7 @@ public class MainMenuManager : MonoBehaviour
         highScoreAnimator.AnimateSinkOut(() =>
         {
             Debug.Log("[MainMenu] High score sink complete, showing main menu");
-            
+
             // Aktifkan main menu panel
             if (mainMenuPanel != null)
             {
