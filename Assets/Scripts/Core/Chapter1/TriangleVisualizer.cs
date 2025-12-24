@@ -216,55 +216,38 @@ public class TriangleVisualizer : MonoBehaviour
 
         if (orientation == TriangleOrientation.Swapped)
         {
-            // SWAPPED (siku di kanan): Auto-calculate optimal offset dengan bounds checking
+            // SWAPPED (siku di kanan): FULL AUTO calculation - IGNORE user settings untuk prevent overflow
             float horizontalWidth = samping * dynamicScale;
             float verticalHeight = depan * dynamicScale;
 
-            float autoOffsetX;
+            // Calculate safe bounds
+            float maxSafeRightEdge = screenHalfWidth - safetyMargin;
+            
+            // Calculate optimal center position
+            // Right edge = centerX + horizontalWidth
+            // We want: centerX + horizontalWidth <= maxSafeRightEdge
+            // So: centerX <= maxSafeRightEdge - horizontalWidth
+            float maxSafeCenterX = maxSafeRightEdge - horizontalWidth;
+            
+            // Optimal: center triangle in available space (left half of screen)
+            // Available space: from 0 to maxSafeCenterX
+            float optimalCenterX = maxSafeCenterX * 0.5f; // Center in available space
+            
+            // Clamp to ensure it's positive and safe
+            float finalOffsetX = Mathf.Max(0, optimalCenterX);
+            
+            adjustedCenter += new Vector3(finalOffsetX, 0, 0);
 
-            if (Mathf.Abs(swappedHorizontalOffsetMultiplier) > 0.01f)
-            {
-                // User manually set multiplier - use it but CLAMP to safe bounds
-                autoOffsetX = horizontalWidth * swappedHorizontalOffsetMultiplier;
-                Debug.Log($"[SWAPPED] Using MANUAL multiplier: {swappedHorizontalOffsetMultiplier:F2}, Raw Offset: {autoOffsetX:F2}");
-                
-                // CRITICAL: Clamp to prevent overflow
-                float maxSafeOffset = screenHalfWidth - horizontalWidth - safetyMargin;
-                if (autoOffsetX > maxSafeOffset)
-                {
-                    Debug.LogWarning($"[SWAPPED] Manual offset {autoOffsetX:F2} exceeds safe bound {maxSafeOffset:F2}! Clamping...");
-                    autoOffsetX = maxSafeOffset;
-                }
-            }
-            else
-            {
-                // AUTO: Calculate optimal offset untuk center triangle
-                // Target: right edge tidak overflow = centerX + width < screenHalfWidth - margin
-                float optimalCenterX = (screenHalfWidth - horizontalWidth - safetyMargin) * 0.5f;
-                autoOffsetX = Mathf.Max(0, optimalCenterX);
-                
-                Debug.Log($"[SWAPPED] AUTO calc: screenHalf={screenHalfWidth:F2}, width={horizontalWidth:F2}, optimalCenter={optimalCenterX:F2}");
-            }
-
-            adjustedCenter += new Vector3(autoOffsetX, 0, 0);
-
-            // Manual offset untuk fine-tuning
-            if (swappedPositionOffset != Vector3.zero)
-            {
-                adjustedCenter += swappedPositionOffset;
-                Debug.Log($"[SWAPPED] Added manual offset: {swappedPositionOffset}");
-            }
-
-            // FINAL BOUNDS CHECK - clamp jika masih overflow
+            // Verify bounds
             float finalRightEdge = adjustedCenter.x + horizontalWidth;
-            if (finalRightEdge > screenHalfWidth - safetyMargin)
+            
+            Debug.Log($"[SWAPPED AUTO] Width: {horizontalWidth:F2}, MaxSafeRight: {maxSafeRightEdge:F2}, MaxSafeCenter: {maxSafeCenterX:F2}, OptimalCenter: {optimalCenterX:F2}, FinalOffset: {finalOffsetX:F2}");
+            Debug.Log($"[SWAPPED] Final Center: {adjustedCenter}, RightEdge: {finalRightEdge:F2} (Must be < {maxSafeRightEdge:F2})");
+            
+            if (finalRightEdge > maxSafeRightEdge)
             {
-                float excessWidth = finalRightEdge - (screenHalfWidth - safetyMargin);
-                adjustedCenter.x -= excessWidth;
-                Debug.LogWarning($"[SWAPPED] OVERFLOW! Right edge {finalRightEdge:F2} > {screenHalfWidth - safetyMargin:F2}. Shifted left by {excessWidth:F2}");
+                Debug.LogError($"[CRITICAL BUG] Triangle STILL overflow after calculation! RightEdge: {finalRightEdge:F2} > Safe: {maxSafeRightEdge:F2}");
             }
-
-            Debug.Log($"[SWAPPED/MIRROR] Final - Width: {horizontalWidth:F2}, Center: {adjustedCenter}, RightEdge: {adjustedCenter.x + horizontalWidth:F2}");
         }
         else
         {
