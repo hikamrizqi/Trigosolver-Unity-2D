@@ -82,9 +82,10 @@ public class TriangleVisualizer : MonoBehaviour
     public float miringLabelMultiplier = 2f;
 
     [Tooltip("Horizontal offset untuk segitiga saat MIRROR/SWAPPED orientation (default 1.0 = 100% width)")]
-    public float swappedHorizontalOffsetMultiplier = 5.0f;
+    [Range(-2f, 2f)] // Limit range untuk prevent extreme values
+    public float swappedHorizontalOffsetMultiplier = 0f; // 0 = auto-calculate
 
-    [Tooltip("Additional manual offset untuk segitiga MIRROR (X, Y, Z)")]
+    [Tooltip("Additional manual offset untuk segitiga MIRROR (X, Y, Z) - HANYA gunakan ini untuk fine-tuning!")]
     public Vector3 swappedPositionOffset = Vector3.zero;
 
     [Tooltip("Z-offset untuk label agar muncul di depan sprite (lebih negatif = lebih depan)")]
@@ -202,34 +203,47 @@ public class TriangleVisualizer : MonoBehaviour
         }
 
         // Hitung posisi-posisi vertex segitiga SEBELUM rotasi
-        // ADJUSTMENT: HANYA untuk SWAPPED orientation, geser ke kanan
+        // ADJUSTMENT: HANYA untuk SWAPPED orientation, geser untuk prevent overflow
         Vector3 adjustedCenter = centerPosition;
 
         Debug.Log($"[Position Debug] Orientation: {orientation}, CenterPosition: {centerPosition}, Depan: {depan}, Samping: {samping}, Scale: {dynamicScale:F2}");
 
         if (orientation == TriangleOrientation.Swapped)
         {
-            // SWAPPED (siku di kanan): Geser untuk mencegah overflow
-            // SMART ADJUSTMENT: Hitung berdasarkan ukuran segitiga yang sebenarnya
+            // SWAPPED (siku di kanan): Auto-calculate optimal offset
             float horizontalWidth = samping * dynamicScale;
             float verticalHeight = depan * dynamicScale;
-            
-            // Hitung posisi agar segitiga pas di tengah frame
-            // Untuk swapped: siku di kanan, jadi geser ke kanan sebesar setengah width
-            float autoOffsetX = horizontalWidth * 0.5f; // Geser 50% dari width sebagai baseline
-            
-            // Jika user sudah set manual multiplier (bukan default 1.0), pakai itu
-            float finalMultiplier = (Mathf.Abs(swappedHorizontalOffsetMultiplier - 1.0f) > 0.01f) 
-                ? swappedHorizontalOffsetMultiplier 
-                : 0.5f; // Auto: 50% offset
-            
-            Vector3 offsetAmount = new Vector3(horizontalWidth * finalMultiplier, 0, 0);
-            adjustedCenter += offsetAmount;
 
-            // Additional manual offset (bisa diatur di Inspector)
-            adjustedCenter += swappedPositionOffset;
+            // AUTO CALCULATION: Geser agar segitiga centered di layar
+            // Untuk swapped, siku di kanan-bawah, jadi geser ke kanan sebesar setengah width
+            float autoOffsetX;
+            
+            if (Mathf.Abs(swappedHorizontalOffsetMultiplier) > 0.01f)
+            {
+                // User manually set multiplier - use it
+                autoOffsetX = horizontalWidth * swappedHorizontalOffsetMultiplier;
+                Debug.Log($"[SWAPPED] Using MANUAL multiplier: {swappedHorizontalOffsetMultiplier:F2}");
+            }
+            else
+            {
+                // AUTO: Calculate optimal offset to center triangle
+                // For portrait mode (camera orthographic size ~5), screen width ~3 units per side from center
+                // Triangle should be centered: offset = (screenWidth/2 - triangleWidth/2) / 2
+                float estimatedScreenHalfWidth = 3f; // Estimate for portrait camera
+                autoOffsetX = Mathf.Min(horizontalWidth * 0.5f, estimatedScreenHalfWidth * 0.3f); // Max 30% of half screen
+                Debug.Log($"[SWAPPED] AUTO offset calculation: width={horizontalWidth:F2}, offset={autoOffsetX:F2}");
+            }
 
-            Debug.Log($"[SWAPPED/MIRROR] Siku di KANAN - Width: {horizontalWidth:F2}, Height: {verticalHeight:F2}, Multiplier: {finalMultiplier:F2}, Offset: {offsetAmount}, Manual: {swappedPositionOffset}, Final Center: {adjustedCenter}");
+            adjustedCenter += new Vector3(autoOffsetX, 0, 0);
+
+            // Manual offset sebagai fine-tuning ONLY (jangan double-add dengan multiplier!)
+            if (swappedPositionOffset != Vector3.zero)
+            {
+                adjustedCenter += swappedPositionOffset;
+                Debug.Log($"[SWAPPED] Added manual offset: {swappedPositionOffset}");
+            }
+
+            Debug.Log($"[SWAPPED/MIRROR] Siku di KANAN - Width: {horizontalWidth:F2}, Height: {verticalHeight:F2}, Total Offset: {autoOffsetX:F2}, Final Center: {adjustedCenter}");
         }
         else
         {
