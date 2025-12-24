@@ -206,44 +206,65 @@ public class TriangleVisualizer : MonoBehaviour
         // ADJUSTMENT: HANYA untuk SWAPPED orientation, geser untuk prevent overflow
         Vector3 adjustedCenter = centerPosition;
 
+        // GET CAMERA BOUNDS untuk accurate calculation
+        float cameraHeight = mainCamera != null ? mainCamera.orthographicSize * 2f : 10f;
+        float cameraWidth = cameraHeight * (mainCamera != null ? mainCamera.aspect : 0.5625f);
+        float screenHalfWidth = cameraWidth / 2f;
+
+        Debug.Log($"[Camera Bounds] Width: {cameraWidth:F2}, Height: {cameraHeight:F2}, HalfWidth: {screenHalfWidth:F2}");
         Debug.Log($"[Position Debug] Orientation: {orientation}, CenterPosition: {centerPosition}, Depan: {depan}, Samping: {samping}, Scale: {dynamicScale:F2}");
 
         if (orientation == TriangleOrientation.Swapped)
         {
-            // SWAPPED (siku di kanan): Auto-calculate optimal offset
+            // SWAPPED (siku di kanan): Auto-calculate optimal offset dengan bounds checking
             float horizontalWidth = samping * dynamicScale;
             float verticalHeight = depan * dynamicScale;
 
-            // AUTO CALCULATION: Geser agar segitiga centered di layar
-            // Untuk swapped, siku di kanan-bawah, jadi geser ke kanan sebesar setengah width
             float autoOffsetX;
-            
+
             if (Mathf.Abs(swappedHorizontalOffsetMultiplier) > 0.01f)
             {
-                // User manually set multiplier - use it
+                // User manually set multiplier - use it but CLAMP to safe bounds
                 autoOffsetX = horizontalWidth * swappedHorizontalOffsetMultiplier;
-                Debug.Log($"[SWAPPED] Using MANUAL multiplier: {swappedHorizontalOffsetMultiplier:F2}");
+                Debug.Log($"[SWAPPED] Using MANUAL multiplier: {swappedHorizontalOffsetMultiplier:F2}, Raw Offset: {autoOffsetX:F2}");
+                
+                // CRITICAL: Clamp to prevent overflow
+                float maxSafeOffset = screenHalfWidth - horizontalWidth - safetyMargin;
+                if (autoOffsetX > maxSafeOffset)
+                {
+                    Debug.LogWarning($"[SWAPPED] Manual offset {autoOffsetX:F2} exceeds safe bound {maxSafeOffset:F2}! Clamping...");
+                    autoOffsetX = maxSafeOffset;
+                }
             }
             else
             {
-                // AUTO: Calculate optimal offset to center triangle
-                // For portrait mode (camera orthographic size ~5), screen width ~3 units per side from center
-                // Triangle should be centered: offset = (screenWidth/2 - triangleWidth/2) / 2
-                float estimatedScreenHalfWidth = 3f; // Estimate for portrait camera
-                autoOffsetX = Mathf.Min(horizontalWidth * 0.5f, estimatedScreenHalfWidth * 0.3f); // Max 30% of half screen
-                Debug.Log($"[SWAPPED] AUTO offset calculation: width={horizontalWidth:F2}, offset={autoOffsetX:F2}");
+                // AUTO: Calculate optimal offset untuk center triangle
+                // Target: right edge tidak overflow = centerX + width < screenHalfWidth - margin
+                float optimalCenterX = (screenHalfWidth - horizontalWidth - safetyMargin) * 0.5f;
+                autoOffsetX = Mathf.Max(0, optimalCenterX);
+                
+                Debug.Log($"[SWAPPED] AUTO calc: screenHalf={screenHalfWidth:F2}, width={horizontalWidth:F2}, optimalCenter={optimalCenterX:F2}");
             }
 
             adjustedCenter += new Vector3(autoOffsetX, 0, 0);
 
-            // Manual offset sebagai fine-tuning ONLY (jangan double-add dengan multiplier!)
+            // Manual offset untuk fine-tuning
             if (swappedPositionOffset != Vector3.zero)
             {
                 adjustedCenter += swappedPositionOffset;
                 Debug.Log($"[SWAPPED] Added manual offset: {swappedPositionOffset}");
             }
 
-            Debug.Log($"[SWAPPED/MIRROR] Siku di KANAN - Width: {horizontalWidth:F2}, Height: {verticalHeight:F2}, Total Offset: {autoOffsetX:F2}, Final Center: {adjustedCenter}");
+            // FINAL BOUNDS CHECK - clamp jika masih overflow
+            float finalRightEdge = adjustedCenter.x + horizontalWidth;
+            if (finalRightEdge > screenHalfWidth - safetyMargin)
+            {
+                float excessWidth = finalRightEdge - (screenHalfWidth - safetyMargin);
+                adjustedCenter.x -= excessWidth;
+                Debug.LogWarning($"[SWAPPED] OVERFLOW! Right edge {finalRightEdge:F2} > {screenHalfWidth - safetyMargin:F2}. Shifted left by {excessWidth:F2}");
+            }
+
+            Debug.Log($"[SWAPPED/MIRROR] Final - Width: {horizontalWidth:F2}, Center: {adjustedCenter}, RightEdge: {adjustedCenter.x + horizontalWidth:F2}");
         }
         else
         {
