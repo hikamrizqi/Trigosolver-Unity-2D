@@ -924,11 +924,14 @@ public class TriangleVisualizer : MonoBehaviour
             Debug.Log($"Sprite pixels per unit: {depanSprite.sprite.pixelsPerUnit}");
         }
 
-        // Optional: Gambar segitiga test untuk preview di editor
+        // DISABLED: Jangan gambar segitiga test di Start() untuk menghindari double generation
+        // Segitiga akan di-generate oleh CalculationManager.StartNewRound() -> UIManager.SetupNewQuestion()
+        /*
         if (currentDepan == 0 && currentSamping == 0 && currentMiring == 0)
         {
             // Gambar segitiga default 3-4-5 untuk testing
             DrawTriangle(3, 4, 5);
         }
+        */
     }
 }
