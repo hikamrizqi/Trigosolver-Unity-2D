@@ -98,8 +98,9 @@ public class UIManagerChapter1 : MonoBehaviour
         if (triangleVisualizer != null)
         {
             // Detect if Level 3 (Pythagoras questions) to show vertex labels A, B, C
-            bool isLevel3 = data.AnswerTileData != null && data.AnswerTileData.IsSingleAnswer;
-            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation, data.IsDualQuestion, isLevel3);
+            bool isLevel3 = data.AnswerTileData != null && data.AnswerTileData.IsMultiStepAnswer;
+            string hiddenSide = isLevel3 ? data.HiddenSideLabel : "";
+            triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation, data.IsDualQuestion, isLevel3, hiddenSide);
 
             // Log difficulty, rotation, orientation, dan question type untuk debugging
             string questionType = data.IsDualQuestion ? "DUAL (A & B)" : isLevel3 ? "LEVEL 3 (A, B, C)" : "SINGLE (θ)";
@@ -114,15 +115,23 @@ public class UIManagerChapter1 : MonoBehaviour
         // Setup answer tiles dengan jawaban benar dan distractor
         if (answerTileSystem != null && data.AnswerTileData != null)
         {
-            // Check if this is Level 3 (single answer mode)
-            if (data.AnswerTileData.IsSingleAnswer)
+            // Check if this is Level 3 (multi-step answer mode)
+            if (data.AnswerTileData.IsMultiStepAnswer)
             {
-                // Level 3: Single answer multiple choice
-                answerTileSystem.SetupSingleAnswerQuestion(
-                    data.AnswerTileData.SingleCorrectAnswer,
-                    data.AnswerTileData.WrongAnswers
+                // Debug: Verify formula data
+                Debug.Log($"[UIManager] Level 3 Formula Data - QuestionSide: {data.AnswerTileData.QuestionSide}, Side1: {data.AnswerTileData.Side1Name}, Side2: {data.AnswerTileData.Side2Name}, Operator: {data.AnswerTileData.OperatorSymbol}");
+                Debug.Log($"[UIManager] HiddenSideLabel: {data.HiddenSideLabel}");
+
+                // Level 3: Multi-step Pythagoras solution (6 sequential slots)
+                answerTileSystem.SetupMultiStepQuestion(
+                    data.AnswerTileData.MultiStepCorrectAnswers,
+                    data.AnswerTileData.WrongAnswers,
+                    data.AnswerTileData.QuestionSide,
+                    data.AnswerTileData.Side1Name,
+                    data.AnswerTileData.Side2Name,
+                    data.AnswerTileData.OperatorSymbol
                 );
-                Debug.Log($"[UIManager] Answer tiles spawned for question {progres} - Type: SINGLE ANSWER (Level 3)");
+                Debug.Log($"[UIManager] Answer tiles spawned for question {progres} - Type: MULTI-STEP (Level 3, 6 slots)");
             }
             else
             {

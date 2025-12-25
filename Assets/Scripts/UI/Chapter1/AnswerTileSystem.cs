@@ -33,6 +33,13 @@ public class AnswerTileSystem : MonoBehaviour
     [SerializeField] private GameObject singleAnswerSlotContainer;  // Container untuk 1 slot (multiple choice)
     [SerializeField] private Transform singleAnswerSlotTransform;   // Single slot untuk jawaban integer
 
+    [Header("Answer Slots - Multi-Step (Level 3 Pythagoras Step-by-step)")]
+    [SerializeField] private GameObject multiStepSlotContainer;     // Container untuk 6 sequential slots
+    [SerializeField] private Transform[] multiStepSlotTransforms;   // Array 6 slots untuk formula step-by-step
+    [SerializeField] private TextMeshProUGUI questionSideText;      // Text untuk sisi yang ditanya (AC/AB/BC)
+    [SerializeField] private TextMeshProUGUI operatorText1;         // Text untuk operator pertama dalam kurung (AB² + BC²)
+    [SerializeField] private TextMeshProUGUI operatorText2;         // Text untuk operator kedua dalam kurung (9 + 16)
+
     [Header("Answer Pool (Pilihan Jawaban)")]
     [SerializeField] private Transform poolContainer;   // Container untuk 5 tiles
     [SerializeField] private GameObject tilePrefab;     // Prefab untuk AnswerTile
@@ -56,16 +63,22 @@ public class AnswerTileSystem : MonoBehaviour
     private AnswerTile currentSlot3Tile = null; // Soal 11-20 only
     private AnswerTile currentSlot4Tile = null; // Soal 11-20 only
 
+    // Multi-step slots (Level 3 sequential)
+    private AnswerTile[] multiStepSlotTiles = new AnswerTile[6]; // Track tiles in 6 sequential slots
+    private int currentMultiStepSlotIndex = 0; // Next empty slot index (0-5)
+
     // Jawaban yang benar untuk soal ini
     private string correctNumerator;   // Angka atas 1 (untuk soal 1-10 atau soal 11-20 pertanyaan pertama)
     private string correctDenominator; // Angka bawah 1
     private string correctNumerator2;  // Angka atas 2 (untuk soal 11-20 pertanyaan kedua)
     private string correctDenominator2; // Angka bawah 2
     private string correctSingleAnswer; // Jawaban tunggal (untuk soal 21-30 Level 3)
+    private List<string> correctMultiStepAnswers; // 6 jawaban sequential untuk Level 3
 
     // Track question type
     private bool currentIsDualQuestion = false;
-    private bool currentIsSingleAnswer = false; // Level 3 mode
+    private bool currentIsSingleAnswer = false; // Level 3 mode - single answer
+    private bool currentIsMultiStepAnswer = false; // Level 3 mode - multi-step sequential
 
     private void Awake()
     {
@@ -210,6 +223,96 @@ public class AnswerTileSystem : MonoBehaviour
     }
 
     /// <summary>
+    /// Setup untuk Level 3 multi-step answer (6 sequential slots)
+    /// 6 jawaban benar (langkah-langkah) + 2 pilihan salah = total 8 tiles
+    /// </summary>
+    public void SetupMultiStepQuestion(List<string> correctAnswers, List<string> wrongAnswers, string questionSide, string side1, string side2, string operatorSymbol)
+    {
+        // Simpan jawaban benar (6 langkah)
+        correctMultiStepAnswers = new List<string>(correctAnswers);
+        currentIsMultiStepAnswer = true;
+        currentIsSingleAnswer = false;
+        currentIsDualQuestion = false;
+
+        // Set dynamic formula parts
+        if (questionSideText != null)
+        {
+            questionSideText.text = questionSide;
+            Debug.Log($"[AnswerTileSystem] Question Side: {questionSide}");
+        }
+
+        // Set operator untuk kedua tempat (dalam kurung pertama dan kedua)
+        if (operatorText1 != null)
+        {
+            operatorText1.text = operatorSymbol;
+            Debug.Log($"[AnswerTileSystem] Operator 1: {operatorSymbol}");
+        }
+
+        if (operatorText2 != null)
+        {
+            operatorText2.text = operatorSymbol;
+            Debug.Log($"[AnswerTileSystem] Operator 2: {operatorSymbol}");
+        }
+
+        // Show/hide containers
+        if (singleQuestionSlotContainer != null)
+            singleQuestionSlotContainer.SetActive(false);
+
+        if (dualQuestionSlotContainer != null)
+            dualQuestionSlotContainer.SetActive(false);
+
+        if (singleAnswerSlotContainer != null)
+            singleAnswerSlotContainer.SetActive(false);
+
+        if (multiStepSlotContainer != null)
+            multiStepSlotContainer.SetActive(true);
+
+        // Reset multi-step slots
+        ResetMultiStepSlots();
+
+        // Destroy tiles lama
+        foreach (var tile in allTiles)
+        {
+            if (tile != null) Destroy(tile.gameObject);
+        }
+        allTiles.Clear();
+
+        // Buat pool: 6 correct + 2 wrong = 8 tiles
+        List<string> poolValues = new List<string>();
+        poolValues.AddRange(correctAnswers);
+        poolValues.AddRange(wrongAnswers);
+
+        // Shuffle untuk random order
+        poolValues = poolValues.OrderBy(x => Random.value).ToList();
+
+        // Instantiate tiles
+        for (int i = 0; i < poolValues.Count; i++)
+        {
+            GameObject tileObj = Instantiate(tilePrefab, poolContainer);
+            AnswerTile tile = tileObj.GetComponent<AnswerTile>();
+            tile.Setup(poolValues[i]);
+            allTiles.Add(tile);
+        }
+
+        Debug.Log($"[AnswerTileSystem] Setup MULTI-STEP (Level 3): 6 Steps={string.Join(", ", correctAnswers)}, Total tiles: {poolValues.Count}");
+
+        // Wait for layout group to position tiles, then animate
+        StartCoroutine(AnimateTilesInDelayed());
+    }
+
+    /// <summary>
+    /// Reset multi-step slots (clear all 6 slots)
+    /// </summary>
+    private void ResetMultiStepSlots()
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            multiStepSlotTiles[i] = null;
+        }
+        currentMultiStepSlotIndex = 0;
+    }
+
+    /// <summary>
     /// Delayed animation agar layout group selesai calculate positions
     /// </summary>
     private System.Collections.IEnumerator AnimateTilesInDelayed()
@@ -241,7 +344,24 @@ public class AnswerTileSystem : MonoBehaviour
         // Tentukan slot target berdasarkan question type
         Transform targetSlot;
 
-        if (currentIsSingleAnswer)
+        if (currentIsMultiStepAnswer)
+        {
+            // MULTI-STEP (Level 3): Sequential filling, 6 slots
+            if (currentMultiStepSlotIndex >= 6)
+            {
+                Debug.LogWarning($"[AnswerTileSystem] All 6 multi-step slots full! Cannot move {tile.Value}");
+                return;
+            }
+
+            // Place tile in next empty slot
+            int slotIndex = currentMultiStepSlotIndex;
+            multiStepSlotTiles[slotIndex] = tile;
+            targetSlot = multiStepSlotTransforms[slotIndex];
+            currentMultiStepSlotIndex++;
+
+            Debug.Log($"[AnswerTileSystem] MULTI-STEP: Moving {tile.Value} to Slot {slotIndex + 1}/6");
+        }
+        else if (currentIsSingleAnswer)
         {
             // SINGLE ANSWER (Level 3): Only 1 slot
             if (currentSlot1Tile == null)
@@ -328,14 +448,50 @@ public class AnswerTileSystem : MonoBehaviour
             return;
         }
 
-        // Hapus dari slot
-        if (currentSlot1Tile == tile)
+        // Handle multi-step mode dengan backward shifting
+        if (currentIsMultiStepAnswer)
+        {
+            // Find which slot this tile is in
+            int removedSlotIndex = -1;
+            for (int i = 0; i < 6; i++)
+            {
+                if (multiStepSlotTiles[i] == tile)
+                {
+                    removedSlotIndex = i;
+                    break;
+                }
+            }
+
+            if (removedSlotIndex >= 0)
+            {
+                Debug.Log($"[AnswerTileSystem] MULTI-STEP: Removing tile from Slot {removedSlotIndex + 1}");
+
+                // Shift all tiles after this one backward
+                for (int i = removedSlotIndex; i < currentMultiStepSlotIndex - 1; i++)
+                {
+                    multiStepSlotTiles[i] = multiStepSlotTiles[i + 1];
+
+                    // Animate shift
+                    if (multiStepSlotTiles[i] != null)
+                    {
+                        multiStepSlotTiles[i].AnimateToPosition(Vector3.zero, multiStepSlotTransforms[i], true, animationDuration);
+                        Debug.Log($"[AnswerTileSystem] MULTI-STEP: Shifted tile {multiStepSlotTiles[i].Value} from Slot {i + 2} to Slot {i + 1}");
+                    }
+                }
+
+                // Clear last slot
+                multiStepSlotTiles[currentMultiStepSlotIndex - 1] = null;
+                currentMultiStepSlotIndex--;
+            }
+        }
+        // Hapus dari slot untuk single/dual mode
+        else if (currentSlot1Tile == tile)
         {
             currentSlot1Tile = null;
             Debug.Log($"[AnswerTileSystem] Removed {tile.Value} from Slot1");
 
             // Auto-shift untuk single question: Jika slot2 ada isi, geser ke kiri
-            if (!currentIsDualQuestion && currentSlot2Tile != null)
+            if (!currentIsDualQuestion && !currentIsSingleAnswer && currentSlot2Tile != null)
             {
                 AnswerTile tileToShift = currentSlot2Tile;
                 currentSlot2Tile = null;
@@ -374,36 +530,64 @@ public class AnswerTileSystem : MonoBehaviour
     /// </summary>
     private void UpdateAnswerDisplay()
     {
-        string slot1Value = currentSlot1Tile != null ? currentSlot1Tile.Value : "";
-        string slot2Value = currentSlot2Tile != null ? currentSlot2Tile.Value : "";
-        string slot3Value = currentSlot3Tile != null ? currentSlot3Tile.Value : "";
-        string slot4Value = currentSlot4Tile != null ? currentSlot4Tile.Value : "";
-
         string answer = "";
-        if (currentIsDualQuestion)
+
+        if (currentIsMultiStepAnswer)
         {
-            // Dual question: format "num1/den1|num2/den2"
-            if (!string.IsNullOrEmpty(slot1Value) && !string.IsNullOrEmpty(slot2Value) &&
-                !string.IsNullOrEmpty(slot3Value) && !string.IsNullOrEmpty(slot4Value))
+            // Multi-step: format "step1,step2,step3,step4,step5,step6"
+            List<string> stepValues = new List<string>();
+            for (int i = 0; i < 6; i++)
             {
-                answer = $"{slot1Value}/{slot2Value}|{slot3Value}/{slot4Value}";
+                if (multiStepSlotTiles[i] != null)
+                {
+                    stepValues.Add(multiStepSlotTiles[i].Value);
+                }
+                else
+                {
+                    stepValues.Add(""); // Empty slot
+                }
             }
-            else
-            {
-                // Incomplete dual answer
-                answer = $"{slot1Value}/{slot2Value}|{slot3Value}/{slot4Value}";
-            }
+            answer = string.Join(",", stepValues);
+            Debug.Log($"[AnswerTileSystem] MULTI-STEP Display: {answer}");
+        }
+        else if (currentIsSingleAnswer)
+        {
+            // Single answer (Level 3 old mode): just the one value
+            answer = currentSlot1Tile != null ? currentSlot1Tile.Value : "";
+            Debug.Log($"[AnswerTileSystem] SINGLE ANSWER Display: {answer}");
         }
         else
         {
-            // Single question: format "num/den"
-            if (!string.IsNullOrEmpty(slot1Value) && !string.IsNullOrEmpty(slot2Value))
+            string slot1Value = currentSlot1Tile != null ? currentSlot1Tile.Value : "";
+            string slot2Value = currentSlot2Tile != null ? currentSlot2Tile.Value : "";
+            string slot3Value = currentSlot3Tile != null ? currentSlot3Tile.Value : "";
+            string slot4Value = currentSlot4Tile != null ? currentSlot4Tile.Value : "";
+
+            if (currentIsDualQuestion)
             {
-                answer = $"{slot1Value}/{slot2Value}";
+                // Dual question: format "num1/den1|num2/den2"
+                if (!string.IsNullOrEmpty(slot1Value) && !string.IsNullOrEmpty(slot2Value) &&
+                    !string.IsNullOrEmpty(slot3Value) && !string.IsNullOrEmpty(slot4Value))
+                {
+                    answer = $"{slot1Value}/{slot2Value}|{slot3Value}/{slot4Value}";
+                }
+                else
+                {
+                    // Incomplete dual answer
+                    answer = $"{slot1Value}/{slot2Value}|{slot3Value}/{slot4Value}";
+                }
             }
-            else if (!string.IsNullOrEmpty(slot1Value))
+            else
             {
-                answer = $"{slot1Value}/";
+                // Single question: format "num/den"
+                if (!string.IsNullOrEmpty(slot1Value) && !string.IsNullOrEmpty(slot2Value))
+                {
+                    answer = $"{slot1Value}/{slot2Value}";
+                }
+                else if (!string.IsNullOrEmpty(slot1Value))
+                {
+                    answer = $"{slot1Value}/";
+                }
             }
         }
 
@@ -421,7 +605,12 @@ public class AnswerTileSystem : MonoBehaviour
     /// </summary>
     public bool IsAnswerComplete()
     {
-        if (currentIsSingleAnswer)
+        if (currentIsMultiStepAnswer)
+        {
+            // Multi-step (Level 3): All 6 slots must be filled
+            return currentMultiStepSlotIndex == 6;
+        }
+        else if (currentIsSingleAnswer)
         {
             // Single answer (Level 3): hanya 1 slot yang perlu terisi
             return currentSlot1Tile != null;
@@ -446,7 +635,17 @@ public class AnswerTileSystem : MonoBehaviour
     {
         if (!IsAnswerComplete()) return "";
 
-        if (currentIsSingleAnswer)
+        if (currentIsMultiStepAnswer)
+        {
+            // Multi-step (Level 3): Return "step1,step2,step3,step4,step5,step6"
+            List<string> stepValues = new List<string>();
+            for (int i = 0; i < 6; i++)
+            {
+                stepValues.Add(multiStepSlotTiles[i].Value);
+            }
+            return string.Join(",", stepValues);
+        }
+        else if (currentIsSingleAnswer)
         {
             // Level 3: Return single integer value
             return currentSlot1Tile.Value;

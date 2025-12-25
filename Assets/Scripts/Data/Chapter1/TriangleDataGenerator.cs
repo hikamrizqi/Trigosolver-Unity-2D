@@ -35,17 +35,34 @@ public enum TriangleOrientation
 [System.Serializable]
 public class AnswerTileData
 {
-    // Mode: single answer (Level 3) atau fraction (Level 1-2)
-    public bool IsSingleAnswer;         // True = 1 slot (Level 3), False = 2 slots (Level 1-2)
+    // Mode flags
+    public bool IsMultiStepAnswer;      // True = 6 sequential slots (Level 3 Pythagoras steps), False = fraction or single mode
+    public bool IsSingleAnswer;         // True = 1 slot single answer (old Level 3 mode - backward compatibility)
 
-    // Single answer mode (Level 3: soal 21-30)
-    public string SingleCorrectAnswer;  // Jawaban benar tunggal (misal: "20")
+    // Multi-step answer mode (Level 3: soal 21-30 - 6 langkah Pythagoras)
+    public List<string> MultiStepCorrectAnswers; // 6 jawaban benar berurutan (urutan default)
+    public List<string> MultiStepAlternativeAnswers; // 6 jawaban alternatif (jika operator +, bisa swap slot 1-2)
+                                                     // Slot 1: sisi pertama (misal AB=3)
+                                                     // Slot 2: sisi kedua (misal BC=4)
+                                                     // Slot 3: sisi pertama kuadrat (9)
+                                                     // Slot 4: sisi kedua kuadrat (16)
+                                                     // Slot 5: hasil operasi (9+16=25 atau c²-b²)
+                                                     // Slot 6: hasil akhir akar (5)
+
+    // Formula info for multi-step display
+    public string QuestionSide;         // Sisi yang dicari: "AC", "AB", atau "BC"
+    public string Side1Name;            // Nama sisi pertama ("AB", "BC", atau "AC")
+    public string Side2Name;            // Nama sisi kedua
+    public string OperatorSymbol;       // Operator: "+" atau "-"
+
+    // Single answer mode (Level 3 old mode - for backward compatibility)
+    public string SingleCorrectAnswer;  // Single integer answer
 
     // Fraction mode (Level 1-2: soal 1-20)
     public string NumeratorCorrect;     // Pembilang yang benar (untuk soal 1-10 atau jawaban A di soal 11-20)
     public string DenominatorCorrect;   // Penyebut yang benar (untuk soal 1-10 atau jawaban A di soal 11-20)
 
-    public List<string> WrongAnswers;   // Jawaban salah (distractor)
+    public List<string> WrongAnswers;   // Jawaban salah (distractor) - 2 untuk Level 3, 6 untuk Level 1-2
 
     // Untuk dual question (soal 11-20)
     public string NumeratorCorrect2;    // Pembilang jawaban B
@@ -80,6 +97,9 @@ public class TriangleData
 
     // Answer Tile Data (untuk button-based input)
     public AnswerTileData AnswerTileData;   // Data untuk answer tile system
+
+    // Info untuk Level 3 label display
+    public string HiddenSideLabel;          // Sisi yang dicari, jangan tampilkan labelnya ("AC", "AB", "BC", atau "")
 
     // Dual Question System (untuk soal 11-20)
     public bool IsDualQuestion;             // True jika soal tanya 2 rasio sekaligus
@@ -259,6 +279,9 @@ public class TriangleDataGenerator : MonoBehaviour
     /// </summary>
     private void GenerateBasicTrigQuestion(TriangleData data, int questionNumber)
     {
+        // Set IsDualQuestion to false for single question (theta symbol)
+        data.IsDualQuestion = false;
+        
         int type = questionNumber % 3;
 
         switch (type)
@@ -361,6 +384,9 @@ public class TriangleDataGenerator : MonoBehaviour
     /// </summary>
     private void GenerateInverseTrigQuestion(TriangleData data)
     {
+        // Set IsDualQuestion to false for single question (theta symbol)
+        data.IsDualQuestion = false;
+        
         int type = Random.Range(0, 3);
 
         switch (type)
@@ -402,6 +428,9 @@ public class TriangleDataGenerator : MonoBehaviour
     /// </summary>
     private void GeneratePythagoreanQuestion(TriangleData data)
     {
+        // Set IsDualQuestion to false for single question (theta symbol)
+        data.IsDualQuestion = false;
+        
         int type = Random.Range(0, 3);
 
         switch (type)
@@ -538,7 +567,10 @@ public class TriangleDataGenerator : MonoBehaviour
         // LEVEL 3 (Soal 21-30): PYTHAGORAS - SINGLE ANSWER dengan 6 pilihan multiple choice
         if (questionNumber >= 21 && questionNumber <= 30)
         {
-            return GenerateAnswerTileDataLevel3(data);
+            tileData = GenerateAnswerTileDataLevel3(data);
+            // Set HiddenSideLabel untuk hide angka sisi yang dicari
+            data.HiddenSideLabel = tileData.QuestionSide; // "AC", "AB", atau "BC"
+            return tileData;
         }
 
         // DUAL QUESTION (Soal 11-20): 4 jawaban benar + 2 distractor = 6 tiles
@@ -717,36 +749,131 @@ public class TriangleDataGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Generate answer tile data untuk Level 3 (single answer multiple choice)
-    /// Total 6 tiles: 1 jawaban benar + 5 pilihan salah
+    /// Generate answer tile data untuk Level 3 (multi-step Pythagoras solution)
+    /// Total 8 tiles: 6 jawaban benar (langkah-langkah) + 2 distractor
     /// </summary>
     private AnswerTileData GenerateAnswerTileDataLevel3(TriangleData data)
     {
         AnswerTileData tileData = new AnswerTileData();
 
-        // Set flag untuk single answer mode
-        tileData.IsSingleAnswer = true;
+        // Set flag untuk multi-step mode
+        tileData.IsMultiStepAnswer = true;
+        tileData.MultiStepCorrectAnswers = new List<string>();
 
-        // Jawaban benar adalah integer (dari Pythagoras)
-        int correctAnswer = (int)data.JawabanBenar;
-        tileData.SingleCorrectAnswer = correctAnswer.ToString();
+        // Tentukan sisi mana yang dicari berdasarkan TypeSoal
+        int side1, side2, result;
+        bool isAddition; // true = mencari miring (a²+b²), false = mencari sisi lain (c²-a²)
+        string questionSide, side1Name, side2Name;
 
-        Debug.Log($"[Level3] Correct Answer: {correctAnswer}");
-
-        // Generate 5 jawaban salah yang dekat dengan jawaban benar
-        tileData.WrongAnswers = new List<string>();
-        HashSet<int> usedNumbers = new HashSet<int> { correctAnswer };
-
-        // Strategy: Generate numbers around correct answer (±1, ±2, ±3, ±4, ±5)
-        List<int> offsets = new List<int> { -3, -2, -1, 1, 2, 3, -4, 4, -5, 5 };
-
-        foreach (int offset in offsets)
+        // Parse dari TypeSoal untuk tahu sisi mana yang dicari
+        if (data.TypeSoal == QuestionType.FindPythagorean)
         {
-            if (tileData.WrongAnswers.Count >= 5) break;
+            // Cek dari SisiDiketahui1 dan SisiDiketahui2 untuk tahu pola soal
+            // Jika JawabanBenar == Miring, berarti mencari sisi miring (addition)
+            if (Mathf.Approximately(data.JawabanBenar, data.Miring))
+            {
+                // Mencari AC (sisi miring): AB² + BC² = AC²
+                side1 = data.Samping;  // AB
+                side2 = data.Depan;    // BC
+                result = data.Miring;  // AC
+                isAddition = true;
+                questionSide = "AC";
+                side1Name = "AB";
+                side2Name = "BC";
+            }
+            else if (Mathf.Approximately(data.JawabanBenar, data.Samping))
+            {
+                // Mencari AB (sisi alas): AC² - BC² = AB²
+                side1 = data.Miring;   // AC
+                side2 = data.Depan;    // BC
+                result = data.Samping; // AB
+                isAddition = false;
+                questionSide = "AB";
+                side1Name = "AC";
+                side2Name = "BC";
+            }
+            else // Mencari BC
+            {
+                // Mencari BC (sisi tegak): AC² - AB² = BC²
+                side1 = data.Miring;   // AC
+                side2 = data.Samping;  // AB
+                result = data.Depan;   // BC
+                isAddition = false;
+                questionSide = "BC";
+                side1Name = "AC";
+                side2Name = "AB";
+            }
+        }
+        else
+        {
+            // Fallback
+            side1 = data.Samping;
+            side2 = data.Depan;
+            result = data.Miring;
+            isAddition = true;
+            questionSide = "AC";
+            side1Name = "AB";
+            side2Name = "BC";
+        }
 
-            int candidate = correctAnswer + offset;
+        // Generate 6 langkah jawaban
+        int step1 = side1;              // Slot 1: Sisi pertama
+        int step2 = side2;              // Slot 2: Sisi kedua
+        int step3 = step1 * step1;      // Slot 3: Sisi pertama kuadrat
+        int step4 = step2 * step2;      // Slot 4: Sisi kedua kuadrat
+        int step5 = isAddition ? (step3 + step4) : (step3 - step4); // Slot 5: Hasil operasi
+        int step6 = result;             // Slot 6: Hasil akhir (akar dari step5)
 
-            // Pastikan positif dan belum dipakai
+        tileData.MultiStepCorrectAnswers.Add(step1.ToString());
+        tileData.MultiStepCorrectAnswers.Add(step2.ToString());
+        tileData.MultiStepCorrectAnswers.Add(step3.ToString());
+        tileData.MultiStepCorrectAnswers.Add(step4.ToString());
+        tileData.MultiStepCorrectAnswers.Add(step5.ToString());
+        tileData.MultiStepCorrectAnswers.Add(step6.ToString());
+
+        // Set formula info untuk display
+        tileData.QuestionSide = questionSide;
+        tileData.Side1Name = side1Name;
+        tileData.Side2Name = side2Name;
+        tileData.OperatorSymbol = isAddition ? "+" : "-";
+
+        // Generate alternative answers (swap slot 1-2) jika operator adalah + (penjumlahan komutatif)
+        tileData.MultiStepAlternativeAnswers = new List<string>();
+        if (isAddition)
+        {
+            // Swap: slot1=step2, slot2=step1, slot3=step4, slot4=step3, slot5 sama, slot6 sama
+            tileData.MultiStepAlternativeAnswers.Add(step2.ToString()); // Swap
+            tileData.MultiStepAlternativeAnswers.Add(step1.ToString()); // Swap
+            tileData.MultiStepAlternativeAnswers.Add(step4.ToString()); // Swap
+            tileData.MultiStepAlternativeAnswers.Add(step3.ToString()); // Swap
+            tileData.MultiStepAlternativeAnswers.Add(step5.ToString()); // Sama
+            tileData.MultiStepAlternativeAnswers.Add(step6.ToString()); // Sama
+            Debug.Log($"[Level3] Alternative answers available (swapped): {step2}, {step1}, {step4}, {step3}, {step5}, {step6}");
+        }
+
+        Debug.Log($"[Level3] Formula: {questionSide} = √({side1Name}² {tileData.OperatorSymbol} {side2Name}²)");
+
+        // Generate 2 distractor (angka yang mirip tapi salah)
+        tileData.WrongAnswers = new List<string>();
+        HashSet<int> usedNumbers = new HashSet<int> { step1, step2, step3, step4, step5, step6 };
+
+        // Strategy: Generate numbers dekat dengan step values
+        List<int> candidateDistractors = new List<int>();
+
+        // Candidates dekat step3-step6 (angka besar)
+        for (int i = -2; i <= 2; i++)
+        {
+            if (i == 0) continue;
+            candidateDistractors.Add(step3 + i);
+            candidateDistractors.Add(step4 + i);
+            candidateDistractors.Add(step5 + i);
+            candidateDistractors.Add(step6 + i);
+        }
+
+        // Pilih 2 distractor unik
+        foreach (int candidate in candidateDistractors)
+        {
+            if (tileData.WrongAnswers.Count >= 2) break;
             if (candidate > 0 && !usedNumbers.Contains(candidate))
             {
                 tileData.WrongAnswers.Add(candidate.ToString());
@@ -754,24 +881,20 @@ public class TriangleDataGenerator : MonoBehaviour
             }
         }
 
-        // Jika masih kurang, generate random dalam range yang masuk akal
+        // Fallback: random jika masih kurang
         int attempts = 0;
-        while (tileData.WrongAnswers.Count < 5 && attempts < 30)
+        while (tileData.WrongAnswers.Count < 2 && attempts < 20)
         {
             attempts++;
-
-            // Random number dalam range ±8 dari jawaban benar
-            int randomOffset = Random.Range(-8, 9);
-            int candidate = correctAnswer + randomOffset;
-
-            if (candidate > 0 && !usedNumbers.Contains(candidate))
+            int randomCandidate = Random.Range(step5 - 5, step5 + 6);
+            if (randomCandidate > 0 && !usedNumbers.Contains(randomCandidate))
             {
-                tileData.WrongAnswers.Add(candidate.ToString());
-                usedNumbers.Add(candidate);
+                tileData.WrongAnswers.Add(randomCandidate.ToString());
+                usedNumbers.Add(randomCandidate);
             }
         }
 
-        Debug.Log($"[Level3] Generated 6 tiles: 1 correct ({correctAnswer}) + 5 wrong ({string.Join(", ", tileData.WrongAnswers)})");
+        Debug.Log($"[Level3] Generated 8 tiles: 6 correct ({string.Join(", ", tileData.MultiStepCorrectAnswers)}) + 2 wrong ({string.Join(", ", tileData.WrongAnswers)})");
 
         return tileData;
     }

@@ -169,8 +169,9 @@ public class TriangleVisualizer : MonoBehaviour
     /// Menggambar segitiga dengan nilai, rotasi, orientasi, dan tipe soal yang diberikan
     /// isDualQuestion: true untuk soal 11-20 (pakai A dan B), false untuk soal 1-10 (pakai theta)
     /// isLevel3: true untuk soal 21-30 (pakai vertex A, B, C)
+    /// hiddenSideLabel: sisi mana yang label nya tidak ditampilkan ("AC", "AB", "BC", atau "")
     /// </summary>
-    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle, TriangleOrientation orientation, bool isDualQuestion, bool isLevel3 = false)
+    public void DrawTriangle(int depan, int samping, int miring, float rotationAngle, TriangleOrientation orientation, bool isDualQuestion, bool isLevel3 = false, string hiddenSideLabel = "")
     {
         currentDepan = depan;
         currentSamping = samping;
@@ -314,7 +315,21 @@ public class TriangleVisualizer : MonoBehaviour
         PositionSprite(horizontalSprite, bottomLeft, bottomRight, horizontalValue);
         if (horizontalLabel != null)
         {
-            horizontalLabel.text = horizontalValue.ToString();
+            // Level 3: Hide label jika ini adalah sisi yang dicari
+            string horizontalSideName = (orientation == TriangleOrientation.Normal) ? "BC" : "AB";
+            bool shouldHideLabel = isLevel3 && !string.IsNullOrEmpty(hiddenSideLabel) && hiddenSideLabel == horizontalSideName;
+
+            Debug.Log($"[TriangleVisualizer] Horizontal - SideName: {horizontalSideName}, HiddenSide: {hiddenSideLabel}, ShouldHide: {shouldHideLabel}, Value: {horizontalValue}");
+
+            if (shouldHideLabel)
+            {
+                horizontalLabel.text = ""; // Hide label
+            }
+            else
+            {
+                horizontalLabel.text = horizontalValue.ToString();
+            }
+
             horizontalLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + bottomRight) / 2f;
             Vector3 direction = (bottomRight - bottomLeft).normalized;
@@ -350,7 +365,21 @@ public class TriangleVisualizer : MonoBehaviour
         PositionSprite(verticalSprite, bottomLeft, topLeft, verticalValue);
         if (verticalLabel != null)
         {
-            verticalLabel.text = verticalValue.ToString();
+            // Level 3: Hide label jika ini adalah sisi yang dicari
+            string verticalSideName = (orientation == TriangleOrientation.Normal) ? "AB" : "BC";
+            bool shouldHideLabel = isLevel3 && !string.IsNullOrEmpty(hiddenSideLabel) && hiddenSideLabel == verticalSideName;
+
+            Debug.Log($"[TriangleVisualizer] Vertical - SideName: {verticalSideName}, HiddenSide: {hiddenSideLabel}, ShouldHide: {shouldHideLabel}, Value: {verticalValue}");
+
+            if (shouldHideLabel)
+            {
+                verticalLabel.text = ""; // Hide label
+            }
+            else
+            {
+                verticalLabel.text = verticalValue.ToString();
+            }
+
             verticalLabel.fontSize = labelFontSize;
             Vector3 midPoint = (bottomLeft + topLeft) / 2f;
             Vector3 direction = (topLeft - bottomLeft).normalized;
@@ -381,7 +410,20 @@ public class TriangleVisualizer : MonoBehaviour
         PositionSprite(miringSprite, topLeft, bottomRight, miring);
         if (miringLabel != null)
         {
-            miringLabel.text = miring.ToString();
+            // Level 3: Hide label jika ini adalah sisi yang dicari (AC selalu miring)
+            bool shouldHideLabel = isLevel3 && !string.IsNullOrEmpty(hiddenSideLabel) && hiddenSideLabel == "AC";
+
+            Debug.Log($"[TriangleVisualizer] Miring - SideName: AC, HiddenSide: {hiddenSideLabel}, ShouldHide: {shouldHideLabel}, Value: {miring}");
+
+            if (shouldHideLabel)
+            {
+                miringLabel.text = ""; // Hide label
+            }
+            else
+            {
+                miringLabel.text = miring.ToString();
+            }
+
             miringLabel.fontSize = labelFontSize;
             Vector3 midPoint = (topLeft + bottomRight) / 2f;
             Vector3 direction = (bottomRight - topLeft).normalized;
@@ -398,8 +440,8 @@ public class TriangleVisualizer : MonoBehaviour
         // SIMBOL THETA (di sudut lancip - antara samping dan miring) - WORLD SPACE
         // NORMAL: Theta di topLeft (antara AB dan AC)
         // SWAPPED: Theta di bottomRight (antara BC dan AC)
-        // HANYA UNTUK SOAL 1-10 (bukan dual question)
-        if (!currentIsDualQuestion && thetaLabel != null)
+        // HANYA UNTUK SOAL 1-10 (bukan dual question dan bukan Level 3)
+        if (!currentIsDualQuestion && !currentIsLevel3 && thetaLabel != null)
         {
             thetaLabel.gameObject.SetActive(true);
             thetaLabel.text = "θ";
@@ -435,8 +477,9 @@ public class TriangleVisualizer : MonoBehaviour
                 thetaLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
             }
         }
-        else if (!currentIsDualQuestion && thetaLabel != null)
+        else if (thetaLabel != null)
         {
+            // Hide theta untuk dual question atau Level 3
             thetaLabel.gameObject.SetActive(false);
         }
 
@@ -524,6 +567,8 @@ public class TriangleVisualizer : MonoBehaviour
         // VERTEX LABELS A, B, C (untuk soal 21-30 - Level 3 Pythagoras)
         if (currentIsLevel3)
         {
+            Debug.Log($"[TriangleVisualizer] Level 3 - Setting up vertex labels A, B, C. Orientation: {orientation}");
+
             // Calculate triangle center for outward positioning
             Vector3 triangleCenter = (topLeft + bottomLeft + bottomRight) / 3f;
             float vertexOffsetDistance = labelOffset * vertexLabelOffsetMultiplier; // Adjustable from Inspector
@@ -551,8 +596,13 @@ public class TriangleVisualizer : MonoBehaviour
 
                 vertexAPosition.z = labelZOffset;
                 vertexLabelA.transform.position = vertexAPosition;
+                Debug.Log($"[TriangleVisualizer] Vertex A position: {vertexAPosition}, Active: true");
                 if (vertexLabelA.GetComponent<MeshRenderer>() != null)
                     vertexLabelA.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
+            else
+            {
+                Debug.LogWarning("[TriangleVisualizer] vertexLabelA is NULL!");
             }
 
             // VERTEX B (bottomLeft - always at right angle)
@@ -568,8 +618,13 @@ public class TriangleVisualizer : MonoBehaviour
                 vertexBPosition.z = labelZOffset;
 
                 vertexLabelB.transform.position = vertexBPosition;
+                Debug.Log($"[TriangleVisualizer] Vertex B position: {vertexBPosition}, Active: true");
                 if (vertexLabelB.GetComponent<MeshRenderer>() != null)
                     vertexLabelB.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            }
+            else
+            {
+                Debug.LogWarning("[TriangleVisualizer] vertexLabelB is NULL!");
             }
 
             // VERTEX C (bottomRight for normal, topLeft for swapped)
@@ -732,8 +787,8 @@ public class TriangleVisualizer : MonoBehaviour
             miringLabel.transform.DOMove(startPos, animationDuration).SetEase(entryEase);
         }
 
-        // THETA SYMBOL: Fade in dan scale (untuk soal 1-10)
-        if (!currentIsDualQuestion && thetaLabel != null && thetaLabel.gameObject.activeSelf)
+        // THETA SYMBOL: Fade in dan scale (untuk soal 1-10 - Level 1 only)
+        if (!currentIsDualQuestion && !currentIsLevel3 && thetaLabel != null && thetaLabel.gameObject.activeSelf)
         {
             thetaLabel.alpha = 0;
             thetaLabel.transform.localScale = Vector3.zero;

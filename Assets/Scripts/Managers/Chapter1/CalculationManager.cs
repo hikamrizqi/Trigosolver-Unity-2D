@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections; // Diperlukan untuk Coroutine (delay)
 
+/// <summary>
+/// Calculation Manager untuk verifikasi jawaban dan game logic Chapter 1
+/// </summary>
 public class CalculationManager : MonoBehaviour
 {
     // Referensi ke skrip lain
@@ -19,7 +22,7 @@ public class CalculationManager : MonoBehaviour
     [Header("Gameplay Settings")]
     [SerializeField] private float answerTolerance = 0.01f; // Toleransi untuk jawaban desimal
 
-    private TriangleData dataSoalSaatIni;
+    private TriangleData dataSoalSaatIni; // Data soal yang sedang aktif
 
     private bool gameStarted = false; // Track if game has been started by level selection
 
@@ -82,7 +85,11 @@ public class CalculationManager : MonoBehaviour
         if (!answerTileSystem.IsAnswerComplete())
         {
             string message;
-            if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsSingleAnswer)
+            if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsMultiStepAnswer)
+            {
+                message = "Isi semua 6 slot dengan tile terlebih dahulu!";
+            }
+            else if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsSingleAnswer)
             {
                 message = "Pilih salah satu jawaban terlebih dahulu!";
             }
@@ -104,8 +111,65 @@ public class CalculationManager : MonoBehaviour
 
         bool isCorrect;
 
-        // Check if this is Level 3 (single answer mode)
-        if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsSingleAnswer)
+        // Check if this is Level 3 Multi-Step mode
+        if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsMultiStepAnswer)
+        {
+            // LEVEL 3 MULTI-STEP: Verify all 6 steps (format: "step1,step2,step3,step4,step5,step6")
+            string[] steps = answer.Split(',');
+            if (steps.Length != 6)
+            {
+                Debug.LogError($"[CalculationManager] Invalid multi-step answer format: {answer}");
+                HandleWrongAnswer("Format jawaban salah!");
+                return;
+            }
+
+            // Verify each step matches expected value (check default order)
+            isCorrect = true;
+            for (int i = 0; i < 6; i++)
+            {
+                string playerStep = steps[i].Trim();
+                string correctStep = dataSoalSaatIni.AnswerTileData.MultiStepCorrectAnswers[i];
+
+                if (playerStep != correctStep)
+                {
+                    isCorrect = false;
+                    Debug.Log($"[CalculationManager] Multi-Step: Step {i + 1} WRONG in default order - Player: {playerStep} vs Correct: {correctStep}");
+                    break;
+                }
+                else
+                {
+                    Debug.Log($"[CalculationManager] Multi-Step: Step {i + 1} CORRECT - {playerStep}");
+                }
+            }
+
+            // Jika salah dan ada alternative answers (untuk operator +), cek urutan alternatif
+            if (!isCorrect && dataSoalSaatIni.AnswerTileData.MultiStepAlternativeAnswers != null &&
+                dataSoalSaatIni.AnswerTileData.MultiStepAlternativeAnswers.Count == 6)
+            {
+                Debug.Log($"[CalculationManager] Checking alternative order (swapped)...");
+                isCorrect = true;
+                for (int i = 0; i < 6; i++)
+                {
+                    string playerStep = steps[i].Trim();
+                    string altStep = dataSoalSaatIni.AnswerTileData.MultiStepAlternativeAnswers[i];
+
+                    if (playerStep != altStep)
+                    {
+                        isCorrect = false;
+                        Debug.Log($"[CalculationManager] Multi-Step: Step {i + 1} WRONG in alternative order - Player: {playerStep} vs Alt: {altStep}");
+                        break;
+                    }
+                    else
+                    {
+                        Debug.Log($"[CalculationManager] Multi-Step: Step {i + 1} CORRECT (alternative) - {playerStep}");
+                    }
+                }
+            }
+
+            Debug.Log($"[CalculationManager] Multi-Step Answer (Level 3) Check - Result: {isCorrect}");
+        }
+        // Check if this is Level 3 (single answer mode - OLD)
+        else if (dataSoalSaatIni.AnswerTileData != null && dataSoalSaatIni.AnswerTileData.IsSingleAnswer)
         {
             // LEVEL 3: Single answer integer verification
             if (!int.TryParse(answer.Trim(), out int playerAnswer))
