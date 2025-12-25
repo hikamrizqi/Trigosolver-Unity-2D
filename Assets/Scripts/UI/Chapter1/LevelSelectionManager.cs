@@ -24,6 +24,11 @@ public class LevelSelectionManager : MonoBehaviour
     [SerializeField] private GameObject interactiveButtonPanel; // Tombol DEPAN/SAMPING/MIRING
     [SerializeField] private GameObject checkButtonObject; // Tombol CHECK
 
+    [Header("Level Specific Objects (Optional)")]
+    [SerializeField] private GameObject answerSlotsLevel1; // Slot khusus Level 1 (jika ada)
+    [SerializeField] private GameObject answerSlotsLevel2; // Slot khusus Level 2 (jika ada)
+    [SerializeField] private GameObject answerSlotsLevel3; // Slot khusus Level 3 (jika ada)
+
     [Header("Animation Settings")]
     [SerializeField] private float animationDuration = 0.5f;
     [SerializeField] private float slideDistance = 1000f; // Distance to slide off screen
@@ -278,7 +283,11 @@ public class LevelSelectionManager : MonoBehaviour
             answerTileSystemObject,
             questionPanelObject,
             interactiveButtonPanel,
-            checkButtonObject
+            checkButtonObject,
+            // Level specific objects
+            answerSlotsLevel1,
+            answerSlotsLevel2,
+            answerSlotsLevel3
         };
 
         foreach (GameObject obj in allGameObjects)
