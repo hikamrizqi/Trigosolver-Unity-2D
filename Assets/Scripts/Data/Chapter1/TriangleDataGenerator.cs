@@ -182,9 +182,18 @@ public class TriangleDataGenerator : MonoBehaviour
         }
         else // Hard
         {
-            // Rotasi bervariasi: 0°, 90°, 180°, 270°
-            float[] rotations = { 0f, 90f, 180f, 270f };
-            data.RotationAngle = rotations[questionNumber % 4];
+            // Level 3 (soal 21-30): HANYA rotasi 0° untuk menghindari overflow
+            // Variasi dari orientation (Normal/Swapped) untuk mirror kanan-kiri
+            if (questionNumber >= 21 && questionNumber <= 30)
+            {
+                data.RotationAngle = 0f; // No rotation, hanya mirror
+            }
+            else
+            {
+                // Soal hard lainnya: Rotasi bervariasi: 0°, 90°, 180°, 270°
+                float[] rotations = { 0f, 90f, 180f, 270f };
+                data.RotationAngle = rotations[questionNumber % 4];
+            }
         }
 
         // Random orientation: kadang swap depan/samping
