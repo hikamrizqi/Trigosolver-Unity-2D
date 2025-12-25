@@ -75,6 +75,9 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Jarak simbol siku dari sudut (lebih kecil = lebih dekat ke garis)")]
     public float rightAngleOffsetMultiplier = 1.2f; // Ubah ke 0.8 atau 0.6 untuk lebih dekat
 
+    [Tooltip("Jarak label vertex A, B, C dari titik sudut (Level 3 - lebih besar = lebih jauh)")]
+    public float vertexLabelOffsetMultiplier = 1.8f; // Ubah ke 1.5 untuk lebih dekat atau 2.5 untuk lebih jauh
+
     [Tooltip("Posisi pusat segitiga di world space")]
     public Vector3 centerPosition = Vector3.zero;
 
@@ -523,7 +526,7 @@ public class TriangleVisualizer : MonoBehaviour
         {
             // Calculate triangle center for outward positioning
             Vector3 triangleCenter = (topLeft + bottomLeft + bottomRight) / 3f;
-            float vertexOffsetDistance = labelOffset * 1.8f; // Slightly further from vertex
+            float vertexOffsetDistance = labelOffset * vertexLabelOffsetMultiplier; // Adjustable from Inspector
 
             // VERTEX A (topLeft for normal, bottomRight for swapped)
             if (vertexLabelA != null)
