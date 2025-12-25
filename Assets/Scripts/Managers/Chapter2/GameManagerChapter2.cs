@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI; // Untuk elemen UI
-using UnityEngine.SceneManagement; // For scene loading
 using TMPro;         // Jika menggunakan TextMeshPro (lebih baik)
 
 public class GameManagerChapter2 : MonoBehaviour
@@ -202,14 +201,5 @@ public class GameManagerChapter2 : MonoBehaviour
             Gizmos.DrawLine(prevPos, currentPos);
             prevPos = currentPos;
         }
-    }
-
-    /// <summary>
-    /// Back to main menu (Mode Cerita Selection)
-    /// </summary>
-    public void BackToMainMenu()
-    {
-        Debug.Log("[GameManagerChapter2] Back to main menu");
-        SceneManager.LoadScene("Main Menu");
     }
 }

@@ -11,7 +11,7 @@ public class CalculationManager : MonoBehaviour
     [SerializeField] private TriangleDataGenerator dataGenerator;
     [SerializeField] private Chapter1EndCutscene endCutscene; // Opsional: untuk cutscene akhir
     [SerializeField] private AnswerTileSystem answerTileSystem; // Reference to answer tile system
-    [SerializeField] private LevelSelectionManager levelSelectionManager; // Reference to level selection
+    [SerializeField] private LevelSelectionManager levelSelectionManager; // Reference to level selection manager
 
     [Header("Status Permainan")]
     private int lives = 3;
@@ -421,23 +421,23 @@ public class CalculationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Back to level selection menu
+    /// Kembali ke pemilihan level (dipanggil dari tombol BACK)
     /// </summary>
     public void BackToLevelSelection()
     {
-        Debug.Log("[CalculationManager] Back to level selection");
+        Debug.Log("[CalculationManager] Kembali ke pemilihan level");
 
+        // Stop game
+        gameStarted = false;
+
+        // Show level selection panel lagi
         if (levelSelectionManager != null)
         {
-            // Stop current game
-            gameStarted = false;
-
-            // Show level selection UI again
             levelSelectionManager.ShowLevelSelection();
         }
         else
         {
-            Debug.LogError("[CalculationManager] LevelSelectionManager reference is missing!");
+            Debug.LogError("[CalculationManager] LevelSelectionManager reference missing!");
         }
     }
 }

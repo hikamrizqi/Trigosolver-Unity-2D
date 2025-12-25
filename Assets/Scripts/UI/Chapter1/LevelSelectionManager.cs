@@ -236,19 +236,19 @@ public class LevelSelectionManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Show level selection panel again (when player clicks back button)
+    /// Tampilkan kembali panel level selection (dipanggil dari tombol BACK saat bermain)
     /// </summary>
     public void ShowLevelSelection()
     {
-        Debug.Log("[LevelSelection] Showing level selection panel");
+        Debug.Log("[LevelSelection] Menampilkan kembali panel level selection");
 
-        // Reset level selected flag
+        // Reset flag
         levelSelected = false;
 
-        // Hide all game objects first
+        // Sembunyikan semua game objects dengan animasi
         ShowAllGameObjects(false);
 
-        // Show and animate level selection panel IN
+        // Tampilkan panel level selection dengan animasi slide in
         if (levelSelectionPanel != null)
         {
             levelSelectionPanel.SetActive(true);
@@ -256,8 +256,8 @@ public class LevelSelectionManager : MonoBehaviour
             RectTransform panelRect = levelSelectionPanel.GetComponent<RectTransform>();
             if (panelRect != null)
             {
-                // Start from above screen
-                Vector2 finalPos = Vector2.zero; // Center of screen
+                // Slide in dari atas
+                Vector2 finalPos = Vector2.zero; // Posisi center
                 Vector2 startPos = finalPos + Vector2.up * slideDistance;
 
                 panelRect.anchoredPosition = startPos;
