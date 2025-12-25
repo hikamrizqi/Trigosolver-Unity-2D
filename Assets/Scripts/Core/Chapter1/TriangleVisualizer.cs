@@ -107,8 +107,8 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Sorting order untuk label (lebih tinggi = lebih depan) - HARUS LEBIH TINGGI dari sprite sorting order")]
     public int labelSortingOrder = 100;
 
-    [Tooltip("Sorting order untuk sprite segitiga (lebih rendah dari label)")]
-    public int spriteSortingOrder = 0;
+    [Tooltip("Sorting order untuk sprite segitiga (di tengah antara background dan label)")]
+    public int spriteSortingOrder = 10; // Changed from 0 to 10 (higher than background)
 
     [Tooltip("Ukuran font untuk label angka sisi")]
     public float labelFontSize = 10f;
