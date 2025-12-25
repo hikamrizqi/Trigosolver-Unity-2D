@@ -246,8 +246,8 @@ public class LevelSelectionManager : MonoBehaviour
         // Reset flag
         levelSelected = false;
 
-        // Sembunyikan semua game objects dengan animasi
-        ShowAllGameObjects(false);
+        // Sembunyikan semua game objects
+        HideAllGameObjects();
 
         // Tampilkan panel level selection dengan animasi slide in
         if (levelSelectionPanel != null)
@@ -264,6 +264,27 @@ public class LevelSelectionManager : MonoBehaviour
                 panelRect.anchoredPosition = startPos;
                 panelRect.DOAnchorPos(finalPos, animationDuration).SetEase(slideEase);
             }
+        }
+    }
+
+    /// <summary>
+    /// Hide all game objects (untuk kembali ke level selection)
+    /// </summary>
+    private void HideAllGameObjects()
+    {
+        GameObject[] allGameObjects = {
+            backgroundObject,
+            triangleVisualizerObject,
+            answerTileSystemObject,
+            questionPanelObject,
+            interactiveButtonPanel,
+            checkButtonObject
+        };
+
+        foreach (GameObject obj in allGameObjects)
+        {
+            if (obj != null)
+                obj.SetActive(false);
         }
     }
 
