@@ -354,8 +354,12 @@ public class TriangleVisualizer : MonoBehaviour
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * multiplier);
             labelPos.z = labelZOffset;
             horizontalLabel.transform.position = labelPos;
-            if (horizontalLabel.GetComponent<MeshRenderer>() != null)
-                horizontalLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            MeshRenderer hRenderer = horizontalLabel.GetComponent<MeshRenderer>();
+            if (hRenderer != null)
+            {
+                hRenderer.sortingLayerName = "Default";
+                hRenderer.sortingOrder = labelSortingOrder;
+            }
         }
 
         // SISI VERTICAL (AB - Tegak)
@@ -404,8 +408,12 @@ public class TriangleVisualizer : MonoBehaviour
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * multiplier);
             labelPos.z = labelZOffset;
             verticalLabel.transform.position = labelPos;
-            if (verticalLabel.GetComponent<MeshRenderer>() != null)
-                verticalLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            MeshRenderer vRenderer = verticalLabel.GetComponent<MeshRenderer>();
+            if (vRenderer != null)
+            {
+                vRenderer.sortingLayerName = "Default";
+                vRenderer.sortingOrder = labelSortingOrder;
+            }
         }
 
         // SISI MIRING (Diagonal - Hypotenuse)
@@ -435,8 +443,12 @@ public class TriangleVisualizer : MonoBehaviour
             Vector3 labelPos = midPoint + perpendicular * (labelOffset * miringLabelMultiplier);
             labelPos.z = labelZOffset;
             miringLabel.transform.position = labelPos;
-            if (miringLabel.GetComponent<MeshRenderer>() != null)
-                miringLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+            MeshRenderer mRenderer = miringLabel.GetComponent<MeshRenderer>();
+            if (mRenderer != null)
+            {
+                mRenderer.sortingLayerName = "Default";
+                mRenderer.sortingOrder = labelSortingOrder;
+            }
         }
 
         // SIMBOL THETA (di sudut lancip - antara samping dan miring) - WORLD SPACE
@@ -446,7 +458,7 @@ public class TriangleVisualizer : MonoBehaviour
         if (!currentIsDualQuestion && !currentIsLevel3 && thetaLabel != null)
         {
             Debug.Log($"[TriangleVisualizer] SHOWING THETA - IsDualQuestion: {currentIsDualQuestion}, IsLevel3: {currentIsLevel3}");
-            
+
             thetaLabel.gameObject.SetActive(true);
             thetaLabel.text = "θ";
             thetaLabel.fontSize = labelFontSize * 0.8f; // Sedikit lebih kecil dari label angka
@@ -477,11 +489,17 @@ public class TriangleVisualizer : MonoBehaviour
 
             Debug.Log($"[TriangleVisualizer] THETA Position: {thetaPosition}, Active: {thetaLabel.gameObject.activeSelf}, Text: '{thetaLabel.text}', FontSize: {thetaLabel.fontSize}");
 
-            // Set sorting order agar tidak tertutup objek lain
-            if (thetaLabel.GetComponent<MeshRenderer>() != null)
+            // Set sorting order dan layer agar tidak tertutup objek lain
+            MeshRenderer thetaRenderer = thetaLabel.GetComponent<MeshRenderer>();
+            if (thetaRenderer != null)
             {
-                thetaLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
-                Debug.Log($"[TriangleVisualizer] THETA Sorting Order: {labelSortingOrder}");
+                thetaRenderer.sortingLayerName = "Default"; // CRITICAL: Set sorting layer sama dengan sprite
+                thetaRenderer.sortingOrder = labelSortingOrder;
+                Debug.Log($"[TriangleVisualizer] THETA Sorting - Layer: {thetaRenderer.sortingLayerName}, Order: {labelSortingOrder}");
+            }
+            else
+            {
+                Debug.LogError("[TriangleVisualizer] THETA MeshRenderer is NULL!");
             }
         }
         else if (thetaLabel != null)
