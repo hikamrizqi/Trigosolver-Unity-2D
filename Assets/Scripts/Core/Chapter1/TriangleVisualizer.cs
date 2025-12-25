@@ -101,11 +101,14 @@ public class TriangleVisualizer : MonoBehaviour
     [Tooltip("Additional manual offset untuk segitiga MIRROR (X, Y, Z) - HANYA gunakan ini untuk fine-tuning!")]
     public Vector3 swappedPositionOffset = Vector3.zero;
 
-    [Tooltip("Z-offset untuk label agar muncul di depan sprite (lebih negatif = lebih depan)")]
-    public float labelZOffset = -2f;
+    [Tooltip("Z-offset untuk label agar muncul di depan sprite - HARUS LEBIH BESAR dari sprite Z (0) untuk orthographic camera")]
+    public float labelZOffset = -0.5f; // Changed from -2f to -0.5f (closer to camera)
 
-    [Tooltip("Sorting order untuk label (lebih tinggi = lebih depan)")]
+    [Tooltip("Sorting order untuk label (lebih tinggi = lebih depan) - HARUS LEBIH TINGGI dari sprite sorting order")]
     public int labelSortingOrder = 100;
+
+    [Tooltip("Sorting order untuk sprite segitiga (lebih rendah dari label)")]
+    public int spriteSortingOrder = 0;
 
     [Tooltip("Ukuran font untuk label angka sisi")]
     public float labelFontSize = 10f;
@@ -974,8 +977,12 @@ public class TriangleVisualizer : MonoBehaviour
         Vector3 midPoint = (start + end) / 2f;
         float distance = Vector3.Distance(start, end);
 
-        // Set posisi ke tengah garis
+        // Set posisi ke tengah garis - Z=0 untuk sprite
         sprite.transform.position = new Vector3(midPoint.x, midPoint.y, 0f);
+
+        // Set sorting layer dan order agar label (sorting order 100) selalu di atas sprite
+        sprite.sortingLayerName = "Default";
+        sprite.sortingOrder = spriteSortingOrder; // Default 0, lebih rendah dari label (100)
 
         // Hitung rotasi
         Vector3 direction = end - start;
