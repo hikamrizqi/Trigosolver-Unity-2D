@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using DG.Tweening;
 using System.Collections;
 
@@ -264,5 +265,14 @@ public class LevelSelectionManager : MonoBehaviour
                 panelRect.DOAnchorPos(finalPos, animationDuration).SetEase(slideEase);
             }
         }
+    }
+
+    /// <summary>
+    /// Kembali ke Main Menu (dipanggil dari tombol BACK di panel level selection)
+    /// </summary>
+    public void BackToMainMenu()
+    {
+        Debug.Log("[LevelSelection] Kembali ke Main Menu");
+        SceneManager.LoadScene("Main Menu");
     }
 }
