@@ -44,10 +44,35 @@ public class UIManagerChapter1 : MonoBehaviour
     [Header("Answer Tile System")]
     [SerializeField] private AnswerTileSystem answerTileSystem; // Reference to answer tile spawner
 
-    [Header("Interactive Buttons (Soal 1-10 vs 11-20)")]
-    // TODO: Untuk soal 11-20, ganti button images/text dari DEPAN/SAMPING/MIRING ke AB/BC/AC
-    // User will provide different button images for this
-    // Button handlers (OnDepanButtonClicked, OnSampingButtonClicked, OnMiringButtonClicked) tetap sama
+    [Header("Interactive Buttons (Soal 1-10 vs 11-20 vs 21-30)")]
+    [Tooltip("Button references untuk ganti image berdasarkan level")]
+    [SerializeField] private UnityEngine.UI.Button depanButton;
+    [SerializeField] private UnityEngine.UI.Button sampingButton;
+    [SerializeField] private UnityEngine.UI.Button miringButton;
+
+    [Header("Button Images - Level 1 (Soal 1-10)")]
+    [Tooltip("Image untuk button DEPAN (Level 1)")]
+    [SerializeField] private Sprite depanImageLevel1;
+    [Tooltip("Image untuk button SAMPING (Level 1)")]
+    [SerializeField] private Sprite sampingImageLevel1;
+    [Tooltip("Image untuk button MIRING (Level 1)")]
+    [SerializeField] private Sprite miringImageLevel1;
+
+    [Header("Button Images - Level 2 (Soal 11-20: AB/BC/AC)")]
+    [Tooltip("Image untuk button AB (Level 2)")]
+    [SerializeField] private Sprite abImageLevel2;
+    [Tooltip("Image untuk button BC (Level 2)")]
+    [SerializeField] private Sprite bcImageLevel2;
+    [Tooltip("Image untuk button AC (Level 2)")]
+    [SerializeField] private Sprite acImageLevel2;
+
+    [Header("Button Images - Level 3 (Soal 21-30: AB/BC/AC)")]
+    [Tooltip("Image untuk button AB (Level 3)")]
+    [SerializeField] private Sprite abImageLevel3;
+    [Tooltip("Image untuk button BC (Level 3)")]
+    [SerializeField] private Sprite bcImageLevel3;
+    [Tooltip("Image untuk button AC (Level 3)")]
+    [SerializeField] private Sprite acImageLevel3;
 
     // Track question type untuk conditional UI
     private bool currentIsDualQuestion = false;
@@ -101,6 +126,9 @@ public class UIManagerChapter1 : MonoBehaviour
             bool isLevel3 = data.AnswerTileData != null && data.AnswerTileData.IsMultiStepAnswer;
             string hiddenSide = isLevel3 ? data.HiddenSideLabel : "";
             triangleVisualizer.DrawTriangle(data.Depan, data.Samping, data.Miring, data.RotationAngle, data.Orientation, data.IsDualQuestion, isLevel3, hiddenSide);
+
+            // Update button images berdasarkan level
+            UpdateButtonImagesForLevel(progres, isLevel3);
 
             // Log difficulty, rotation, orientation, dan question type untuk debugging
             string questionType = data.IsDualQuestion ? "DUAL (A & B)" : isLevel3 ? "LEVEL 3 (A, B, C)" : "SINGLE (θ)";
@@ -296,5 +324,56 @@ public class UIManagerChapter1 : MonoBehaviour
     public void OnMiringButtonClicked()
     {
         HighlightSide(miringSprite);
+    }
+
+    /// <summary>
+    /// Update button images berdasarkan level/difficulty
+    /// Level 1 (Soal 1-10): DEPAN, SAMPING, MIRING
+    /// Level 2 (Soal 11-20): AB, BC, AC
+    /// Level 3 (Soal 21-30): AB, BC, AC (dengan vertex labels A, B, C)
+    /// </summary>
+    private void UpdateButtonImagesForLevel(int questionNumber, bool isLevel3)
+    {
+        if (depanButton == null || sampingButton == null || miringButton == null)
+        {
+            Debug.LogWarning("[UIManagerChapter1] Button references not assigned!");
+            return;
+        }
+
+        UnityEngine.UI.Image depanImage = depanButton.GetComponent<UnityEngine.UI.Image>();
+        UnityEngine.UI.Image sampingImage = sampingButton.GetComponent<UnityEngine.UI.Image>();
+        UnityEngine.UI.Image miringImage = miringButton.GetComponent<UnityEngine.UI.Image>();
+
+        if (depanImage == null || sampingImage == null || miringImage == null)
+        {
+            Debug.LogWarning("[UIManagerChapter1] Button Image components not found!");
+            return;
+        }
+
+        // Determine level based on question number
+        if (questionNumber >= 1 && questionNumber <= 10)
+        {
+            // Level 1: DEPAN, SAMPING, MIRING
+            if (depanImageLevel1 != null) depanImage.sprite = depanImageLevel1;
+            if (sampingImageLevel1 != null) sampingImage.sprite = sampingImageLevel1;
+            if (miringImageLevel1 != null) miringImage.sprite = miringImageLevel1;
+            Debug.Log("[UIManagerChapter1] Updated buttons for Level 1 (DEPAN/SAMPING/MIRING)");
+        }
+        else if (questionNumber >= 11 && questionNumber <= 20)
+        {
+            // Level 2: AB, BC, AC
+            if (abImageLevel2 != null) depanImage.sprite = abImageLevel2;
+            if (bcImageLevel2 != null) sampingImage.sprite = bcImageLevel2;
+            if (acImageLevel2 != null) miringImage.sprite = acImageLevel2;
+            Debug.Log("[UIManagerChapter1] Updated buttons for Level 2 (AB/BC/AC)");
+        }
+        else if (questionNumber >= 21 && questionNumber <= 30)
+        {
+            // Level 3: AB, BC, AC (dengan vertex labels)
+            if (abImageLevel3 != null) depanImage.sprite = abImageLevel3;
+            if (bcImageLevel3 != null) sampingImage.sprite = bcImageLevel3;
+            if (acImageLevel3 != null) miringImage.sprite = acImageLevel3;
+            Debug.Log("[UIManagerChapter1] Updated buttons for Level 3 (AB/BC/AC with vertex labels)");
+        }
     }
 }

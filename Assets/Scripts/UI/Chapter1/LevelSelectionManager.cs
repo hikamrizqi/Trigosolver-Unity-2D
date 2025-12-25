@@ -234,4 +234,35 @@ public class LevelSelectionManager : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// Show level selection panel again (when player clicks back button)
+    /// </summary>
+    public void ShowLevelSelection()
+    {
+        Debug.Log("[LevelSelection] Showing level selection panel");
+
+        // Reset level selected flag
+        levelSelected = false;
+
+        // Hide all game objects first
+        ShowAllGameObjects(false);
+
+        // Show and animate level selection panel IN
+        if (levelSelectionPanel != null)
+        {
+            levelSelectionPanel.SetActive(true);
+
+            RectTransform panelRect = levelSelectionPanel.GetComponent<RectTransform>();
+            if (panelRect != null)
+            {
+                // Start from above screen
+                Vector2 finalPos = Vector2.zero; // Center of screen
+                Vector2 startPos = finalPos + Vector2.up * slideDistance;
+
+                panelRect.anchoredPosition = startPos;
+                panelRect.DOAnchorPos(finalPos, animationDuration).SetEase(slideEase);
+            }
+        }
+    }
 }
