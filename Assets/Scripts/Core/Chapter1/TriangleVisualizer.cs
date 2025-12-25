@@ -181,6 +181,8 @@ public class TriangleVisualizer : MonoBehaviour
         currentIsDualQuestion = isDualQuestion; // Simpan tipe soal
         currentIsLevel3 = isLevel3; // Simpan flag Level 3
 
+        Debug.Log($"[TriangleVisualizer] DrawTriangle - IsDualQuestion: {isDualQuestion}, IsLevel3: {isLevel3}, Rotation: {rotationAngle}°, Orientation: {orientation}");
+
         // Hitung scale dinamis agar segitiga fit di layar
         float dynamicScale = baseScale;
 
@@ -443,6 +445,8 @@ public class TriangleVisualizer : MonoBehaviour
         // HANYA UNTUK SOAL 1-10 (bukan dual question dan bukan Level 3)
         if (!currentIsDualQuestion && !currentIsLevel3 && thetaLabel != null)
         {
+            Debug.Log($"[TriangleVisualizer] SHOWING THETA - IsDualQuestion: {currentIsDualQuestion}, IsLevel3: {currentIsLevel3}");
+            
             thetaLabel.gameObject.SetActive(true);
             thetaLabel.text = "θ";
             thetaLabel.fontSize = labelFontSize * 0.8f; // Sedikit lebih kecil dari label angka
@@ -471,15 +475,19 @@ public class TriangleVisualizer : MonoBehaviour
             thetaPosition.z = labelZOffset; // Z di depan sprite
             thetaLabel.transform.position = thetaPosition;
 
+            Debug.Log($"[TriangleVisualizer] THETA Position: {thetaPosition}, Active: {thetaLabel.gameObject.activeSelf}, Text: '{thetaLabel.text}', FontSize: {thetaLabel.fontSize}");
+
             // Set sorting order agar tidak tertutup objek lain
             if (thetaLabel.GetComponent<MeshRenderer>() != null)
             {
                 thetaLabel.GetComponent<MeshRenderer>().sortingOrder = labelSortingOrder;
+                Debug.Log($"[TriangleVisualizer] THETA Sorting Order: {labelSortingOrder}");
             }
         }
         else if (thetaLabel != null)
         {
             // Hide theta untuk dual question atau Level 3
+            Debug.Log($"[TriangleVisualizer] HIDING THETA - IsDualQuestion: {currentIsDualQuestion}, IsLevel3: {currentIsLevel3}, thetaLabel null: {thetaLabel == null}");
             thetaLabel.gameObject.SetActive(false);
         }
 

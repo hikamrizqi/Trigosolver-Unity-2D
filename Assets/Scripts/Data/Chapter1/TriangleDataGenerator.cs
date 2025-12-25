@@ -281,7 +281,7 @@ public class TriangleDataGenerator : MonoBehaviour
     {
         // Set IsDualQuestion to false for single question (theta symbol)
         data.IsDualQuestion = false;
-        
+
         int type = questionNumber % 3;
 
         switch (type)
@@ -386,7 +386,7 @@ public class TriangleDataGenerator : MonoBehaviour
     {
         // Set IsDualQuestion to false for single question (theta symbol)
         data.IsDualQuestion = false;
-        
+
         int type = Random.Range(0, 3);
 
         switch (type)
@@ -430,7 +430,7 @@ public class TriangleDataGenerator : MonoBehaviour
     {
         // Set IsDualQuestion to false for single question (theta symbol)
         data.IsDualQuestion = false;
-        
+
         int type = Random.Range(0, 3);
 
         switch (type)
