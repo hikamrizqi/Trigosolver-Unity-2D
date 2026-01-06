@@ -12,6 +12,8 @@ public class CalculationManager : MonoBehaviour
     [SerializeField] private Chapter1EndCutscene endCutscene; // Opsional: untuk cutscene akhir
     [SerializeField] private AnswerTileSystem answerTileSystem; // Reference to answer tile system
     [SerializeField] private LevelSelectionManager levelSelectionManager; // Reference to level selection manager
+    [SerializeField] private ScoreDisplayManager scoreDisplayManager; // Reference to score display
+    [SerializeField] private GameOverPanel gameOverPanel; // Reference to game over panel
 
     [Header("Status Permainan")]
     private int lives = 3;
@@ -257,6 +259,13 @@ public class CalculationManager : MonoBehaviour
         {
             // JAWABAN BENAR
             score += 10;
+            
+            // Show +10 score animation
+            if (scoreDisplayManager != null)
+            {
+                scoreDisplayManager.AddScore(10);
+            }
+            
             answerTileSystem.HighlightAnswer(true); // Highlight hijau
             uiManager.ShowCorrectFeedback("PENGUKURAN TEPAT! +10 Poin.");
             uiManager.HighlightCorrectAnswer(); // Sparkle effect
@@ -277,13 +286,25 @@ public class CalculationManager : MonoBehaviour
 
         if (lives <= 0)
         {
-            // Game Over
-            uiManager.ShowFeedback(false, "GAME OVER! Lives habis.");
-
-            // Tampilkan cutscene game over jika ada
-            if (endCutscene != null)
+            // Game Over - Save score and show game over panel
+            Debug.Log($"[CalculationManager] Game Over - Final Score: {score}");
+            
+            // Show game over panel
+            if (gameOverPanel != null)
             {
-                StartCoroutine(ShowGameOverAfterDelay());
+                gameOverPanel.ShowGameOver(score);
+            }
+            else
+            {
+                Debug.LogError("[CalculationManager] GameOverPanel reference missing!");
+                // Fallback: tampilkan feedback biasa
+                uiManager.ShowFeedback(false, $"GAME OVER! Skor Akhir: {score}");
+            }
+            
+            // Reset score for next game
+            if (scoreDisplayManager != null)
+            {
+                scoreDisplayManager.ResetScore();
             }
         }
         else
@@ -296,7 +317,7 @@ public class CalculationManager : MonoBehaviour
             }
 
             uiManager.ShowFeedback(false, message);
-            uiManager.HighlightWrongAnswer(dataSoalSaatIni.SoalDisederhanakan); // Highlight merah GDD
+            uiManager.HighlightWrongAnswer(dataSoalSaatIni.SoalDisederhanakan); // Highlight merah
             StartCoroutine(NextRoundDelay()); // Ganti ke soal baru
         }
     }

@@ -2473,7 +2473,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &301348087
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2481,20 +2481,19 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 301348086}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.000000014901161}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 572080915}
   - {fileID: 983832426}
-  - {fileID: 378273432}
-  m_Father: {fileID: 1070294637}
+  m_Father: {fileID: 659328350}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -1514.366, y: -239.2}
-  m_SizeDelta: {x: -337.526, y: 67.67}
+  m_AnchoredPosition: {x: 2733.634, y: 221.8}
+  m_SizeDelta: {x: 606.474, y: 67.67}
   m_Pivot: {x: 5, y: 0.5}
 --- !u!114 &301348088
 MonoBehaviour:
@@ -2748,11 +2747,11 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 157003256}
-  m_Father: {fileID: 301348087}
+  m_Father: {fileID: 659328350}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 113.016846, y: 1009.6453}
+  m_AnchoredPosition: {x: 420.7549, y: 1265.2803}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &378273433
@@ -2799,9 +2798,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1380502329}
-        m_TargetAssemblyTypeName: LevelSelectionManager, Assembly-CSharp
-        m_MethodName: BackToMainMenu
+      - m_Target: {fileID: 1842567423}
+        m_TargetAssemblyTypeName: CalculationManager, Assembly-CSharp
+        m_MethodName: BackToLevelSelection
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4083,6 +4082,43 @@ Transform:
   - {fileID: 1547916151}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+--- !u!1 &659328349
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 659328350}
+  m_Layer: 0
+  m_Name: Answers Slots Level 2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &659328350
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 659328349}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 378273432}
+  - {fileID: 301348087}
+  m_Father: {fileID: 1070294637}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &667154927
 GameObject:
   m_ObjectHideFlags: 0
@@ -4116,7 +4152,7 @@ MonoBehaviour:
   singleSlot1Transform: {fileID: 901218298}
   singleSlot2Transform: {fileID: 808637432}
   singleSlashText: {fileID: 906423521}
-  dualQuestionSlotContainer: {fileID: 301348086}
+  dualQuestionSlotContainer: {fileID: 659328349}
   dualSlot1Transform: {fileID: 74517781}
   dualSlot2Transform: {fileID: 173081105}
   dualSlot3Transform: {fileID: 689776894}
@@ -6812,7 +6848,7 @@ RectTransform:
   m_Children:
   - {fileID: 432059337}
   - {fileID: 757641079}
-  - {fileID: 301348087}
+  - {fileID: 659328350}
   - {fileID: 1454929311}
   m_Father: {fileID: 96296901}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -7423,9 +7459,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1842567419}
-        m_TargetAssemblyTypeName: LevelSelectionManager, Assembly-CSharp
-        m_MethodName: 
+      - m_Target: {fileID: 1842567423}
+        m_TargetAssemblyTypeName: CalculationManager, Assembly-CSharp
+        m_MethodName: BackToLevelSelection
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8652,6 +8688,9 @@ MonoBehaviour:
   questionPanelObject: {fileID: 96296900}
   interactiveButtonPanel: {fileID: 790132665}
   checkButtonObject: {fileID: 16550686}
+  answerSlotsLevel1: {fileID: 432059336}
+  answerSlotsLevel2: {fileID: 659328349}
+  answerSlotsLevel3: {fileID: 757641078}
   animationDuration: 1
   slideDistance: 1000
   slideEase: 9
@@ -9291,9 +9330,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1380502329}
-        m_TargetAssemblyTypeName: LevelSelectionManager, Assembly-CSharp
-        m_MethodName: BackToMainMenu
+      - m_Target: {fileID: 1842567423}
+        m_TargetAssemblyTypeName: CalculationManager, Assembly-CSharp
+        m_MethodName: BackToLevelSelection
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
