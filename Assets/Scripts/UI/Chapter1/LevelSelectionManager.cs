@@ -15,8 +15,10 @@ public class LevelSelectionManager : MonoBehaviour
     [SerializeField] private Button level1Button;
     [SerializeField] private Button level2Button;
     [SerializeField] private Button level3Button;
+    [SerializeField] private Button materiButton; // Button untuk menampilkan materi & tutorial
 
     [Header("Game Objects to Hide/Show")]
+    [SerializeField] private GameObject headerPanel; // Panel header dengan back button
     [SerializeField] private GameObject triangleVisualizerObject;
     [SerializeField] private GameObject answerTileSystemObject;
     [SerializeField] private GameObject backgroundObject; // Background meja
@@ -36,6 +38,8 @@ public class LevelSelectionManager : MonoBehaviour
 
     [Header("Manager References")]
     [SerializeField] private CalculationManager calculationManager;
+    [SerializeField] private StoryPanel storyPanel; // Reference untuk show materi
+    [SerializeField] private BackButtonManager backButtonManager; // Reference untuk unified back button
 
     private bool levelSelected = false;
 
@@ -50,6 +54,9 @@ public class LevelSelectionManager : MonoBehaviour
 
         if (level3Button != null)
             level3Button.onClick.AddListener(() => OnLevelSelected(3));
+
+        if (materiButton != null)
+            materiButton.onClick.AddListener(OnMateriButtonClicked);
     }
 
     private void Start()
@@ -57,7 +64,22 @@ public class LevelSelectionManager : MonoBehaviour
         // Hide all game objects at start
         HideAllGameObjects(false); // No animation, instant hide
 
-        // Show level selection panel
+        // Jangan langsung show level selection jika ada StoryPanel
+        // StoryPanel akan memanggil ShowLevelSelection() setelah player klik
+        StoryPanel storyPanel = FindFirstObjectByType<StoryPanel>();
+        if (storyPanel == null)
+        {
+            // Tidak ada story panel, langsung show level selection
+            ShowLevelSelectionAtStart();
+        }
+        // Jika ada story panel, tunggu sampai player klik
+    }
+
+    /// <summary>
+    /// Show level selection panel at start (dipanggil dari Start atau dari StoryPanel)
+    /// </summary>
+    private void ShowLevelSelectionAtStart()
+    {
         if (levelSelectionPanel != null)
         {
             levelSelectionPanel.SetActive(true);
@@ -84,6 +106,31 @@ public class LevelSelectionManager : MonoBehaviour
 
         // Start animation sequence
         StartCoroutine(LevelSelectionSequence(level));
+    }
+
+    /// <summary>
+    /// Called when Materi button is clicked
+    /// Shows materi & tutorial slides without story panels
+    /// </summary>
+    private void OnMateriButtonClicked()
+    {
+        Debug.Log("[LevelSelection] Materi button clicked");
+
+        // Hide level selection panel first
+        if (levelSelectionPanel != null)
+            levelSelectionPanel.SetActive(false);
+
+        // Show materi-only mode
+        if (storyPanel != null)
+        {
+            storyPanel.ShowMateriOnly();
+        }
+        else
+        {
+            Debug.LogError("[LevelSelection] StoryPanel reference not set! Assign in Inspector.");
+            // Fallback: Show level selection again
+            ShowLevelSelection();
+        }
     }
 
     /// <summary>
@@ -114,6 +161,13 @@ public class LevelSelectionManager : MonoBehaviour
 
         // Wait for game objects to slide in
         yield return new WaitForSeconds(animationDuration + 0.2f);
+
+        // Switch back button to gameplay mode and show header panel
+        if (backButtonManager != null)
+            backButtonManager.SetGameplayMode();
+
+        if (headerPanel != null)
+            headerPanel.SetActive(true);
 
         // 3. Start game from appropriate question number
         int startingQuestion;
@@ -247,6 +301,13 @@ public class LevelSelectionManager : MonoBehaviour
     public void ShowLevelSelection()
     {
         Debug.Log("[LevelSelection] Menampilkan kembali panel level selection");
+
+        // Switch back button to level selection mode and hide header panel
+        if (backButtonManager != null)
+            backButtonManager.SetLevelSelectionMode();
+
+        if (headerPanel != null)
+            headerPanel.SetActive(false);
 
         // Reset flag
         levelSelected = false;

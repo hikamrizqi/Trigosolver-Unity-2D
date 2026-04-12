@@ -14,6 +14,8 @@ public class CalculationManager : MonoBehaviour
     [SerializeField] private LevelSelectionManager levelSelectionManager; // Reference to level selection manager
     [SerializeField] private ScoreDisplayManager scoreDisplayManager; // Reference to score display
     [SerializeField] private GameOverPanel gameOverPanel; // Reference to game over panel
+    [SerializeField] private CharacterAnimationController characterAnimController; // Reference to character animation
+    [SerializeField] private Chapter1AudioManager audioManager; // Reference to audio manager
 
     [Header("Status Permainan")]
     private int lives = 3;
@@ -53,6 +55,13 @@ public class CalculationManager : MonoBehaviour
         progres = questionNumber - 1; // Set to question before target (will increment in StartNewRound)
         lives = 3;
         score = 0;
+
+        // Reset score display
+        if (scoreDisplayManager != null)
+        {
+            scoreDisplayManager.ResetScore();
+        }
+
         uiManager.UpdateLives(lives);
 
         Debug.Log($"[CalculationManager] Starting from question {questionNumber}");
@@ -259,17 +268,25 @@ public class CalculationManager : MonoBehaviour
         {
             // JAWABAN BENAR
             score += 10;
-            
+
+            // Play correct answer SFX
+            if (audioManager != null)
+            {
+                audioManager.PlayCorrectAnswerSFX();
+            }
+
             // Show +10 score animation
             if (scoreDisplayManager != null)
             {
                 scoreDisplayManager.AddScore(10);
             }
-            
+
             answerTileSystem.HighlightAnswer(true); // Highlight hijau
             uiManager.ShowCorrectFeedback("PENGUKURAN TEPAT! +10 Poin.");
             uiManager.HighlightCorrectAnswer(); // Sparkle effect
-            StartCoroutine(NextRoundDelay());
+
+            // Trigger character animation untuk jawaban benar
+            StartCoroutine(NextRoundDelayWithCharacterAnimation(true));
         }
         else
         {
@@ -286,30 +303,38 @@ public class CalculationManager : MonoBehaviour
 
         if (lives <= 0)
         {
-            // Game Over - Save score and show game over panel
+            // Game Over - Show character animation first
             Debug.Log($"[CalculationManager] Game Over - Final Score: {score}");
-            
-            // Show game over panel
-            if (gameOverPanel != null)
+
+            // Play game over SFX and stop BGM
+            if (audioManager != null)
             {
-                gameOverPanel.ShowGameOver(score);
+                audioManager.PlayGameOverSFX();
+                audioManager.StopBGMForGameOver(); // Stop BGM
             }
-            else
+
+            // Trigger character game over animation (akan tetap tampil)
+            if (characterAnimController != null)
             {
-                Debug.LogError("[CalculationManager] GameOverPanel reference missing!");
-                // Fallback: tampilkan feedback biasa
-                uiManager.ShowFeedback(false, $"GAME OVER! Skor Akhir: {score}");
+                characterAnimController.PlayGameOverAnimation(() =>
+                {
+                    Debug.Log("[CalculationManager] Game Over animation started");
+                });
             }
-            
-            // Reset score for next game
-            if (scoreDisplayManager != null)
-            {
-                scoreDisplayManager.ResetScore();
-            }
+
+            // Show game over panel (setelah small delay untuk character muncul dulu)
+            StartCoroutine(ShowGameOverPanelAfterDelay());
         }
         else
         {
             // Masih ada nyawa, ulang soal
+
+            // Play wrong answer SFX
+            if (audioManager != null)
+            {
+                audioManager.PlayWrongAnswerSFX();
+            }
+
             string message = customMessage;
             if (string.IsNullOrEmpty(message))
             {
@@ -318,7 +343,9 @@ public class CalculationManager : MonoBehaviour
 
             uiManager.ShowFeedback(false, message);
             uiManager.HighlightWrongAnswer(dataSoalSaatIni.SoalDisederhanakan); // Highlight merah
-            StartCoroutine(NextRoundDelay()); // Ganti ke soal baru
+
+            // Trigger character animation untuk jawaban salah
+            StartCoroutine(NextRoundDelayWithCharacterAnimation(false)); // Ganti ke soal baru
         }
     }
 
@@ -329,7 +356,34 @@ public class CalculationManager : MonoBehaviour
         endCutscene.ShowGameOver(score);
     }
 
-    // Delay sebelum lanjut ke soal berikutnya
+    /// <summary>
+    /// Coroutine untuk show game over panel setelah character animation muncul
+    /// </summary>
+    IEnumerator ShowGameOverPanelAfterDelay()
+    {
+        // Tunggu character muncul dulu (move up duration + sedikit delay)
+        yield return new WaitForSeconds(1.2f);
+
+        // Show game over panel
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.ShowGameOver(score, characterAnimController);
+        }
+        else
+        {
+            Debug.LogError("[CalculationManager] GameOverPanel reference missing!");
+            // Fallback: tampilkan feedback biasa
+            uiManager.ShowFeedback(false, $"GAME OVER! Skor Akhir: {score}");
+        }
+
+        // Reset score for next game
+        if (scoreDisplayManager != null)
+        {
+            scoreDisplayManager.ResetScore();
+        }
+    }
+
+    // Delay sebelum lanjut ke soal berikutnya (TANPA animasi karakter)
     IEnumerator NextRoundDelay()
     {
         // Beri pemain waktu 1.5 detik untuk membaca feedback
@@ -374,10 +428,91 @@ public class CalculationManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Delay dengan animasi karakter sebelum lanjut ke soal berikutnya
+    /// </summary>
+    /// <param name="isCorrect">True jika jawaban benar, false jika salah</param>
+    IEnumerator NextRoundDelayWithCharacterAnimation(bool isCorrect)
+    {
+        // Beri pemain waktu 1.5 detik untuk membaca feedback
+        yield return new WaitForSeconds(1.5f);
+
+        // Trigger animasi karakter (hanya untuk level 1, 2, 3 / soal 1-30)
+        if (characterAnimController != null && progres >= 1 && progres <= 30)
+        {
+            bool characterAnimDone = false;
+
+            // Play animasi sesuai hasil jawaban
+            if (isCorrect)
+            {
+                characterAnimController.PlayCorrectAnimation(() =>
+                {
+                    characterAnimDone = true;
+                });
+            }
+            else
+            {
+                characterAnimController.PlayWrongAnimation(() =>
+                {
+                    characterAnimDone = true;
+                });
+            }
+
+            // Tunggu hingga animasi karakter selesai
+            yield return new WaitUntil(() => characterAnimDone);
+        }
+
+        // Setelah animasi karakter selesai, lanjut ke animasi exit triangle & tiles
+        // Flag untuk tracking animasi selesai
+        bool triangleAnimDone = false;
+        bool tilesAnimDone = false;
+
+        // Animate triangle keluar
+        if (uiManager != null && uiManager.triangleVisualizer != null)
+        {
+            uiManager.triangleVisualizer.AnimateTriangleOut(() =>
+            {
+                triangleAnimDone = true;
+                if (tilesAnimDone) StartNewRound();
+            });
+        }
+        else
+        {
+            triangleAnimDone = true;
+        }
+
+        // Animate answer tiles keluar (parallel)
+        if (AnswerTileSystem.Instance != null)
+        {
+            AnswerTileSystem.Instance.AnimateTilesOut(() =>
+            {
+                tilesAnimDone = true;
+                if (triangleAnimDone) StartNewRound();
+            });
+        }
+        else
+        {
+            tilesAnimDone = true;
+        }
+
+        // Fallback jika tidak ada animator
+        if (triangleAnimDone && tilesAnimDone)
+        {
+            StartNewRound();
+        }
+    }
+
     void EndChapter()
     {
         // Save high score based on which level was played
         SaveLevelScore();
+
+        // Save to new highscore leaderboard system
+        if (score > 0)
+        {
+            Debug.Log($"[CalculationManager] Saving score on chapter completion: {score}");
+            HighScoreManager.Instance.SaveScore(score);
+        }
 
         uiManager.ShowFeedback(true, $"CHAPTER 1 SELESAI! Skor Total: {score}");
 
@@ -447,6 +582,19 @@ public class CalculationManager : MonoBehaviour
     public void BackToLevelSelection()
     {
         Debug.Log("[CalculationManager] Kembali ke pemilihan level");
+
+        // Save current score if > 0
+        if (score > 0)
+        {
+            Debug.Log($"[CalculationManager] Saving score before exit: {score}");
+            HighScoreManager.Instance.SaveScore(score);
+        }
+
+        // Reset score for next game
+        if (scoreDisplayManager != null)
+        {
+            scoreDisplayManager.ResetScore();
+        }
 
         // Stop game
         gameStarted = false;

@@ -91,10 +91,10 @@ public class ScoreDisplayManager : MonoBehaviour
         Vector2 endPos = startPos + Vector2.up * popupFloatDistance;
 
         Sequence sequence = DOTween.Sequence();
-        
+
         // Float up
         sequence.Append(rectTransform.DOAnchorPos(endPos, popupDuration).SetEase(Ease.OutQuad));
-        
+
         // Fade out (start fading halfway through)
         sequence.Join(canvasGroup.DOFade(0f, popupDuration * 0.6f).SetDelay(popupDuration * 0.4f));
 

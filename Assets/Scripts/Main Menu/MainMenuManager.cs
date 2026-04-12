@@ -21,6 +21,13 @@ public class MainMenuManager : MonoBehaviour
     public GameObject modeCeritaSelectionPanel;
     public GameObject highScorePanel;
 
+    [Header("Material Display")]
+    [Tooltip("Material Display Panel dengan 2 gambar materi")]
+    public GameObject materialPanel;
+
+    [Tooltip("Material Display Controller component")]
+    public MaterialDisplayController materialDisplayController;
+
     [Header("High Score Display")]
     [Tooltip("High Score Display component (optional)")]
     public HighScoreDisplay highScoreDisplay;
@@ -42,7 +49,8 @@ public class MainMenuManager : MonoBehaviour
         MainMenu,
         ModeSelection,
         ModeCeritaSelection,
-        HighScore
+        HighScore,
+        Material
     }
 
     private MenuState currentState;
@@ -54,6 +62,9 @@ public class MainMenuManager : MonoBehaviour
         modeSelectionPanel.SetActive(false);
         modeCeritaSelectionPanel.SetActive(false);
         highScorePanel.SetActive(false);
+
+        if (materialPanel != null)
+            materialPanel.SetActive(false);
     }
 
     private void Start()
@@ -71,6 +82,13 @@ public class MainMenuManager : MonoBehaviour
         if (modeSelectionAnimator == null) Debug.LogError("Mode Selection panel tidak memiliki MenuAnimationController!");
         if (modeCeritaAnimator == null) Debug.LogError("Mode Cerita Selection panel tidak memiliki MenuAnimationController!");
         if (highScoreAnimator == null) Debug.LogWarning("High Score panel tidak memiliki MenuAnimationController!");
+
+        // Setup material display controller callback
+        if (materialDisplayController != null)
+        {
+            materialDisplayController.OnMaterialClosed = OnMaterialClosed;
+        }
+
         // Mulai dari logo
         currentState = MenuState.Logo;
         ShowLogo();
@@ -214,6 +232,72 @@ public class MainMenuManager : MonoBehaviour
                 Debug.LogError("[MainMenu] highScoreAnimator is NULL!");
             }
         });
+    }
+
+    /// <summary>
+    /// Transisi dari Main Menu ke Material Display
+    /// </summary>
+    public void OnMateriClicked()
+    {
+        if (currentState != MenuState.MainMenu) return;
+
+        Debug.Log("[MainMenu] OnMateriClicked called");
+
+        currentState = MenuState.Material;
+
+        // Main menu sink, lalu material display muncul
+        mainMenuAnimator.AnimateSinkOut(() =>
+        {
+            Debug.Log("[MainMenu] Main menu sink complete, showing material display");
+
+            if (materialPanel != null)
+            {
+                materialPanel.SetActive(true);
+            }
+            else
+            {
+                Debug.LogError("[MainMenu] materialPanel is NULL!");
+                return;
+            }
+
+            if (materialDisplayController != null)
+            {
+                materialDisplayController.ShowMaterial();
+            }
+            else
+            {
+                Debug.LogError("[MainMenu] materialDisplayController is NULL!");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Callback saat material display ditutup
+    /// </summary>
+    private void OnMaterialClosed()
+    {
+        Debug.Log("[MainMenu] OnMaterialClosed called");
+
+        if (currentState != MenuState.Material) return;
+
+        currentState = MenuState.MainMenu;
+
+        // Hide material panel
+        if (materialPanel != null)
+        {
+            materialPanel.SetActive(false);
+        }
+
+        // Show main menu
+        if (mainMenuPanel != null)
+        {
+            mainMenuPanel.SetActive(true);
+        }
+
+        if (mainMenuAnimator != null)
+        {
+            mainMenuAnimator.AnimateDropIn();
+        }
     }
 
     /// <summary>

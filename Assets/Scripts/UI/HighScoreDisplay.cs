@@ -33,6 +33,11 @@ public class HighScoreDisplay : MonoBehaviour
 
     private void OnEnable()
     {
+        // Kill any ongoing animations first to prevent overlap
+        DOTween.Kill(level1ScoreText);
+        DOTween.Kill(level2ScoreText);
+        DOTween.Kill(totalScoreText);
+
         RefreshScores();
 
         if (animateOnEnable)
@@ -41,11 +46,21 @@ public class HighScoreDisplay : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        // Kill animations when disabled to prevent leaks
+        DOTween.Kill(level1ScoreText);
+        DOTween.Kill(level2ScoreText);
+        DOTween.Kill(totalScoreText);
+    }
+
     /// <summary>
     /// Refresh semua score dari HighScoreManager
     /// </summary>
     public void RefreshScores()
     {
+        Debug.Log("[HighScoreDisplay] RefreshScores called");
+
         ScoreSummary summary = HighScoreManager.Instance.GetScoreSummary();
 
         // Update Level 1 Score
@@ -54,6 +69,7 @@ public class HighScoreDisplay : MonoBehaviour
             level1ScoreText.text = summary.level1HighScore > 0
                 ? summary.level1HighScore.ToString()
                 : noScoreText;
+            Debug.Log($"[HighScoreDisplay] Level 1: {level1ScoreText.text}");
         }
 
         // Update Level 2 Score

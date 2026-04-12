@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Linq;
 
 /// <summary>
 /// Singleton manager untuk menyimpan dan mengelola high scores
@@ -230,6 +231,116 @@ public class HighScoreManager : MonoBehaviour
             level3Date = GetLevel3Date(),
             totalDate = GetTotalDate()
         };
+    }
+
+    #endregion
+
+    #region Leaderboard System (New Highscore with Timestamps)
+
+    private const string LEADERBOARD_KEY = "HighscoreLeaderboardData";
+    private const int MAX_LEADERBOARD_ENTRIES = 100;
+
+    [System.Serializable]
+    public class HighscoreEntry
+    {
+        public int score;
+        public string date; // Format: "06 Jan 2026"
+        public string time; // Format: "14:30"
+        public long timestamp; // Untuk sorting
+
+        public HighscoreEntry(int score)
+        {
+            this.score = score;
+            System.DateTime now = System.DateTime.Now;
+            this.date = now.ToString("dd MMM yyyy");
+            this.time = now.ToString("HH:mm");
+            this.timestamp = now.Ticks;
+        }
+    }
+
+    [System.Serializable]
+    private class LeaderboardData
+    {
+        public System.Collections.Generic.List<HighscoreEntry> entries = new System.Collections.Generic.List<HighscoreEntry>();
+    }
+
+    /// <summary>
+    /// Simpan score ke leaderboard
+    /// </summary>
+    public void SaveScore(int score)
+    {
+        LeaderboardData data = LoadLeaderboardData();
+        data.entries.Add(new HighscoreEntry(score));
+
+        // Keep MAX_LEADERBOARD_ENTRIES terbaru
+        if (data.entries.Count > MAX_LEADERBOARD_ENTRIES)
+        {
+            data.entries = data.entries
+                .OrderByDescending(e => e.timestamp)
+                .Take(MAX_LEADERBOARD_ENTRIES)
+                .ToList();
+        }
+
+        string json = JsonUtility.ToJson(data);
+        PlayerPrefs.SetString(LEADERBOARD_KEY, json);
+        PlayerPrefs.Save();
+
+        Debug.Log($"[HighScore Leaderboard] Score saved: {score} at {System.DateTime.Now:dd MMM yyyy HH:mm}");
+    }
+
+    /// <summary>
+    /// Get 10 score tertinggi
+    /// </summary>
+    public System.Collections.Generic.List<HighscoreEntry> GetTop10()
+    {
+        LeaderboardData data = LoadLeaderboardData();
+        return data.entries
+            .OrderByDescending(e => e.score)
+            .Take(10)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Get 3 score terakhir
+    /// </summary>
+    public System.Collections.Generic.List<HighscoreEntry> GetRecent3()
+    {
+        LeaderboardData data = LoadLeaderboardData();
+        return data.entries
+            .OrderByDescending(e => e.timestamp)
+            .Take(3)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Load leaderboard data
+    /// </summary>
+    private LeaderboardData LoadLeaderboardData()
+    {
+        if (PlayerPrefs.HasKey(LEADERBOARD_KEY))
+        {
+            string json = PlayerPrefs.GetString(LEADERBOARD_KEY);
+            try
+            {
+                return JsonUtility.FromJson<LeaderboardData>(json);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[HighScore] Error loading leaderboard: {e.Message}");
+                return new LeaderboardData();
+            }
+        }
+        return new LeaderboardData();
+    }
+
+    /// <summary>
+    /// Clear leaderboard data
+    /// </summary>
+    public void ClearLeaderboard()
+    {
+        PlayerPrefs.DeleteKey(LEADERBOARD_KEY);
+        PlayerPrefs.Save();
+        Debug.Log("[HighScore] Leaderboard cleared");
     }
 
     #endregion
